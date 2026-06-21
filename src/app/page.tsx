@@ -148,14 +148,14 @@ export default function HomePage() {
     <>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-background">
-        {/* Varm dot-grid bakgrund */}
+        {/* Blueprint-rutnät bakgrund */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage: "radial-gradient(circle, #D8CFBE 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-            opacity: 0.55,
+            backgroundImage:
+              "linear-gradient(rgba(180,170,155,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(180,170,155,0.35) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
           }}
         />
         {/* Nedåt-fade */}
@@ -172,8 +172,8 @@ export default function HomePage() {
 
             {/* Liten etikett */}
             <div className="mb-5">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3.5 py-1.5 text-xs font-mono font-medium text-muted-foreground shadow-sm">
+                <span aria-hidden className="w-2 h-2 rounded-[2px] bg-[#F5C842] shrink-0" />
                 Svensk community för AI-byggare
               </span>
             </div>
@@ -230,7 +230,8 @@ export default function HomePage() {
         <section>
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h2 className="font-heading text-2xl font-bold text-foreground">
+              <h2 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
+                <span aria-hidden className="inline-block w-3 h-3 rounded-[3px] bg-primary shrink-0" />
                 Just nu på bänken
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -268,7 +269,8 @@ export default function HomePage() {
         <section>
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h2 className="font-heading text-2xl font-bold text-foreground">
+              <h2 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
+                <span aria-hidden className="inline-block w-3 h-3 rounded-[3px] bg-[#E8722A] shrink-0" />
                 Folk har fastnat här
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -303,7 +305,8 @@ export default function HomePage() {
         <section>
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h2 className="font-heading text-2xl font-bold text-foreground">
+              <h2 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
+                <span aria-hidden className="inline-block w-3 h-3 rounded-[3px] bg-[#3B7DD8] shrink-0" />
                 Prompts som faktiskt funkade
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -338,7 +341,8 @@ export default function HomePage() {
 
         {/* ── Verktyg folk bråkar med ── */}
         <section className="rounded-2xl border border-border bg-background-alt px-6 py-8 sm:px-8">
-          <h2 className="font-heading text-xl font-bold text-foreground mb-1">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+            <span aria-hidden className="inline-block w-3 h-3 rounded-[3px] bg-[#F5C842] shrink-0" />
             Verktyg folk bråkar med
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
@@ -353,7 +357,8 @@ export default function HomePage() {
 
         {/* ── Så funkar det ── */}
         <section>
-          <h2 className="font-heading text-2xl font-bold text-foreground mb-1">
+          <h2 className="font-heading text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
+            <span aria-hidden className="inline-block w-3 h-3 rounded-[3px] bg-foreground/20 shrink-0" />
             Så funkar det
           </h2>
           <p className="text-sm text-muted-foreground mb-8">

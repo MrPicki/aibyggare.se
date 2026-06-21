@@ -15,6 +15,15 @@ interface ProjectCardProps {
   authorUsername: string;
 }
 
+const statusTopColor: Record<ProjectStatus, string> = {
+  idea:       "#D8CFBE",
+  mvp:        "#3B7DD8",
+  live:       "#9FBE5A",
+  feedback:   "#E8722A",
+  testers:    "#A78BFA",
+  cofounder:  "#F472B6",
+};
+
 export function ProjectCard({
   title,
   tagline,
@@ -27,8 +36,10 @@ export function ProjectCard({
 }: ProjectCardProps) {
   return (
     <Link href={`/projects/${slug}`} className="group block">
-      <article className="h-full rounded-xl border border-border bg-card p-5 shadow-sm shadow-border/40 transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-border/60 hover:-translate-y-0.5">
-
+      <article
+        className="h-full rounded-xl border border-border bg-card p-5 shadow-sm shadow-border/40 transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-border/60 hover:-translate-y-0.5 border-t-[3px]"
+        style={{ borderTopColor: statusTopColor[status] }}
+      >
         {/* Status + title */}
         <div className="mb-3">
           <StatusPill status={status} className="mb-2" />
