@@ -62,7 +62,7 @@ export function Footer() {
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-muted-foreground">
           <p>
             © {new Date().getFullYear()}{" "}
-            <span className="text-primary font-medium">AIbyggare</span>.se — Byggd med AI
+            <span className="text-primary font-medium">AIbyggare</span>.se — Byggd med AI i Sverige 🇸🇪
           </p>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-foreground transition-colors">
