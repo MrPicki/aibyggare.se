@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { HelpCard } from "@/components/cards/HelpCard";
+import { PromptCard } from "@/components/cards/PromptCard";
 import { ToolBadge } from "@/components/ui/ToolBadge";
 import { Ticker } from "@/components/ui/Ticker";
 
@@ -47,28 +48,58 @@ const mockProjects = [
 
 const mockHelpQuestions = [
   {
-    title: "Hur kopplar jag Firebase Auth till Next.js App Router utan att tappa session vid reload?",
+    title: "Firebase Auth tappar session vid reload i Next.js App Router — hur löser man det?",
     slug: "firebase-auth-nextjs",
-    tool: "Claude Code",
+    tool: "Firebase",
     answerCount: 0,
     timeAgo: "2 timmar sedan",
     isOpen: true,
+    mood: "Auth gör ont" as const,
   },
   {
-    title: "Varför misslyckas min Vercel deploy — env variabler ser rätt ut lokalt?",
+    title: "Vercel vägrar deploya. Allt ser rätt ut lokalt men env-variablerna hittas inte i produktion.",
     slug: "vercel-deploy-env",
     tool: "Vercel",
     answerCount: 2,
     timeAgo: "5 timmar sedan",
     isOpen: true,
+    mood: "Vercel vägrar" as const,
   },
   {
-    title: "Hur strukturerar jag Firestore för projekt med kommentarer och upvotes?",
+    title: "Hur strukturerar man Firestore-collections för projekt med kommentarer, upvotes och taggar?",
     slug: "firestore-projekt-kommentarer",
     tool: "Firebase",
     answerCount: 1,
     timeAgo: "1 dag sedan",
     isOpen: true,
+    mood: "Fastnat i Firebase-träsket" as const,
+  },
+];
+
+const mockPrompts = [
+  {
+    title: "Bygg en fullständig Next.js-komponent med TypeScript och Tailwind",
+    slug: "nextjs-komponent-ts-tailwind",
+    tool: "Claude Code",
+    saves: 31,
+    timeAgo: "3 timmar sedan",
+    excerpt: "Du är en expert på Next.js, TypeScript och Tailwind CSS. Bygg en komponent som...",
+  },
+  {
+    title: "Hitta och förklara buggarna utan att ändra logiken",
+    slug: "hitta-buggar-forklara",
+    tool: "Cursor",
+    saves: 19,
+    timeAgo: "1 dag sedan",
+    excerpt: "Analysera koden nedan. Lista alla potentiella buggar. Förklara varje bugg med...",
+  },
+  {
+    title: "Sätt upp Firestore Security Rules för en communityapp",
+    slug: "firestore-security-rules",
+    tool: "Claude AI",
+    saves: 44,
+    timeAgo: "2 dagar sedan",
+    excerpt: "Skriv Firestore Security Rules för en app där användare kan skapa, läsa och redigera...",
   },
 ];
 
@@ -168,7 +199,7 @@ export default function HomePage() {
                   "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold shadow-sm"
                 )}
               >
-                Visa upp mitt bygge
+                Lägg upp mitt bygge
                 <ArrowRight size={16} className="ml-1.5" />
               </Link>
               <Link
@@ -220,7 +251,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Empty state (visas när inga projekt finns) */}
           {mockProjects.length === 0 && (
             <div className="mt-5 rounded-xl border border-dashed border-border p-10 text-center">
               <p className="text-sm text-muted-foreground">
@@ -264,6 +294,43 @@ export default function HomePage() {
               <p className="text-sm text-muted-foreground">
                 Ingen har fastnat just nu.{" "}
                 <span className="text-muted-foreground/60">Det lär inte hålla länge.</span>
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ── Prompts som faktiskt funkade ── */}
+        <section>
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <h2 className="font-heading text-2xl font-bold text-foreground">
+                Prompts som faktiskt funkade
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Spara de prompts som gjorde mer nytta än skada.
+              </p>
+            </div>
+            <Link
+              href="/prompts"
+              className="text-sm font-medium text-primary hover:text-[#8DB34E] transition-colors mt-1 shrink-0"
+            >
+              Se alla →
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockPrompts.map((p) => (
+              <PromptCard key={p.slug} {...p} />
+            ))}
+          </div>
+
+          {mockPrompts.length === 0 && (
+            <div className="mt-5 rounded-xl border border-dashed border-border p-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Här saknas prompts.{" "}
+                <Link href="/prompts/new" className="text-primary hover:underline font-medium">
+                  Dela den där prompten som räddade din kväll.
+                </Link>
               </p>
             </div>
           )}

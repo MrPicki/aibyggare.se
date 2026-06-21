@@ -9,6 +9,7 @@ interface HelpCardProps {
   answerCount: number;
   timeAgo: string;
   isOpen?: boolean;
+  mood?: string;
 }
 
 export function HelpCard({
@@ -18,6 +19,7 @@ export function HelpCard({
   answerCount,
   timeAgo,
   isOpen = true,
+  mood,
 }: HelpCardProps) {
   return (
     <Link href={`/help/${slug}`} className="group block">
@@ -38,6 +40,11 @@ export function HelpCard({
           </div>
 
           <div className="min-w-0 flex-1">
+            {mood && (
+              <span className="inline-block text-[10px] font-semibold tracking-wide uppercase text-[#8B4F10] bg-[#F2A65A]/10 border border-[#F2A65A]/20 rounded px-1.5 py-0.5 mb-1.5">
+                {mood}
+              </span>
+            )}
             <h3 className="font-medium text-sm text-foreground group-hover:text-[#3D6B20] dark:group-hover:text-primary transition-colors line-clamp-2 leading-snug">
               {title}
             </h3>
