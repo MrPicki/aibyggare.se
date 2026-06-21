@@ -1,65 +1,293 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Hammer, HelpCircle, BookOpen, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import { ProjectCard } from "@/components/cards/ProjectCard";
+import { HelpCard } from "@/components/cards/HelpCard";
+import { ToolBadge } from "@/components/ui/ToolBadge";
 
-export default function Home() {
+const tools = [
+  "Claude Code",
+  "Cursor",
+  "Lovable",
+  "Bolt",
+  "Replit",
+  "Supabase",
+  "Vercel",
+  "Next.js",
+  "Stripe",
+];
+
+const mockProjects = [
+  {
+    title: "AIkostnad.se",
+    tagline:
+      "Förstå vad AI faktiskt kostar — jämför modeller och räkna ut din månadskostnad i realtid.",
+    slug: "aikostnad-se",
+    status: "live" as const,
+    stack: ["Next.js", "Supabase"],
+    upvotes: 24,
+    commentCount: 7,
+    authorName: "Erik Lindqvist",
+    authorUsername: "eriklindqvist",
+  },
+  {
+    title: "Need Radar",
+    tagline:
+      "AI som söker igenom forum och communities dagligen och hittar marknadsmöjligheter.",
+    slug: "need-radar",
+    status: "mvp" as const,
+    stack: ["Next.js", "Claude AI"],
+    upvotes: 18,
+    commentCount: 4,
+    authorName: "Sara Holm",
+    authorUsername: "saraholm",
+  },
+  {
+    title: "Smartbok.se",
+    tagline:
+      "AI-bokföringsassistent för enskild firma. Foton på kvitton, kategorisering, export.",
+    slug: "smartbok-se",
+    status: "feedback" as const,
+    stack: ["React", "Supabase"],
+    upvotes: 12,
+    commentCount: 9,
+    authorName: "Jonas Berg",
+    authorUsername: "jonasberg",
+  },
+];
+
+const mockHelpQuestions = [
+  {
+    title: "Hur kopplar jag Supabase Auth till Next.js App Router på rätt sätt?",
+    slug: "supabase-auth-nextjs",
+    tool: "Claude Code",
+    answerCount: 0,
+    timeAgo: "2 timmar sedan",
+    isOpen: true,
+  },
+  {
+    title: "Varför misslyckas min Vercel deploy — env variabler ser rätt ut?",
+    slug: "vercel-deploy-env",
+    tool: "Vercel",
+    answerCount: 2,
+    timeAgo: "5 timmar sedan",
+    isOpen: true,
+  },
+  {
+    title: "Hur strukturerar jag databasen för projekt med kommentarer och upvotes?",
+    slug: "databas-projekt-kommentarer",
+    tool: "Supabase",
+    answerCount: 1,
+    timeAgo: "1 dag sedan",
+    isOpen: true,
+  },
+];
+
+const howItWorks = [
+  {
+    icon: Hammer,
+    step: "01",
+    title: "Visa vad du bygger",
+    text: "Lägg upp ditt projekt, berätta vad du använder och vad du vill ha feedback på.",
+  },
+  {
+    icon: HelpCircle,
+    step: "02",
+    title: "Få hjälp när du fastnar",
+    text: "Ställ tydliga frågor och få svar från andra som bygger med samma verktyg.",
+  },
+  {
+    icon: BookOpen,
+    step: "03",
+    title: "Dela prompts och lärdomar",
+    text: "Spara tid för andra genom att dela prompts, guider och workflows som faktiskt funkar.",
+  },
+  {
+    icon: Users,
+    step: "04",
+    title: "Följ andra byggare",
+    text: "Hitta människor som bygger liknande saker och följ deras resa från idé till lansering.",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden bg-background">
+        {/* Dot grid */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, var(--border) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+            opacity: 0.65,
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        {/* Radial fade */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 70% at 50% 0%, transparent 30%, var(--background) 100%)",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-20 sm:py-28 md:py-32">
+          <div className="max-w-2xl">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background-alt px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Sveriges community för AI-byggare
+            </p>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.1]">
+              Bygg med AI.<br />
+              Visa upp.<br />
+              <span className="text-primary">Få hjälp.</span>
+            </h1>
+
+            <p className="mt-5 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
+              AIbyggare.se är Sveriges community för dig som bygger appar,
+              webbsidor och digitala produkter med AI.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/projects/new"
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "bg-primary text-primary-foreground hover:bg-[#8FB339] font-semibold shadow-sm"
+                )}
+              >
+                Lägg upp ditt bygge
+                <ArrowRight size={16} className="ml-2" />
+              </Link>
+              <Link
+                href="/help/new"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "border-border"
+                )}
+              >
+                Be om hjälp
+              </Link>
+            </div>
+
+            <p className="mt-4 text-sm text-muted-foreground">
+              För dig som använder Claude Code, Cursor, Lovable, Bolt, Replit,
+              Supabase och liknande.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Tool badges ── */}
+      <section className="border-y border-border bg-background-alt py-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground font-medium shrink-0 mr-1">
+              Populära verktyg:
+            </span>
+            {tools.map((tool) => (
+              <ToolBadge key={tool} name={tool} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 space-y-16">
+        {/* ── Senaste byggen ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground">Senaste byggen</h2>
+            <Link
+              href="/projects"
+              className="text-sm font-medium text-primary hover:text-[#8FB339] transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Se alla →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockProjects.map((project) => (
+              <ProjectCard key={project.slug} {...project} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Hjälpfrågor ── */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground">
+              Behöver hjälp just nu
+            </h2>
+            <Link
+              href="/help"
+              className="text-sm font-medium text-primary hover:text-[#8FB339] transition-colors"
             >
-              Learning
-            </a>{" "}
-            center.
+              Se alla →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockHelpQuestions.map((q) => (
+              <HelpCard key={q.slug} {...q} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Så fungerar det ── */}
+        <section>
+          <h2 className="text-xl font-semibold text-foreground mb-8">
+            Så fungerar det
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {howItWorks.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.step} className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+                      <Icon size={15} className="text-[#2A5C1E] dark:text-primary" />
+                    </div>
+                    <span className="text-xs font-mono font-semibold text-muted-foreground">
+                      {item.step}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-foreground leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="rounded-2xl bg-primary/10 border border-primary/25 p-8 sm:p-12 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+            Redo att visa vad du bygger?
+          </h2>
+          <p className="text-muted-foreground mb-8 text-base">
+            Gratis. Inget kreditkort. Bara bygg.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/register"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "bg-primary text-primary-foreground hover:bg-[#8FB339] font-semibold shadow-sm"
+            )}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            Skapa konto gratis
+            <ArrowRight size={16} className="ml-2" />
+          </Link>
+        </section>
+      </div>
+    </>
   );
 }
