@@ -7,45 +7,39 @@ export type AnyStatus = ProjectStatus | PostStatus;
 const statusConfig: Record<AnyStatus, { label: string; className: string }> = {
   idea: {
     label: "Idé",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-muted text-muted-foreground border border-border",
   },
   mvp: {
-    label: "MVP",
-    className:
-      "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+    label: "Hackig MVP",
+    className: "bg-[#263B4A]/10 text-[#263B4A] border border-[#263B4A]/20 dark:bg-blue-950/40 dark:text-blue-300",
   },
   live: {
-    label: "Live",
-    className:
-      "bg-primary/15 text-[#2A5C1E] dark:bg-primary/20 dark:text-primary",
+    label: "Live men nervös",
+    className: "bg-primary/12 text-[#3D6B20] border border-primary/25 dark:bg-primary/15 dark:text-primary",
   },
   feedback: {
-    label: "Söker feedback",
-    className:
-      "bg-[#E79D45]/15 text-[#7A4E0A] dark:bg-[#E79D45]/20 dark:text-[#E79D45]",
+    label: "Behöver feedback",
+    className: "bg-[#F2A65A]/12 text-[#8B4F10] border border-[#F2A65A]/25 dark:bg-[#F2A65A]/15 dark:text-[#F2A65A]",
   },
   testers: {
     label: "Behöver testare",
-    className:
-      "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300",
+    className: "bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300",
   },
   cofounder: {
     label: "Söker medgrundare",
-    className:
-      "bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300",
+    className: "bg-pink-100 text-pink-700 border border-pink-200 dark:bg-pink-950/40 dark:text-pink-300",
   },
   open: {
     label: "Öppen",
-    className:
-      "bg-primary/15 text-[#2A5C1E] dark:bg-primary/20 dark:text-primary",
+    className: "bg-primary/12 text-[#3D6B20] border border-primary/25 dark:bg-primary/15 dark:text-primary",
   },
   solved: {
     label: "Löst",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-muted text-muted-foreground border border-border",
   },
   archived: {
     label: "Arkiverad",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-muted text-muted-foreground border border-border",
   },
 };
 

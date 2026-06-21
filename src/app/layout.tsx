@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -14,14 +14,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "AIbyggare.se — Sveriges community för AI-byggare",
+  title: "AIbyggare.se — För oss som bygger först och förstår sen",
   description:
-    "Visa upp ditt bygge, få hjälp när du fastnar, dela prompts och hitta andra som bygger med AI.",
+    "En svensk community för AI-byggare, vibe coders och envisa nybörjare. Visa upp ditt bygge, få hjälp när du fastnar, dela prompts som faktiskt funkade.",
   openGraph: {
-    title: "AIbyggare.se — Sveriges community för AI-byggare",
+    title: "AIbyggare.se — För oss som bygger först och förstår sen",
     description:
-      "Visa upp ditt bygge, få hjälp när du fastnar, dela prompts och hitta andra som bygger med AI.",
+      "En svensk community för AI-byggare, vibe coders och envisa nybörjare.",
     locale: "sv_SE",
     type: "website",
   },
@@ -35,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="sv"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Header />

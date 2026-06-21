@@ -8,9 +8,10 @@ import { buttonVariants } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
-  { href: "/help", label: "Hjälp" },
+  { href: "/help", label: "Fastnat?" },
   { href: "/prompts", label: "Prompts" },
-  { href: "/community", label: "Community" },
+  { href: "/guides", label: "Genvägar" },
+  { href: "/community", label: "Byggsnack" },
 ];
 
 export function Header() {
@@ -19,17 +20,18 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-15 items-center justify-between gap-4">
+
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center font-semibold text-lg tracking-tight text-foreground"
+            className="flex items-center gap-0.5 font-heading font-bold text-base tracking-tight text-foreground shrink-0"
           >
-            AIbyggare<span className="text-primary font-bold">.</span>se
+            AIbyggare<span className="text-primary">.</span>se
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -42,7 +44,7 @@ export function Header() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <Link
               href="/login"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
@@ -53,14 +55,14 @@ export function Header() {
               href="/projects/new"
               className={cn(
                 buttonVariants({ size: "sm" }),
-                "bg-primary text-primary-foreground hover:bg-[#8FB339] font-medium"
+                "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold"
               )}
             >
               Lägg upp
             </Link>
           </div>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile toggle */}
           <button
             className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -75,7 +77,7 @@ export function Header() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background">
-          <nav className="flex flex-col px-4 py-3 gap-1">
+          <nav className="flex flex-col px-4 py-3 gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -101,7 +103,7 @@ export function Header() {
                 href="/projects/new"
                 className={cn(
                   buttonVariants({ size: "sm" }),
-                  "bg-primary text-primary-foreground hover:bg-[#8FB339]"
+                  "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold"
                 )}
                 onClick={() => setMobileOpen(false)}
               >

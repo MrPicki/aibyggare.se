@@ -10,7 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -47,64 +47,75 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  /* Projektspecifika accentfärger */
+  /* Projektets accentfärger */
   --color-accent-orange: var(--accent-orange);
-  --color-accent-blue: var(--accent-blue);
-  --color-accent-sand: var(--accent-sand);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-bug: var(--accent-bug);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-supabase: var(--accent-supabase);
   --color-primary-dark: var(--primary-dark);
+  /* Ticker-animation */
+  --animate-ticker: ticker 35s linear infinite;
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 :root {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 
-  /* AIbyggare.se — ljust läge */
-  --background: #F7F5EF;
-  --background-alt: #EFECE3;
-  --foreground: #151515;
-  --card: #FFFFFF;
-  --card-foreground: #151515;
-  --popover: #FFFFFF;
-  --popover-foreground: #151515;
-  --primary: #A7C957;
-  --primary-foreground: #151515;
-  --primary-dark: #386641;
-  --secondary: #EFECE3;
-  --secondary-foreground: #151515;
-  --muted: #EFECE3;
-  --muted-foreground: #5F625D;
-  --accent: #EFECE3;
-  --accent-foreground: #151515;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #DED9CC;
-  --input: #DED9CC;
-  --ring: #A7C957;
+  /* AIbyggare.se — Varm byggarpalett, ljust läge */
+  --background: #F6F1E7;
+  --background-alt: #EDE7D9;
+  --foreground: #181713;
+  --card: #FFFDF7;
+  --card-foreground: #181713;
+  --popover: #FFFDF7;
+  --popover-foreground: #181713;
+  --primary: #9FBE5A;
+  --primary-foreground: #181713;
+  --primary-dark: #3D6B20;
+  --secondary: #EDE7D9;
+  --secondary-foreground: #181713;
+  --muted: #EDE7D9;
+  --muted-foreground: #6B665B;
+  --accent: #EDE7D9;
+  --accent-foreground: #181713;
+  --destructive: #D96C5F;
+  --border: #D8CFBE;
+  --input: #D8CFBE;
+  --ring: #9FBE5A;
   --radius: 0.625rem;
 
-  /* Projektets accentfärger */
-  --accent-orange: #E79D45;
-  --accent-blue: #6B8F9C;
-  --accent-sand: #D8C3A5;
+  /* Karaktärsfärger */
+  --accent-orange: #F2A65A;
+  --accent-ink: #263B4A;
+  --accent-bug: #D96C5F;
+  --accent-yellow: #F4D35E;
+  --accent-supabase: #6FAF7A;
 
   /* Sidebar */
-  --sidebar: #EFECE3;
-  --sidebar-foreground: #151515;
-  --sidebar-primary: #A7C957;
-  --sidebar-primary-foreground: #151515;
-  --sidebar-accent: #DED9CC;
-  --sidebar-accent-foreground: #151515;
-  --sidebar-border: #DED9CC;
-  --sidebar-ring: #A7C957;
+  --sidebar: #EDE7D9;
+  --sidebar-foreground: #181713;
+  --sidebar-primary: #9FBE5A;
+  --sidebar-primary-foreground: #181713;
+  --sidebar-accent: #D8CFBE;
+  --sidebar-accent-foreground: #181713;
+  --sidebar-border: #D8CFBE;
+  --sidebar-ring: #9FBE5A;
 
   /* Chart */
-  --chart-1: #A7C957;
-  --chart-2: #E79D45;
-  --chart-3: #6B8F9C;
-  --chart-4: #D8C3A5;
-  --chart-5: #386641;
+  --chart-1: #9FBE5A;
+  --chart-2: #F2A65A;
+  --chart-3: #263B4A;
+  --chart-4: #F4D35E;
+  --chart-5: #6FAF7A;
 }
 
 .dark {
-  /* AIbyggare.se — mörkt läge */
   --background: #11130F;
   --background-alt: #191C16;
   --foreground: #F4F1E8;
@@ -121,12 +132,11 @@
   --muted-foreground: #B7B2A4;
   --accent: #1E221A;
   --accent-foreground: #F4F1E8;
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: #E07B6E;
   --border: #2A2E25;
   --input: #2A2E25;
   --ring: #B7E063;
 
-  /* Sidebar */
   --sidebar: #191C16;
   --sidebar-foreground: #F4F1E8;
   --sidebar-primary: #B7E063;
@@ -136,12 +146,11 @@
   --sidebar-border: #2A2E25;
   --sidebar-ring: #B7E063;
 
-  /* Chart */
   --chart-1: #B7E063;
-  --chart-2: #E79D45;
+  --chart-2: #F2A65A;
   --chart-3: #6B8F9C;
-  --chart-4: #D8C3A5;
-  --chart-5: #386641;
+  --chart-4: #F4D35E;
+  --chart-5: #6FAF7A;
 }
 
 @layer base {
