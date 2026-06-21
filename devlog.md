@@ -18,130 +18,202 @@
 
 ---
 
+## Infrastruktur och arbetsflöde — LÄSVÄRDIG VID VARJE SESSION
+
+### Stack — vad vi använder och till vad
+
+| System | Syfte | Åtkomst |
+|--------|-------|---------|
+| **Next.js 16** | Frontend + API-routes (App Router) | Lokalt: `npm run dev` |
+| **Firebase Auth** | Inloggning (Google + GitHub OAuth) | Via `src/lib/firebase/client.ts` |
+| **Firestore** | Databas (NoSQL dokument-DB) | Klient: `client.ts` · Server: `admin.ts` |
+| **Firebase Storage** | Bilduppladdningar | Via `src/lib/firebase/client.ts` |
+| **GitHub** | Versionskontroll, kodbas | `github.com/MrPicki/aibyggare.se` |
+| **Vercel** | Hosting + auto-deploy | `vercel.com` — projekt `aibyggare-se` |
+
+---
+
+### Exakt arbetsflöde — kod till produktion
+
+```
+1. Koda lokalt
+   └─ npm run dev  →  http://localhost:3000
+
+2. Verifiera att build passerar
+   └─ npm run build  (ska vara fel-fritt)
+   └─ npm run lint   (ska vara varnings-fritt)
+
+3. Committa och pusha
+   └─ git add <filer>
+   └─ git commit -m "beskrivning"
+   └─ git push origin main
+
+4. Vercel deployer automatiskt
+   └─ Trigger: push till main på GitHub
+   └─ Build tar ~30–60 sekunder
+   └─ Live-URL: https://aibyggare.vercel.app
+   └─ Preview-URL per commit: https://aibyggare-<hash>.vercel.app
+```
+
+**Vercel bygger med produktions-env-variabler** — `.env.local` används bara lokalt.
+
+---
+
+### Miljövariabler — var de finns
+
+| Miljö | Fil/plats | Används av |
+|-------|-----------|------------|
+| Lokalt (dev) | `.env.local` (ej i git) | `npm run dev` |
+| Produktion/Preview | Vercel Dashboard → Settings → Env Vars | Vercel build |
+
+**Variabler som finns:**
+```
+NEXT_PUBLIC_FIREBASE_API_KEY          — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN      — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_PROJECT_ID       — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET   — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_APP_ID           — Firebase klient (publik)
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID   — Firebase Analytics (publik)
+FIREBASE_SERVICE_ACCOUNT_KEY          — Firebase Admin/server (HEMLIG)
+NEXT_PUBLIC_SITE_URL                  — Bas-URL för projektet
+```
+
+**`NEXT_PUBLIC_*`** variabler är publika — de bäddas in i klient-JS (detta är korrekt och normalt för Firebase).
+**`FIREBASE_SERVICE_ACCOUNT_KEY`** är hemlig och finns aldrig på klientsidan. Den körs bara i Server Components, API-routes och middleware.
+
+---
+
+### Firebase — klient vs server
+
+```
+Klientsidan (Browser / Client Components):
+  import { auth, db, storage } from "@/lib/firebase/client"
+  → Lämpligt för: auth-state, realtidslyssnare, direktskrivning med Security Rules
+
+Serversidan (Server Components / API Routes / Middleware):
+  import { adminAuth, adminDb, adminStorage } from "@/lib/firebase/admin"
+  → Lämpligt för: token-verifiering, admin-operationer, SSR-datahämtning
+  → OBS: importeras ALDRIG i klient-komponenter
+```
+
+---
+
+### Firebase Security Rules (Fas 2)
+
+Firestore är öppen (test mode) tills vi sätter regler i Fas 2. Reglerna ska följa:
+- **Läsa:** Alla kan läsa publicerade projekt, posts, profiler, kommentarer
+- **Skriva:** Kräver inloggning (`request.auth != null`)
+- **Ändra/Radera:** Kräver att `request.auth.uid == resource.data.userId`
+- **Admin:** Kräver `get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin'`
+
+---
+
+### Git-konventioner
+
+```
+Commit-format:
+  Fas X: kort beskrivning av vad som gjordes
+  Komponent: ändring av specifik komponent
+  Fix: buggfix
+  Refactor: omstrukturering utan ny funktionalitet
+
+Branch-strategi (MVP-fas):
+  main = alltid deploybar, alltid grön
+  feature/* = ny funktion (mergas till main via PR när klar)
+```
+
+---
+
 ## 2026-06-21
 
-### 09:XX — Projektmapp skapad
-**Fas:** Pre-setup
-**Status:** ✅ Klar
+### Pre-setup ✅
 
-**Vad gjordes:**
-- Skapade mappen `/home/picki/code/aibyggare.se/`
-
----
-
-### 09:XX — plan.md skapad
-**Fas:** Pre-setup
-**Status:** ✅ Klar
-
-**Vad gjordes:**
-- Analyserade hela projektbriefens 32 punkter.
-- Skrev om briefen till ett strukturerat planeringsdokument: `plan.md`
-- Inkluderade: vision, designsystem, teknisk stack, databasmodell, RLS-regler, auth-flöde, komponentkrav, empty states, seed-innehåll, 10 Claude Code Skills och 8 byggfaser med checklistor.
+- `CLAUDE.md` — rollmanifest och projektkonstitution
+- `plan.md` — fullständig projektplan med 8 faser
+- `devlog.md` — denna fil
 
 ---
 
-### 09:XX — devlog.md skapad (denna fil)
-**Fas:** Pre-setup
-**Status:** ✅ Klar
+### Fas 1 ✅ Klar — 2026-06-21
 
----
+**Next.js-projekt:**
+- Next.js 16.2.9 med Turbopack, TypeScript, Tailwind v4, App Router, `src/`-mapp
+- **Kritisk notering:** shadcn/ui v4 använder `@base-ui/react` INTE Radix UI
+  - Ingen `asChild`-prop på `<Button>`
+  - Lösning: `buttonVariants({ variant, size })` + `cn()` direkt på `<Link>`
 
-### 09:XX — CLAUDE.md skapad (rollmanifest)
-**Fas:** Pre-setup
-**Status:** ✅ Klar
+**Designsystem:**
+- Projektets färgpalett implementerad som CSS-variabler i `globals.css`
+- Ljust: `#F7F5EF` bakgrund · `#A7C957` primary grön · `#151515` text
+- Mörkt: `#11130F` bakgrund · `#B7E063` primary grön · `#F4F1E8` text
+- Custom Tailwind-klasser via `@theme inline`: `bg-background-alt`, `text-primary-dark`, `text-accent-orange`
+- Font: Geist Sans (primär) + Geist Mono (kod/taggar)
 
-**Vad gjordes:**
-- Formaliserade rollen, mandatet och arbetsfilosofin.
-- Skapade `CLAUDE.md` — projektets konstitution.
+**Komponenter skapade:**
+- `src/components/layout/Header.tsx` — sticky, logo, nav, mobilmeny
+- `src/components/layout/Footer.tsx` — länkkolumner, copyright
+- `src/components/cards/ProjectCard.tsx` — titel, tagline, status-pill, stack-badges, upvotes, kommentarer
+- `src/components/cards/HelpCard.tsx` — svar-räknare, titel, verktyg-badge, tid
+- `src/components/ui/StatusPill.tsx` — 9 statusar med färgkodning
+- `src/components/ui/ToolBadge.tsx` — mono-font badge
 
----
+**Startsida (`src/app/page.tsx`):**
+- Hero med dot-grid bakgrund + radial fade
+- Verktygs-badges (Claude Code, Cursor, Lovable, Bolt, Replit, Supabase, Vercel, Next.js, Stripe)
+- Mockdata: 3 projektkort + 3 hjälpfråge-kort
+- "Så fungerar det" — 4 steg
+- CTA-sektion
 
-### 21:XX — Fas 1 Genomförd
-**Fas:** Fas 1 — Projektsetup
-**Status:** ✅ Klar
+**Firebase (valt över Supabase):**
+- Supabase hade inga lediga gratis-projekt → bytte till Firebase
+- `src/lib/firebase/client.ts` — browser-SDK (auth, db, storage)
+- `src/lib/firebase/admin.ts` — Admin SDK för server-side
+- `src/types/firestore.ts` — TypeScript-typer för alla collections
 
-**Vad gjordes:**
+**GitHub + Vercel + Firebase — verifierat 2026-06-21:**
+- GitHub repo skapad: `github.com/MrPicki/aibyggare.se` ✅
+- Vercel projekt: `aibyggare-se` (ID: `prj_sMlfbUjJa0mjP2RNnXmPhMZdOULq`) ✅
+- Vercel kopplad till GitHub (auto-deploy på push till `main`) ✅
+- 9 env-variabler i Vercel (via API) ✅
+- Firebase Auth: ansluten ✅
+- Firestore: ansluten och testad (skriv/läs/radera verifierat) ✅
+- End-to-end test: push → Vercel deploy på <15 sekunder ✅
 
-1. **Next.js-projekt skapat**
-   - `npx create-next-app@latest . --typescript --tailwind --app --src-dir --eslint --no-git`
-   - Next.js 16.2.9 med Turbopack, TypeScript, Tailwind v4, App Router, `src/`-mapp, ESLint
-
-2. **shadcn/ui installerat och konfigurerat**
-   - Initialiserat med `style: base-nova` (shadcn v4 med Base UI)
-   - **Viktigt:** shadcn v4 använder `@base-ui/react` istället för Radix — ingen `asChild`-prop
-   - Lösning: Använde `buttonVariants()` + `cn()` direkt på `<Link>`-element istället
-   - Installerade komponenter: button, card, badge, avatar, input, textarea, separator, dropdown-menu, dialog, sonner
-
-3. **Typografi**
-   - Geist Sans som primär font via `next/font/google`
-   - Geist Mono för kod/mono-element
-   - Satt `--font-sans: var(--font-geist-sans)` i CSS-root
-
-4. **Färgtema implementerat**
-   - Komplett projekts färgpalett i `globals.css` som CSS-variabler
-   - Ljust läge: #F7F5EF bakgrund, #A7C957 primary grön, #151515 text
-   - Mörkt läge: #11130F bakgrund, #B7E063 primary grön, #F4F1E8 text
-   - Utökat `@theme inline` med custom Tailwind-klasser: `bg-background-alt`, `text-primary-dark`, `text-accent-orange`, `text-accent-blue`, `text-accent-sand`
-
-5. **Grundlayout**
-   - `src/components/layout/Header.tsx` — sticky header, logo, desktop nav, mobilmeny (hamburger)
-   - `src/components/layout/Footer.tsx` — länkkolumner, copyright, green brand accent
-   - `src/app/layout.tsx` — metadata på svenska, lang="sv", Header + Footer shell
-
-6. **Startsida (src/app/page.tsx)**
-   - Hero med dot grid bakgrund, badge, headline, två CTA-knappar
-   - Verktygs-badges-rad (Claude Code, Cursor, Lovable, Bolt, Replit, Supabase, Vercel, Next.js, Stripe)
-   - Sektion "Senaste byggen" med 3 projektkort (mockdata)
-   - Sektion "Behöver hjälp just nu" med 3 hjälpfråge-kort (mockdata)
-   - Sektion "Så fungerar det" (4 steg med ikon + text)
-   - CTA-sektion med grön bakgrund
-
-7. **Återanvändbara komponenter**
-   - `src/components/cards/ProjectCard.tsx` — titel, tagline, status-pill, stack-badges, upvotes, kommentarer, skapare
-   - `src/components/cards/HelpCard.tsx` — svar-räknare, titel, verktyg-badge, tid
-   - `src/components/ui/StatusPill.tsx` — 9 statusar med färgkodning
-   - `src/components/ui/ToolBadge.tsx` — mono-font badge med border
-
-8. **Firebase (ej Supabase)**
-   - **Beslut:** Bytte från Supabase till Firebase eftersom Supabase gratis-projekts var uppfyllda
-   - Installerade: `firebase`, `firebase-admin`
-   - `src/lib/firebase/client.ts` — Firebase app, auth, db (Firestore), storage
-   - `src/lib/firebase/admin.ts` — Firebase Admin SDK för server-side
-   - `src/types/firestore.ts` — TypeScript-typer för alla Firestore-collections (Profile, Project, Post, Comment, Vote, Bookmark)
-   - `.env.example` och `.env.local` med Firebase-config
-   - Firebase projekt-ID: `aibyggare-c45c6`
-
-9. **Env och säkerhet**
-   - `.env.local` med faktisk Firebase-config (täcks av `.gitignore` via `.env*`-regel)
-   - `.env.example` dokumenterar alla variabler
-
-**Tekniska problem/beslut:**
-- `create-next-app` nekade befintliga filer — löstes med temporär flytt av CLAUDE.md/plan.md/devlog.md
-- shadcn/ui v4 använder `@base-ui/react` (ej Radix) → `asChild` finns ej, använd `buttonVariants()` direkt
-- `--font-sans: var(--font-sans)` i `@theme inline` är självrefererande → lade till `--font-sans: var(--font-geist-sans)` i `:root`
-
-**Kvalitetskontroll:**
-- `npm run build` → ✅ ingen fel
-- `npm run lint` → ✅ inga varningar
-- Dev-server → 200 OK på `/`
-
-**💡 Rekommendationer:**
-- Firebase Hosting behövs INTE — vi deployar till Vercel
-- Generera Service Account-nyckel inför Fas 2 (Firebase Console → Project Settings → Service accounts)
-- Aktivera i Firebase Console inför Fas 2: Google Auth, GitHub Auth, Firestore, Storage
+**Commits:**
+- `e3930d8` — Fas 1: projektsetup, designsystem och startsida
+- `ef02bb1` — Test: end-to-end deploy-verifiering
 
 ---
 
 ## 🔜 Nästa steg — Fas 2: Databas och auth
 
-1. Aktivera Firestore i Firebase Console (production mode)
-2. Aktivera Google + GitHub i Firebase Auth
-3. Aktivera Firebase Storage
-4. Generera Service Account-nyckel och lägg i `.env.local`
-5. Skapa Firestore Security Rules (ersätter Supabase RLS)
-6. Auth-callbacks i Next.js (middleware för session-cookies)
-7. Auto-skapande av användarprofil vid första login
-8. Onboarding-flöde
+**Vad som ska byggas:**
+
+1. **Firestore Security Rules**
+   - Definiera regler i `firestore.rules`
+   - Publik läsning, autentiserat skrivande, ägarskyddad redigering
+
+2. **Firebase Auth-integration i Next.js**
+   - Middleware som verifierar Firebase ID-token i session-cookie
+   - `src/middleware.ts` — skyddar `/projects/new`, `/help/new`, `/settings`, etc.
+   - Auth-kontext via React Context Provider
+
+3. **Auth-sidor**
+   - `src/app/(auth)/login/page.tsx` — Google + GitHub-knappar
+   - `src/app/(auth)/register/page.tsx` — redirect till onboarding
+
+4. **Auto-profil vid första login**
+   - Firebase Auth trigger (via API-route `/api/auth/callback`)
+   - Skapar Firestore-dokument i `profiles/`-collection vid ny användare
+
+5. **Onboarding-flöde**
+   - `src/app/(app)/onboarding/page.tsx`
+   - Samlar: username, display name, bio, verktyg
+   - Max 4 fält, snabbt och smidigt
+
+**Prioritetsordning Fas 2:**
+Auth → Middleware → Login-sida → Auto-profil → Onboarding
 
 ---
 
