@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Public read on all files
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Authenticated upload to own directory — max 5 MB, images only
+    match /images/{uid}/{allPaths=**} {
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+  }
+}

@@ -3,9 +3,18 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
+// Serve the OAuth handler first-party from our own origin (proxied via the
+// /__/auth rewrite in next.config). Using our own host instead of the default
+// <project>.firebaseapp.com avoids third-party storage partitioning, which
+// otherwise makes signInWithRedirect bounce back without signing in.
+const authDomain =
+  typeof window !== "undefined"
+    ? window.location.host
+    : process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  authDomain,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,

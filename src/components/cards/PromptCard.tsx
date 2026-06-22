@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Copy, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +27,7 @@ export interface PromptCardProps {
 
 export function PromptCard({ title, tool, badge, prompt, accent, className }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setSaved(readSaved().includes(title));
-  }, [title]);
+  const [saved, setSaved] = useState(() => readSaved().includes(title));
 
   function copy() {
     navigator.clipboard?.writeText(prompt).then(() => {

@@ -8,7 +8,7 @@ import {
   signInWithRedirect,
   getRedirectResult,
   signOut as firebaseSignOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
 } from "firebase/auth";
 import {
   doc,
@@ -79,9 +79,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((err) => setError(firebaseErrorMessage(err)));
 
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    // onIdTokenChanged fires on sign-in, sign-out, and token refresh (every ~1 h).
+    // We use it to keep the __session cookie in sync so the middleware can
+    // protect routes without needing Firebase Admin SDK in Edge Runtime.
+    const unsubscribe = onIdTokenChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
+      if (u) {
+        const token = await u.getIdToken();
+        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
+      } else {
+        document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+      }
     });
     return unsubscribe;
   }, [router]);

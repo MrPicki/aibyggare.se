@@ -134,13 +134,13 @@ Alla flöden ska vara:
 
 ## Säkerhet — aldrig kompromissa
 
-- RLS på alla relevanta tabeller
-- Användare får bara ändra sitt eget innehåll
-- Adminroll hanteras säkert via `profiles.role = 'admin'`
-- Validering på all input (Zod)
-- Säkra upload-regler i Supabase Storage
-- Inga läckta miljövariabler
-- Inga oskyddade adminroutes
+- Firebase Security Rules på alla collections och Storage-buckets
+- Användare får bara läsa/skriva sitt eget innehåll — regler sätts i Firestore Rules, inte bara i frontend
+- Adminroll hanteras via `users/{uid}.role = 'admin'` i Firestore, verifieras server-side med Firebase Admin SDK
+- Validering på all input (Zod) — aldrig lita på klient-data
+- Säkra upload-regler i Firebase Storage Rules
+- Inga läckta miljövariabler — `FIREBASE_SERVICE_ACCOUNT_KEY` får aldrig exponeras klient-side
+- Inga oskyddade adminroutes — verifiera alltid token server-side med Admin SDK
 - Inga antaganden om att frontend ensam skyddar data
 
 Om säkerheten är oklar: pausa, förklara risken, föreslå rätt lösning.

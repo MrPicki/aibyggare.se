@@ -79,13 +79,19 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
 | Språk | TypeScript |
 | Styling | Tailwind CSS |
 | Komponenter | shadcn/ui (kraftigt anpassad) |
-| Databas/Auth/Storage | Firebase (Firestore + Auth + Storage) |
+| Databas | Firebase Firestore (NoSQL) |
+| Auth | Firebase Auth (Google + GitHub) |
+| Storage | Firebase Storage |
+| Backend-säkerhet | Firebase Admin SDK (server-side) |
+| Security Rules | Firestore Security Rules + Storage Rules |
 | Hosting | Vercel |
 | Formulär | React Hook Form + Zod |
 | Datahämtning | TanStack Query (vid behov) |
 | Animationer | Framer Motion (enbart subtilt) |
 | Ikoner | Lucide (sparsamt) |
 | Markdown | react-markdown eller MDX |
+
+**Beslut 2026-06-22:** Firebase valdes framför Supabase. Hela stacken är Google Firebase — ingen Supabase-kod ska finnas i projektet.
 
 **Princip:** Undvik överkomplexitet. Bygg robust och läsbart.
 
@@ -125,7 +131,7 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
     /profile
     /home
   /lib
-    /supabase
+    /firebase          ← client.ts, admin.ts, auth.ts, storage.ts
     /utils
     /validation
     /auth
@@ -138,128 +144,141 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
 
 ---
 
-## Databasmodell (Supabase)
+## Databasmodell (Firebase Firestore)
 
-### profiles
-```sql
-id            uuid primary key references auth.users
-username      text unique
-display_name  text
-bio           text
-avatar_url    text
-website_url   text
-github_url    text
-linkedin_url  text
-tools         text[]
-role          text          -- 'user' | 'admin'
-created_at    timestamptz
-updated_at    timestamptz
+Firestore är NoSQL — data lagras i collections med documents. Inga SQL-tabeller, inga JOINs.
+Relationer hanteras via document-referenser (path-strängar) eller denormalisering.
+
+### Collection: `users/{uid}`
+```
+uid             string (= Firebase Auth UID)
+username        string (unique — enforced via Cloud Function eller transaktion)
+displayName     string
+bio             string
+avatarUrl       string
+websiteUrl      string
+githubUrl       string
+linkedinUrl     string
+tools           string[]
+role            string    // 'user' | 'admin'
+createdAt       Timestamp
+updatedAt       Timestamp
 ```
 
-### projects
-```sql
-id              uuid primary key
-user_id         uuid references profiles(id)
-title           text
-slug            text unique
-tagline         text
-description     text
-problem         text
-stack           text[]
-status          text    -- 'idea' | 'mvp' | 'live' | 'feedback' | 'testers' | 'cofounder'
-project_url     text
-github_url      text
-image_url       text
-feedback_wanted text
-is_featured     boolean default false
-created_at      timestamptz
-updated_at      timestamptz
+### Collection: `projects/{projectId}`
+```
+id              string (auto-id)
+userId          string (ref → users/{uid})
+userDisplayName string (denormaliserat för visning utan extra fetch)
+userAvatarUrl   string (denormaliserat)
+title           string
+slug            string (unique — enforced server-side)
+tagline         string
+description     string
+problem         string
+stack           string[]
+status          string    // 'idea' | 'mvp' | 'live' | 'feedback' | 'testers' | 'cofounder'
+projectUrl      string
+githubUrl       string
+imageUrl        string
+feedbackWanted  string
+isFeatured      boolean
+voteCount       number    // denormaliserat räknare (atomic increment)
+commentCount    number    // denormaliserat räknare
+createdAt       Timestamp
+updatedAt       Timestamp
 ```
 
-### posts (hjälpfrågor, prompts, guider, diskussioner)
-```sql
-id                   uuid primary key
-user_id              uuid references profiles(id)
-type                 text    -- 'help' | 'prompt' | 'guide' | 'discussion'
-title                text
-slug                 text unique
-body                 text
-tool                 text
-status               text    -- 'open' | 'solved' | 'archived'
-tags                 text[]
-is_featured          boolean default false
-accepted_comment_id  uuid nullable
-created_at           timestamptz
-updated_at           timestamptz
+### Collection: `posts/{postId}`
+Används för hjälpfrågor, prompts, guider och diskussioner.
+```
+id                  string (auto-id)
+userId              string
+userDisplayName     string (denormaliserat)
+userAvatarUrl       string (denormaliserat)
+type                string    // 'help' | 'prompt' | 'guide' | 'discussion'
+title               string
+slug                string
+body                string
+tool                string
+status              string    // 'open' | 'solved' | 'archived'
+tags                string[]
+isFeatured          boolean
+acceptedCommentId   string | null
+voteCount           number
+commentCount        number
+createdAt           Timestamp
+updatedAt           Timestamp
 ```
 
-### comments
-```sql
-id          uuid primary key
-user_id     uuid references profiles(id)
-project_id  uuid nullable references projects(id)
-post_id     uuid nullable references posts(id)
-parent_id   uuid nullable references comments(id)
-body        text
-is_accepted boolean default false
-created_at  timestamptz
-updated_at  timestamptz
+### Sub-collection: `projects/{projectId}/comments/{commentId}`
+### Sub-collection: `posts/{postId}/comments/{commentId}`
+```
+id          string (auto-id)
+userId      string
+userDisplayName string (denormaliserat)
+userAvatarUrl   string (denormaliserat)
+body        string
+parentId    string | null    // för nästlade svar
+isAccepted  boolean
+createdAt   Timestamp
+updatedAt   Timestamp
 ```
 
-### votes
-```sql
-id          uuid primary key
-user_id     uuid references profiles(id)
-project_id  uuid nullable references projects(id)
-post_id     uuid nullable references posts(id)
-comment_id  uuid nullable references comments(id)
-value       int default 1
-created_at  timestamptz
--- Unique: en röst per användare per project/post/comment
+### Collection: `votes/{userId_targetId}`
+Document-ID = `{userId}_{projectId}` eller `{userId}_{postId}` — garanterar en röst per användare.
+```
+userId      string
+targetId    string
+targetType  string    // 'project' | 'post' | 'comment'
+createdAt   Timestamp
 ```
 
-### bookmarks
-```sql
-id          uuid primary key
-user_id     uuid references profiles(id)
-project_id  uuid nullable
-post_id     uuid nullable
-created_at  timestamptz
+### Collection: `bookmarks/{userId_targetId}`
+```
+userId      string
+targetId    string
+targetType  string    // 'project' | 'post'
+createdAt   Timestamp
 ```
 
-### reports
-```sql
-id          uuid primary key
-reporter_id uuid references profiles(id)
-project_id  uuid nullable
-post_id     uuid nullable
-comment_id  uuid nullable
-reason      text
-status      text default 'open'
-created_at  timestamptz
+### Collection: `reports/{reportId}`
+```
+reporterId  string
+targetId    string
+targetType  string    // 'project' | 'post' | 'comment'
+reason      string
+status      string    // 'open' | 'resolved'
+createdAt   Timestamp
 ```
 
 ---
 
-## Row Level Security
+## Firebase Security Rules
 
+Firestore Rules och Storage Rules ersätter Supabase RLS. Reglerna sätts i `firestore.rules` och `storage.rules`.
+
+**Grundprinciper:**
 - Alla kan **läsa** publicerade projekt, posts, kommentarer och profiler.
-- Endast inloggade kan **skapa** projekt, posts, kommentarer, votes, bookmarks.
-- Användare kan bara **redigera/radera** sitt eget innehåll.
-- Admin (`profiles.role = 'admin'`) kan moderera allt.
-- Storage-bucket: upload tillåts för inloggade, läsning är publik.
+- Endast inloggade (`request.auth != null`) kan **skapa** projekt, posts, kommentarer, votes, bookmarks.
+- Användare kan bara **uppdatera/radera** dokument där `userId == request.auth.uid`.
+- Admin-operationer (moderering, featured) görs via Firebase Admin SDK i Next.js API routes — aldrig direkt från klienten.
+- Storage: inloggad användare kan ladda upp till `images/{uid}/...` — publik läsning.
+- Alla skrivoperationer valideras även server-side med Zod innan de når Firestore.
 
 ---
 
 ## Auth och onboarding
 
-**Loginmetoder:** Google, GitHub, (email magic link som bonus)
+**Loginmetoder:** Google, GitHub
 
 **Flöde efter första login:**
-1. Supabase-trigger skapar profilrad automatiskt.
-2. Redirect till `/onboarding`.
-3. Onboarding samlar in: username, display name, kort bio, vilka verktyg de använder.
-4. Redirect till `/projects/new` eller dashboard med CTA.
+1. Firebase Auth hanterar inloggning.
+2. `onAuthStateChanged` detekterar ny användare — kontrollera om `users/{uid}` finns i Firestore.
+3. Om profil saknas → redirect till `/onboarding`.
+4. Onboarding samlar in: username, display name, kort bio, vilka verktyg de använder.
+5. Profildokument skapas i `users/{uid}`.
+6. Redirect till `/projects/new` eller dashboard med CTA.
 
 **Viktigt:** Onboardingen ska vara snabb — max 3–4 fält, inga långa formulär.
 
@@ -392,7 +411,7 @@ Placering: `.claude/skills/`
 | `ui-craft` | Modern, välbalanserad UI — tydlig spacing, konsekventa komponenter |
 | `no-ai-look` | Tar bort generisk AI-design, ersätter med mänsklig copy och nordisk identitet |
 | `accessibility-review` | Kontrast, tangentbord, aria, fokus, semantisk HTML — körs före UI-commits |
-| `supabase-rls` | Verifierar att alla tabeller har säkra RLS-policies |
+| `firebase-security` | Verifierar Firestore Rules + Storage Rules + Admin SDK-anrop — ersätter supabase-rls |
 | `community-safety` | Moderering, rapportering, rate limiting, input-validering |
 | `copywriting-sv` | Tydlig, varm, konkret svenska utan corporate-floskler |
 | `component-polish` | Förbättrar spacing, hover, empty/loading/error states och skeletons |
@@ -413,12 +432,14 @@ Placering: `.claude/skills/`
 - [x] Implementera färgtema och typografi
 - [x] Startsida — första version
 
-### Fas 2 — Databas och auth
-- [ ] Supabase SQL-migration med alla tabeller
-- [ ] RLS policies
-- [ ] Auth callback-route
-- [ ] Auto-skapande av profilrad vid signup
-- [ ] Onboarding-flöde
+### Fas 2 — Databas och auth ✅
+- [x] Firestore Security Rules (firestore.rules)
+- [x] Firebase Storage Rules (storage.rules)
+- [x] Firebase Auth: Google + GitHub providers
+- [x] `onIdTokenChanged` → kontroll om profil finns → redirect onboarding
+- [x] Auto-skapande av `profiles/{uid}` dokument vid första login
+- [x] Onboarding-flöde (/onboarding)
+- [x] Route-skydd via proxy.ts (Edge Runtime JWT-check + Firestore Rules)
 
 ### Fas 3 — Projektflöde *(första leverans)*
 - [ ] Lista projekt (flöde)
@@ -427,7 +448,7 @@ Placering: `.claude/skills/`
 - [ ] Projektkort-komponent
 - [ ] Upvotes
 - [ ] Kommentarer
-- [ ] Bildupload (Supabase Storage)
+- [ ] Bildupload (Firebase Storage)
 
 **Checkpoint fas 3:** Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt ska fungera.
 
@@ -503,7 +524,7 @@ Verktygsspecifika sidor blir ett starkt SEO-fundament över tid.
 Innan en fas markeras som klar:
 - Sidan fungerar på mobil
 - Auth fungerar som förväntat
-- RLS är säker (ingen kan ändra andras innehåll)
+- Firestore Security Rules är satta (ingen kan ändra andras innehåll)
 - Alla formulär har validering (Zod)
 - Användaren får feedback vid loading / error / success
 - Designen känns modern och inte generisk
@@ -536,7 +557,7 @@ Innan en fas markeras som klar:
 | Fas | Status |
 |-----|--------|
 | Fas 1 — Projektsetup | ✅ Klar |
-| Fas 2 — Databas och auth | Ej påbörjad |
+| Fas 2 — Databas och auth | ✅ Klar |
 | Fas 3 — Projektflöde | Ej påbörjad |
 | Fas 4 — Hjälpfrågor | Ej påbörjad |
 | Fas 5 — Prompts/guider | Ej påbörjad |
@@ -546,4 +567,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-21*
+*Senast uppdaterad: 2026-06-22*

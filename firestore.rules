@@ -40,8 +40,16 @@ service cloud.firestore {
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
     }
 
-    // ── Comments ─────────────────────────────────────────────────────────────
-    match /comments/{commentId} {
+    // ── Comments on projects (sub-collection) ────────────────────────────────
+    match /projects/{projectId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+
+    // ── Comments on posts (sub-collection) ───────────────────────────────────
+    match /posts/{postId}/comments/{commentId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
