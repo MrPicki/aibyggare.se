@@ -1,37 +1,7 @@
 import Link from "next/link";
-import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard";
+import { PromptCard } from "@/components/cards/PromptCard";
 import { Sticker } from "@/components/ui/Sticker";
-
-const PROMPTS: (Omit<PromptCardProps, "className">)[] = [
-  {
-    title: "Bygg utan att förstöra designen",
-    tool: "Claude Code",
-    badge: "Räddar frontend",
-    accent: "var(--warning-orange)",
-    prompt: "Innan du ändrar något: lista exakt vilka filer och rader du tänker röra och varför. Rör inte styling, layout eller befintliga komponenter som inte är del av uppgiften. Gör minsta möjliga ändring.",
-  },
-  {
-    title: "Debugga först, koda sen",
-    tool: "Cursor / Claude",
-    badge: "Stoppar panikfixar",
-    accent: "var(--code-blue)",
-    prompt: "Skriv ingen kod än. Förklara först vad som faktiskt orsakar felet, hur du vet det, och vilka 2 alternativa lösningar som finns. Vänta på mitt godkännande innan du ändrar något.",
-  },
-  {
-    title: "Förklara felet som om jag är ny",
-    tool: "ChatGPT",
-    badge: "Nybörjarvänlig",
-    accent: "var(--prompt-purple)",
-    prompt: "Förklara det här felmeddelandet som om jag precis börjat koda. Vad betyder det på vanlig svenska, varför händer det, och vad gör jag steg för steg för att fixa det?",
-  },
-  {
-    title: "Skapa Supabase RLS steg för steg",
-    tool: "Supabase",
-    badge: "RLS-terapi",
-    accent: "var(--supabase-green)",
-    prompt: "Skriv Row Level Security-policies för den här tabellen så att användare bara kan läsa och ändra sina egna rader. Förklara varje policy med en kommentar och visa hur jag testar att de funkar.",
-  },
-];
+import { SEED_PROMPTS } from "@/lib/seed";
 
 export function PromptShowcase() {
   return (
@@ -56,7 +26,7 @@ export function PromptShowcase() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {PROMPTS.map((p) => (
+          {SEED_PROMPTS.map((p) => (
             <PromptCard key={p.title} {...p} />
           ))}
         </div>

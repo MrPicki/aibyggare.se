@@ -1,65 +1,64 @@
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
-import { ToolBadge } from "@/components/ui/ToolBadge";
-
-interface HelpCardProps {
-  title: string;
-  slug: string;
-  tool: string;
-  answerCount: number;
-  timeAgo: string;
-  isOpen?: boolean;
-  mood?: string;
-}
+import { ArrowUpRight, MessageSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { HelpQuestion } from "@/lib/seed";
 
 export function HelpCard({
-  title,
   slug,
-  tool,
+  title,
+  body,
+  topic,
+  accent,
+  author,
   answerCount,
-  timeAgo,
-  isOpen = true,
-  mood,
-}: HelpCardProps) {
+  status,
+  className,
+}: HelpQuestion & { className?: string }) {
+  const solved = status === "Löst";
+
   return (
-    <Link href={`/help/${slug}`} className="group block">
-      <article className="h-full rounded-xl border border-border bg-card p-5 shadow-sm shadow-border/40 transition-all duration-200 hover:border-[#E8722A]/50 hover:shadow-md hover:shadow-border/60 hover:-translate-y-0.5 border-t-[3px] border-t-[#E8722A]/60">
-        <div className="flex gap-3.5">
+    <article
+      className={cn(
+        "chunky pressable group flex h-full flex-col rounded-3xl bg-paper",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5">
+        <span
+          className="sticker px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink"
+          style={{ backgroundColor: accent }}
+        >
+          {topic}
+        </span>
+        <span
+          className={cn(
+            "font-mono text-[10px] font-bold uppercase tracking-widest",
+            solved ? "text-build-green" : "text-mud",
+          )}
+        >
+          {solved ? "Löst" : "Öppen"}
+        </span>
+      </div>
 
-          {/* Svar-indikator */}
-          <div
-            className={[
-              "shrink-0 flex flex-col items-center justify-center w-11 h-11 rounded-lg text-xs font-semibold gap-0.5",
-              answerCount > 0
-                ? "bg-primary/12 text-[#3D6B20] border border-primary/20"
-                : "bg-[#E8722A]/10 text-[#8B4F10] border border-[#E8722A]/25",
-            ].join(" ")}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-lg font-bold leading-snug text-ink">{title}</h3>
+        <p className="mt-2 flex-1 text-sm leading-relaxed text-mud line-clamp-3">{body}</p>
+
+        <div className="mt-5 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
+          <Link
+            href={`/help/${slug}`}
+            className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink group-hover:text-build-green transition-colors"
           >
-            <MessageSquare size={13} />
-            <span>{answerCount}</span>
-          </div>
-
-          <div className="min-w-0 flex-1">
-            {mood && (
-              <span className="inline-block text-[10px] font-semibold tracking-wide uppercase text-[#8B4F10] bg-[#E8722A]/10 border border-[#E8722A]/20 rounded px-1.5 py-0.5 mb-1.5">
-                {mood}
-              </span>
-            )}
-            <h3 className="font-medium text-sm text-foreground group-hover:text-[#3D6B20] transition-colors line-clamp-2 leading-snug">
-              {title}
-            </h3>
-            <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-              <ToolBadge name={tool} />
-              {!isOpen && (
-                <span className="text-xs bg-primary/10 text-[#3D6B20] border border-primary/20 rounded-full px-2 py-0.5 font-medium">
-                  Löst
-                </span>
-              )}
-              <span className="text-xs text-muted-foreground">{timeAgo}</span>
-            </div>
+            Hjälp till <ArrowUpRight size={13} />
+          </Link>
+          <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
+            <span>{author}</span>
+            <span className="inline-flex items-center gap-1">
+              <MessageSquare size={12} /> {answerCount}
+            </span>
           </div>
         </div>
-      </article>
-    </Link>
+      </div>
+    </article>
   );
 }

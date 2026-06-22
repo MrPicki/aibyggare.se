@@ -108,17 +108,14 @@ function OnboardingForm({ user }: { user: User }) {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
-      <div className="flex items-center gap-2 mb-8">
-        <span className="w-2 h-2 rounded-[2px] bg-primary" aria-hidden />
-        <span className="text-xs font-mono font-medium text-muted-foreground uppercase tracking-wide">
-          Snabbinstallation
-        </span>
-      </div>
+      <span className="sticker mb-5 inline-flex bg-hammer-yellow px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-ink">
+        Snabbinstallation
+      </span>
 
-      <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-2">
+      <h1 className="font-display text-2xl sm:text-3xl font-bold text-ink mb-2">
         Välkommen till AIbyggare
       </h1>
-      <p className="text-muted-foreground mb-10">
+      <p className="text-mud mb-10">
         Tre snabba fält — sedan kan du visa upp ditt första bygge.
       </p>
 
@@ -126,11 +123,11 @@ function OnboardingForm({ user }: { user: User }) {
 
         {/* Username */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1.5">
-            Användarnamn <span className="text-[#D94F3F]">*</span>
+          <label htmlFor="username" className="block text-sm font-semibold text-ink mb-1.5">
+            Användarnamn <span className="text-bug-red">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-mud text-sm select-none">
               @
             </span>
             <input
@@ -144,16 +141,16 @@ function OnboardingForm({ user }: { user: User }) {
                 }))
               }
               placeholder="dittnamn"
-              className="w-full pl-7 pr-3 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-muted-foreground/60"
+              className="w-full pl-7 pr-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-build-green placeholder:text-mud/60"
               maxLength={20}
               autoComplete="username"
               autoFocus
             />
           </div>
           {errors.username ? (
-            <p className="mt-1.5 text-xs text-[#D94F3F]">{errors.username}</p>
+            <p className="mt-1.5 text-xs text-bug-red">{errors.username}</p>
           ) : (
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-xs text-mud">
               Syns på din profil. Kan ändras senare.
             </p>
           )}
@@ -161,8 +158,8 @@ function OnboardingForm({ user }: { user: User }) {
 
         {/* Display name */}
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-foreground mb-1.5">
-            Visningsnamn <span className="text-[#D94F3F]">*</span>
+          <label htmlFor="displayName" className="block text-sm font-semibold text-ink mb-1.5">
+            Visningsnamn <span className="text-bug-red">*</span>
           </label>
           <input
             id="displayName"
@@ -170,20 +167,20 @@ function OnboardingForm({ user }: { user: User }) {
             value={form.displayName}
             onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
             placeholder="Ditt namn"
-            className="w-full px-3 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-muted-foreground/60"
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-build-green placeholder:text-mud/60"
             maxLength={50}
             autoComplete="name"
           />
           {errors.displayName && (
-            <p className="mt-1.5 text-xs text-[#D94F3F]">{errors.displayName}</p>
+            <p className="mt-1.5 text-xs text-bug-red">{errors.displayName}</p>
           )}
         </div>
 
         {/* Bio */}
         <div>
-          <label htmlFor="bio" className="block text-sm font-medium text-foreground mb-1.5">
+          <label htmlFor="bio" className="block text-sm font-semibold text-ink mb-1.5">
             Kort bio{" "}
-            <span className="text-muted-foreground font-normal">(valfri)</span>
+            <span className="text-mud font-normal">(valfri)</span>
           </label>
           <textarea
             id="bio"
@@ -191,19 +188,19 @@ function OnboardingForm({ user }: { user: User }) {
             onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
             placeholder="Vad bygger du? Vad är du bra på? Vad håller du på att lära dig?"
             rows={3}
-            className="w-full px-3 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none placeholder:text-muted-foreground/60"
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-build-green resize-none placeholder:text-mud/60"
             maxLength={160}
           />
-          <p className="mt-1 text-xs text-muted-foreground text-right">
+          <p className="mt-1 text-xs text-mud text-right">
             {form.bio.length}/160
           </p>
         </div>
 
         {/* Tools */}
         <div>
-          <p className="block text-sm font-medium text-foreground mb-1.5">
+          <p className="block text-sm font-semibold text-ink mb-1.5">
             Vilka verktyg använder du?{" "}
-            <span className="text-muted-foreground font-normal">(valfri)</span>
+            <span className="text-mud font-normal">(valfri)</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {AVAILABLE_TOOLS.map((tool) => {
@@ -213,11 +210,12 @@ function OnboardingForm({ user }: { user: User }) {
                   key={tool}
                   type="button"
                   onClick={() => toggleTool(tool)}
+                  aria-pressed={selected}
                   className={[
-                    "px-3 py-1.5 rounded-md border text-xs font-mono font-medium transition-colors",
+                    "rounded-xl border-2 border-ink px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150",
                     selected
-                      ? "bg-primary/15 border-primary/40 text-[#3D6B20]"
-                      : "bg-card border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                      ? "bg-build-green text-paper shadow-[2px_2px_0_0_var(--ink)]"
+                      : "bg-paper text-mud hover:bg-hammer-yellow hover:text-ink",
                   ].join(" ")}
                 >
                   {tool}
@@ -228,15 +226,15 @@ function OnboardingForm({ user }: { user: User }) {
         </div>
 
         {errors.submit && (
-          <div className="p-3 rounded-lg bg-[#D94F3F]/10 border border-[#D94F3F]/20">
-            <p className="text-sm text-[#D94F3F]">{errors.submit}</p>
+          <div className="chunky-sm rounded-xl bg-bug-red/10 p-3">
+            <p className="text-sm font-medium text-bug-red">{errors.submit}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-3 rounded-xl bg-primary text-[#181713] font-semibold text-sm hover:bg-[#8DB34E] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="chunky pressable w-full rounded-xl bg-build-green py-3 font-mono text-sm font-bold uppercase tracking-wide text-paper disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
           {saving ? "Sparar..." : "Klar — visa upp mitt första bygge →"}
         </button>

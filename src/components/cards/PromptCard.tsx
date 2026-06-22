@@ -1,8 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Copy, Bookmark } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Copy, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const SAVED_KEY = "aibyggare:saved-prompts";
+
+function readSaved(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
 
 export interface PromptCardProps {
   title: string;
@@ -16,12 +27,26 @@ export interface PromptCardProps {
 
 export function PromptCard({ title, tool, badge, prompt, accent, className }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(readSaved().includes(title));
+  }, [title]);
 
   function copy() {
     navigator.clipboard?.writeText(prompt).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     });
+  }
+
+  function toggleSave() {
+    const current = readSaved();
+    const next = current.includes(title)
+      ? current.filter((t) => t !== title)
+      : [...current, title];
+    localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+    setSaved(next.includes(title));
   }
 
   return (
@@ -53,10 +78,16 @@ export function PromptCard({ title, tool, badge, prompt, accent, className }: Pr
           {copied ? "Kopierat!" : "Kopiera"}
         </button>
         <button
-          className="chunky-sm pressable inline-flex items-center justify-center gap-1.5 rounded-xl bg-paper px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-ink"
-          aria-label="Spara prompt"
+          onClick={toggleSave}
+          aria-pressed={saved}
+          aria-label={saved ? "Ta bort sparad prompt" : "Spara prompt"}
+          className={cn(
+            "chunky-sm pressable inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide",
+            saved ? "bg-hammer-yellow text-ink" : "bg-paper text-ink",
+          )}
         >
-          <Bookmark size={13} /> Spara
+          {saved ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
+          {saved ? "Sparad" : "Spara"}
         </button>
       </div>
     </article>

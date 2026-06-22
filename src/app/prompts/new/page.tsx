@@ -1,3 +1,6 @@
+import { ChunkyLink } from "@/components/ui/ChunkyButton";
+import { Sticker } from "@/components/ui/Sticker";
+
 export const metadata = {
   title: "Dela en prompt — AIbyggare.se",
 };
@@ -5,14 +8,24 @@ export const metadata = {
 export default function NewPromptPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-14">
-      <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
+      <Sticker tilt={-2} className="mb-4 bg-prompt-purple">Ny prompt</Sticker>
+      <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
         Dela en prompt
       </h1>
-      <p className="text-muted-foreground mb-10">
+      <p className="mt-2 text-mud">
         Den där prompten som faktiskt funkade. Spara den här så andra slipper uppfinna hjulet igen.
       </p>
-      <div className="rounded-xl border border-dashed border-border p-16 text-center text-muted-foreground">
-        Formuläret kommer snart. Logga in för att komma igång.
+
+      <div className="chunky mt-10 rounded-3xl bg-paper p-10 text-center sm:p-12">
+        <p className="font-display text-lg font-bold text-ink">Formuläret byggs just nu.</p>
+        <p className="mx-auto mt-2 max-w-sm text-mud">
+          Logga in så kan du dela din prompt så fort det öppnar.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <ChunkyLink href="/login" variant="ink">
+            Logga in
+          </ChunkyLink>
+        </div>
       </div>
     </div>
   );

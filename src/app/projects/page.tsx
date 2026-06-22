@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { ChunkyLink } from "@/components/ui/ChunkyButton";
+import { ProjectCard } from "@/components/cards/ProjectCard";
+import { Sticker } from "@/components/ui/Sticker";
+import { SEED_PROJECTS } from "@/lib/seed";
 
 export const metadata = {
   title: "Byggen — AIbyggare.se",
@@ -9,43 +9,44 @@ export const metadata = {
 };
 
 export default function ProjectsPage() {
+  const projects = SEED_PROJECTS;
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-      <div className="flex items-start justify-between mb-8">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">
+          <Sticker tilt={-2} className="mb-3 bg-build-green">Byggen</Sticker>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             Just nu på bänken
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 max-w-md text-mud">
             Projekt från folk som bygger, testar, misslyckas och försöker igen.
           </p>
         </div>
-        <Link
-          href="/projects/new"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold shrink-0"
-          )}
-        >
+        <ChunkyLink href="/projects/new" variant="green">
           Lägg upp bygge
-          <ArrowRight size={14} className="ml-1.5" />
-        </Link>
+        </ChunkyLink>
       </div>
 
-      <div className="rounded-xl border border-dashed border-border p-16 text-center">
-        <p className="text-muted-foreground mb-4">
-          Tomt på bänken än så länge.
-        </p>
-        <Link
-          href="/projects/new"
-          className={cn(
-            buttonVariants(),
-            "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold"
-          )}
-        >
-          Lägg upp första bygget
-        </Link>
-      </div>
+      {projects.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p) => (
+            <ProjectCard key={p.slug} {...p} />
+          ))}
+        </div>
+      ) : (
+        <div className="chunky rounded-3xl bg-paper p-12 text-center sm:p-16">
+          <p className="font-display text-xl font-bold text-ink">Tomt på bänken än så länge.</p>
+          <p className="mx-auto mt-2 max-w-sm text-mud">
+            Halvfärdigt räknas. Lägg upp det du håller på med så har bänken något att visa.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <ChunkyLink href="/projects/new" variant="green">
+              Lägg upp första bygget
+            </ChunkyLink>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

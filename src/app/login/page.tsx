@@ -22,16 +22,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-24">
+    <div className="mx-auto max-w-sm px-4 py-20 sm:py-24">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/15 border border-primary/25 mb-4">
-          <HammerIcon className="text-[#3D6B20]" />
+        <div className="chunky-sm mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-build-green text-paper">
+          <HammerIcon />
         </div>
-        <h1 className="font-heading text-2xl font-bold text-foreground mb-2">
+        <h1 className="font-display text-2xl font-bold text-ink mb-2">
           Välkommen tillbaka
         </h1>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-mud text-sm">
           Logga in för att visa upp ditt bygge, ställa frågor och hjälpa andra.
         </p>
       </div>
@@ -41,7 +41,7 @@ export default function LoginPage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading || githubLoading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-sm font-medium text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+          className="chunky pressable flex w-full items-center justify-center gap-3 rounded-xl bg-paper px-4 py-3 font-mono text-sm font-semibold text-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
           <GoogleIcon />
           {googleLoading ? "Ansluter..." : "Fortsätt med Google"}
@@ -50,7 +50,7 @@ export default function LoginPage() {
         <button
           onClick={handleGitHub}
           disabled={googleLoading || githubLoading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-[#30363d] bg-[#161b22] hover:bg-[#21262d] transition-colors text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="chunky pressable flex w-full items-center justify-center gap-3 rounded-xl bg-ink px-4 py-3 font-mono text-sm font-semibold text-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
           <GithubIcon />
           {githubLoading ? "Ansluter..." : "Fortsätt med GitHub"}
@@ -58,16 +58,16 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div className="mt-4 p-3 rounded-lg bg-[#D94F3F]/10 border border-[#D94F3F]/20">
-          <p className="text-sm text-[#D94F3F]">{error}</p>
+        <div className="chunky-sm mt-4 rounded-xl bg-bug-red/10 p-3">
+          <p className="text-sm font-medium text-bug-red">{error}</p>
         </div>
       )}
 
       <div className="mt-8 space-y-3">
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-mud">
           Inget konto? Du skapar ett automatiskt när du loggar in.
         </p>
-        <p className="text-center text-xs text-muted-foreground/70">
+        <p className="text-center text-xs text-mud/70">
           Genom att logga in godkänner du att vi lagrar din profilinformation.{" "}
           <Link href="/" className="underline underline-offset-2">Inga GDPR-popups</Link>, lovar.
         </p>

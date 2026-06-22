@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { ChunkyLink } from "@/components/ui/ChunkyButton";
+import { PromptCard } from "@/components/cards/PromptCard";
+import { Sticker } from "@/components/ui/Sticker";
+import { SEED_PROMPTS } from "@/lib/seed";
 
 export const metadata = {
   title: "Prompts — AIbyggare.se",
@@ -9,43 +9,44 @@ export const metadata = {
 };
 
 export default function PromptsPage() {
+  const prompts = SEED_PROMPTS;
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-      <div className="flex items-start justify-between mb-8">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">
+          <Sticker tilt={-2} className="mb-3 bg-prompt-purple">Prompts</Sticker>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             Prompts som faktiskt funkade
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 max-w-md text-mud">
             Spara de prompts som gjorde mer nytta än skada.
           </p>
         </div>
-        <Link
-          href="/prompts/new"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold shrink-0"
-          )}
-        >
+        <ChunkyLink href="/prompts/new" variant="ink">
           Dela en prompt
-          <ArrowRight size={14} className="ml-1.5" />
-        </Link>
+        </ChunkyLink>
       </div>
 
-      <div className="rounded-xl border border-dashed border-border p-16 text-center">
-        <p className="text-muted-foreground mb-4">
-          Här saknas prompts.
-        </p>
-        <Link
-          href="/prompts/new"
-          className={cn(
-            buttonVariants(),
-            "bg-primary text-primary-foreground hover:bg-[#8DB34E] font-semibold"
-          )}
-        >
-          Dela den där prompten som räddade din kväll
-        </Link>
-      </div>
+      {prompts.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {prompts.map((p) => (
+            <PromptCard key={p.title} {...p} />
+          ))}
+        </div>
+      ) : (
+        <div className="chunky rounded-3xl bg-paper p-12 text-center sm:p-16">
+          <p className="font-display text-xl font-bold text-ink">Här saknas prompts.</p>
+          <p className="mx-auto mt-2 max-w-sm text-mud">
+            Dela den där prompten som räddade din kväll — någon annan sitter med samma problem.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <ChunkyLink href="/prompts/new" variant="ink">
+              Dela en prompt
+            </ChunkyLink>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
