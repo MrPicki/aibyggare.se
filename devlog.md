@@ -444,6 +444,36 @@ Auth → Middleware → Login-sida → Auto-profil → Onboarding
 
 ---
 
+---
+
+## 2026-06-22 — Borrmaskins-upvotes (DrillButton)
+
+### Vad gjordes
+
+**Ny upvote-identitet — borrmaskinen:**
+- `src/components/brand/DrillIcon.tsx` — blocky SVG-borrmaskin (bit, chuck, body, handle, trigger)
+- `src/components/projects/DrillButton.tsx` — ersätter `UpvoteButton`:
+  - Variant `full`: "Ge en borr" → "Borrad" + räknare i pill, chunky border-2 knapp
+  - Variant `compact`: bara ikon + siffra, används i kort och listor
+  - Optimistic UI med rollback vid Firestore-fel
+  - Shake-animation (`animate-drill-shake`) vid klick + fly-away +1 (`animate-drill-plus`)
+  - Tooltip "Logga in för att ge en borr" för utloggad
+- `src/app/globals.css` — `@keyframes drill-shake` + `@keyframes drill-plus`, utility-klasser i `@layer utilities`, `prefers-reduced-motion`-stöd
+- `src/app/projects/[slug]/page.tsx` — `DrillButton` (full) ersätter `UpvoteButton`
+- `src/components/cards/ProjectCard.tsx` — `DrillIcon` (statisk) ersätter `ChevronUp`
+- `src/components/home/LatestBuildActivity.tsx` — `DrillIcon` (statisk) ersätter `ChevronUp`
+
+| Komponent | Status |
+|-----------|--------|
+| DrillIcon SVG | ✅ |
+| DrillButton full (detaljsida) | ✅ |
+| DrillButton compact / statisk (kort) | ✅ |
+| CSS-animationer (shake + +1 fly-away) | ✅ |
+| Optimistic UI + rollback | ✅ |
+| `prefers-reduced-motion` | ✅ |
+
+---
+
 ## 🔜 Nästa steg — Fas 4: Hjälpfrågor
 
 **Fas 4 börjar med:**

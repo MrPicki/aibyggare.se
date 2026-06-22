@@ -446,7 +446,7 @@ Placering: `.claude/skills/`
 - [x] Skapa projekt (formulär) — titel, tagline, status, stack, URL:er, bild
 - [x] Projektdetalj-sida — Firestore + seed-fallback
 - [x] Projektkort-komponent — adapter Firestore → card props
-- [x] Upvotes — Firestore-transaktion, en röst per användare
+- [x] Upvotes (borrmaskin) — DrillButton, Firestore-transaktion, en röst per användare, shake-animation
 - [x] Kommentarer — sub-collection, real-time subscription
 - [x] Bildupload (Firebase Storage) — images/{uid}/projects/
 

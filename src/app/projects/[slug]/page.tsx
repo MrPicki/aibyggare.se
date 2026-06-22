@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getProjectBySlug, getProjectComments } from "@/lib/firebase/projects";
-import { UpvoteButton } from "@/components/projects/UpvoteButton";
+import { DrillButton } from "@/components/projects/DrillButton";
 import { CommentSection } from "@/components/projects/CommentSection";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import type { ProjectStatus } from "@/types/firestore";
@@ -215,7 +215,7 @@ export default async function ProjectDetailPage({
 
           {/* Upvote + count bar */}
           <div className="mt-8 flex items-center gap-4 border-t-2 border-dashed border-border pt-5">
-            <UpvoteButton projectId={project.id} initialCount={project.upvoteCount ?? 0} />
+            <DrillButton projectId={project.id} initialCount={project.upvoteCount ?? 0} />
             <span className="font-mono text-sm text-mud">
               {project.commentCount ?? 0} kommentarer
             </span>

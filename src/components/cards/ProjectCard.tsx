@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowUpRight, ChevronUp, MessageSquare } from "lucide-react";
+import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DrillIcon } from "@/components/brand/DrillIcon";
 
 export interface ProjectCardProps {
   title: string;
@@ -70,7 +71,7 @@ export function ProjectCard({
           </Link>
           <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
             <span className="inline-flex items-center gap-1">
-              <ChevronUp size={13} className="text-build-green" /> {upvotes}
+              <DrillIcon className="h-3.5 w-3.5 text-build-green" /> {upvotes}
             </span>
             <span className="inline-flex items-center gap-1">
               <MessageSquare size={12} /> {commentCount}

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ChevronUp, MessageSquare, ExternalLink } from "lucide-react";
+import { MessageSquare, ExternalLink } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
+import { DrillIcon } from "@/components/brand/DrillIcon";
 
 type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
 
@@ -221,7 +222,7 @@ function ActivityCard({ item }: { item: BuildActivityItem }) {
         </span>
         <div className="flex items-center gap-4 font-mono text-xs font-semibold text-mud">
           <span className="inline-flex items-center gap-1">
-            <ChevronUp size={13} className="text-build-green" />
+            <DrillIcon className="h-3.5 w-3.5 text-build-green" />
             {item.upvotes}
           </span>
           <span className="inline-flex items-center gap-1">
