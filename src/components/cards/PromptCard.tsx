@@ -1,47 +1,64 @@
-import Link from "next/link";
-import { Bookmark } from "lucide-react";
-import { ToolBadge } from "@/components/ui/ToolBadge";
+"use client";
 
-interface PromptCardProps {
+import { useState } from "react";
+import { Check, Copy, Bookmark } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export interface PromptCardProps {
   title: string;
-  slug: string;
   tool: string;
-  saves: number;
-  timeAgo: string;
-  excerpt: string;
+  badge: string;
+  /** Själva prompten — kopieras till urklipp. */
+  prompt: string;
+  accent: string;
+  className?: string;
 }
 
-export function PromptCard({
-  title,
-  slug,
-  tool,
-  saves,
-  timeAgo,
-  excerpt,
-}: PromptCardProps) {
+export function PromptCard({ title, tool, badge, prompt, accent, className }: PromptCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    navigator.clipboard?.writeText(prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
   return (
-    <Link href={`/prompts/${slug}`} className="group block">
-      <article className="h-full rounded-xl border border-border bg-card p-5 shadow-sm shadow-border/40 transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-border/60 hover:-translate-y-0.5">
+    <article className={cn("chunky group flex h-full flex-col rounded-3xl bg-paper p-5", className)}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span
+          className="sticker px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink"
+          style={{ backgroundColor: accent }}
+        >
+          {badge}
+        </span>
+        <span className="font-mono text-[11px] font-medium uppercase tracking-wide text-mud">
+          {tool}
+        </span>
+      </div>
 
-        <h3 className="font-medium text-sm text-foreground group-hover:text-[#3D6B20] dark:group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
-          {title}
-        </h3>
+      <h3 className="font-display text-lg font-bold leading-snug text-ink">{title}</h3>
 
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
-          {excerpt}
-        </p>
+      <p className="mt-2 flex-1 rounded-xl border-2 border-dashed border-border bg-cream p-3 font-mono text-xs leading-relaxed text-mud line-clamp-3">
+        {prompt}
+      </p>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-3">
-          <div className="flex items-center gap-2">
-            <ToolBadge name={tool} />
-            <span>{timeAgo}</span>
-          </div>
-          <span className="flex items-center gap-1 font-semibold text-foreground/60 shrink-0">
-            <Bookmark size={11} />
-            {saves}
-          </span>
-        </div>
-      </article>
-    </Link>
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          onClick={copy}
+          className="chunky-sm pressable inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-build-green px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-paper"
+        >
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+          {copied ? "Kopierat!" : "Kopiera"}
+        </button>
+        <button
+          className="chunky-sm pressable inline-flex items-center justify-center gap-1.5 rounded-xl bg-paper px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-ink"
+          aria-label="Spara prompt"
+        >
+          <Bookmark size={13} /> Spara
+        </button>
+      </div>
+    </article>
   );
 }

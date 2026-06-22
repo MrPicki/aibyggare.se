@@ -1,80 +1,83 @@
 import Link from "next/link";
-import { ArrowUp, MessageSquare } from "lucide-react";
-import { StatusPill, type ProjectStatus } from "@/components/ui/StatusPill";
-import { ToolBadge } from "@/components/ui/ToolBadge";
+import { ArrowUpRight, ChevronUp, MessageSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface ProjectCardProps {
+export interface ProjectCardProps {
   title: string;
   tagline: string;
   slug: string;
-  status: ProjectStatus;
-  stack: string[];
+  status: string;
+  /** CSS-färg för header-bar + statussticker. */
+  accent: string;
+  tags: string[];
   upvotes: number;
   commentCount: number;
-  authorName: string;
-  authorUsername: string;
+  className?: string;
 }
-
-const statusTopColor: Record<ProjectStatus, string> = {
-  idea:       "#D8CFBE",
-  mvp:        "#3B7DD8",
-  live:       "#9FBE5A",
-  feedback:   "#E8722A",
-  testers:    "#A78BFA",
-  cofounder:  "#F472B6",
-};
 
 export function ProjectCard({
   title,
   tagline,
   slug,
   status,
-  stack,
+  accent,
+  tags,
   upvotes,
   commentCount,
-  authorName,
+  className,
 }: ProjectCardProps) {
   return (
-    <Link href={`/projects/${slug}`} className="group block">
-      <article
-        className="h-full rounded-xl border border-border bg-card p-5 shadow-sm shadow-border/40 transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-border/60 hover:-translate-y-0.5 border-t-[3px]"
-        style={{ borderTopColor: statusTopColor[status] }}
+    <article
+      className={cn(
+        "chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1",
+        className,
+      )}
+    >
+      {/* Färgad header-bar (ritningslapp) */}
+      <div
+        className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5"
+        style={{ backgroundColor: accent }}
       >
-        {/* Status + title */}
-        <div className="mb-3">
-          <StatusPill status={status} className="mb-2" />
-          <h3 className="font-heading font-semibold text-foreground group-hover:text-[#3D6B20] dark:group-hover:text-primary transition-colors leading-snug">
-            {title}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 leading-snug">
-            {tagline}
-          </p>
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
+          Bygge
+        </span>
+        <span className="sticker bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink">
+          {status}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-xl font-bold leading-tight text-ink">{title}</h3>
+        <p className="mt-2 flex-1 text-sm leading-relaxed text-mud line-clamp-3">{tagline}</p>
+
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-md border border-border bg-cream px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-mud"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
 
-        {/* Stack */}
-        {stack.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {stack.map((tool) => (
-              <ToolBadge key={tool} name={tool} />
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-3 mt-auto">
-          <span className="truncate max-w-32 font-medium">{authorName}</span>
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="flex items-center gap-1">
-              <MessageSquare size={11} />
-              {commentCount}
+        <div className="mt-5 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
+          <Link
+            href={`/projects/${slug}`}
+            className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink group-hover:text-build-green transition-colors"
+          >
+            Visa bygget <ArrowUpRight size={13} />
+          </Link>
+          <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
+            <span className="inline-flex items-center gap-1">
+              <ChevronUp size={13} className="text-build-green" /> {upvotes}
             </span>
-            <span className="flex items-center gap-1 font-semibold text-foreground/60">
-              <ArrowUp size={11} />
-              {upvotes}
+            <span className="inline-flex items-center gap-1">
+              <MessageSquare size={12} /> {commentCount}
             </span>
           </div>
         </div>
-      </article>
-    </Link>
+      </div>
+    </article>
   );
 }

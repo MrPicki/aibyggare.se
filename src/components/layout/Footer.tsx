@@ -1,77 +1,87 @@
 import Link from "next/link";
+import { PixelHammerLogo } from "@/components/brand/illustrations";
 
-const footerLinks = {
-  Plattform: [
-    { href: "/projects", label: "Byggen" },
-    { href: "/help", label: "Hjälp" },
-    { href: "/prompts", label: "Prompts" },
-    { href: "/community", label: "Community" },
-  ],
-  Verktyg: [
-    { href: "/tools/claude-code", label: "Claude Code" },
-    { href: "/tools/cursor", label: "Cursor" },
-    { href: "/tools/lovable", label: "Lovable" },
-    { href: "/tools/supabase", label: "Supabase" },
-  ],
-  Om: [
-    { href: "/about", label: "Om AIbyggare" },
-    { href: "/community-rules", label: "Regler" },
-    { href: "/contact", label: "Kontakt" },
-  ],
-};
+const footerLinks = [
+  { href: "/projects", label: "Byggen" },
+  { href: "/help", label: "Fastnat?" },
+  { href: "/prompts", label: "Prompts" },
+  { href: "/guides", label: "Genvägar" },
+  { href: "/community", label: "Byggsnack" },
+  { href: "/about", label: "Om" },
+  { href: "/community-rules", label: "Regler" },
+  { href: "/contact", label: "Kontakt" },
+];
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background-alt mt-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+    <footer className="border-t-2 border-ink bg-paper">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 md:grid-cols-3">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link
-              href="/"
-              className="font-semibold text-base tracking-tight text-foreground"
-            >
-              AIbyggare<span className="text-primary font-bold">.</span>se
+          <div>
+            <Link href="/" className="flex items-center gap-2" aria-label="AIbyggare.se — startsida">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-ink bg-build-green text-paper">
+                <PixelHammerLogo size={22} />
+              </span>
+              <span className="font-display text-lg font-bold tracking-tight text-ink">
+                AIbyggare<span className="text-build-green">.</span>se
+              </span>
             </Link>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-48">
-              Sveriges community för dig som bygger med AI.
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-mud">
+              En svensk byggplats för folk som skapar med AI — och fastnar, delar och
+              hjälper varandra vidare.
             </p>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h3 className="text-sm font-semibold text-foreground mb-3">{category}</h3>
-              <ul className="space-y-2">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Nyhetsbrev */}
+          <div>
+            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink">
+              Nyhetsbrev
+            </h3>
+            <p className="mt-3 text-sm text-mud">
+              Få veckans byggen, prompts och misstag vi kan skratta åt efteråt.
+            </p>
+            <form className="mt-4 flex gap-2" action="#" aria-label="Prenumerera på nyhetsbrev">
+              <input
+                type="email"
+                required
+                placeholder="din@email.se"
+                className="min-w-0 flex-1 rounded-xl border-2 border-ink bg-cream px-3 py-2 font-mono text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+              />
+              <button
+                type="submit"
+                className="chunky-sm pressable shrink-0 rounded-xl bg-build-green px-4 py-2 font-mono text-xs font-bold uppercase tracking-wide text-paper"
+              >
+                Skicka
+              </button>
+            </form>
+          </div>
+
+          {/* Länkar */}
+          <div className="md:justify-self-end">
+            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink">
+              Karta
+            </h3>
+            <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2">
+              {footerLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="font-mono text-sm text-mud hover:text-build-green transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-muted-foreground">
-          <p>
-            © {new Date().getFullYear()}{" "}
-            <span className="text-primary font-medium">AIbyggare</span>.se — Byggd med AI i Sverige 🇸🇪
+        <div className="mt-12 border-t-2 border-dashed border-border pt-6">
+          <p className="font-mono text-xs text-mud">
+            © {new Date().getFullYear()} AIbyggare.se · Byggt med AI, kaffe och rimlig
+            mängd panik.
           </p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
-              Integritet
-            </Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">
-              Villkor
-            </Link>
-          </div>
         </div>
       </div>
     </footer>
