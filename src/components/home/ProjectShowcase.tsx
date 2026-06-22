@@ -9,12 +9,12 @@ export function ProjectShowcase() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Sticker tilt={-2} className="mb-3 bg-build-green">Byggen</Sticker>
+            <Sticker tilt={-2} className="mb-3 bg-build-green">Utvalda</Sticker>
             <h2 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              Just nu på bänken
+              Utvalda byggen
             </h2>
             <p className="mt-2 max-w-md text-mud">
-              Projekt från folk som bygger, testar, misslyckas och försöker igen.
+              Några projekt från byggbänken som är värda en extra titt.
             </p>
           </div>
           <Link

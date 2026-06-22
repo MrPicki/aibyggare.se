@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/Hero";
 import { TabStrip } from "@/components/home/TabStrip";
+import { LatestBuildActivity } from "@/components/home/LatestBuildActivity";
 import { StatementBlock } from "@/components/home/StatementBlock";
 import { ProjectShowcase } from "@/components/home/ProjectShowcase";
 import { StuckBanner } from "@/components/home/StuckBanner";
@@ -12,6 +13,7 @@ export default function HomePage() {
     <>
       <Hero />
       <TabStrip />
+      <LatestBuildActivity />
       <StatementBlock />
       <ProjectShowcase />
       <StuckBanner />
