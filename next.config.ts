@@ -7,6 +7,16 @@ import type { NextConfig } from "next";
 const firebaseAppDomain = `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`;
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      // Firebase Storage (project cover images, user avatars)
+      { protocol: "https", hostname: "firebasestorage.googleapis.com" },
+      // Google profile pictures (via Google Sign-In)
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      // GitHub profile pictures (via GitHub Sign-In)
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+    ],
+  },
   async rewrites() {
     return [
       {

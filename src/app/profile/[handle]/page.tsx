@@ -46,10 +46,10 @@ export default async function PublicProfilePage({
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-14">
       <Link
-        href="/projects"
+        href="/"
         className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
       >
-        <ArrowLeft size={14} /> Tillbaka
+        <ArrowLeft size={14} /> Startsidan
       </Link>
 
       {/* ── Profile card ── */}
