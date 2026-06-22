@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
@@ -24,11 +25,8 @@ function HammerIcon({ className }: { className?: string }) {
       className={className}
       aria-hidden
     >
-      {/* Hammer head */}
       <rect x="1" y="1" width="12" height="7" rx="1.5" />
-      {/* Side claw */}
       <rect x="10" y="3" width="7" height="3" rx="1" />
-      {/* Handle */}
       <rect x="5.5" y="7" width="3.5" height="10" rx="1.5" />
     </svg>
   );
@@ -36,10 +34,11 @@ function HammerIcon({ className }: { className?: string }) {
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
 
   return (
     <div className="sticky top-0 z-50">
-      {/* Safety stripe — construction yellow */}
+      {/* Safety stripe */}
       <div aria-hidden className="h-[3px] w-full bg-[#F5C842]" />
 
       <header className="w-full border-b border-border bg-background/96 backdrop-blur-sm">
@@ -60,7 +59,7 @@ export function Header() {
               </span>
             </Link>
 
-            {/* Desktop nav — pill style */}
+            {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-0.5" aria-label="Huvudnavigation">
               {navLinks.map((link) => (
                 <Link
@@ -75,12 +74,45 @@ export function Header() {
 
             {/* Desktop CTAs */}
             <div className="hidden md:flex items-center gap-2 shrink-0">
-              <Link
-                href="/login"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-              >
-                Logga in
-              </Link>
+              {!loading && (
+                user ? (
+                  <>
+                    <Link
+                      href={`/profile/${user.displayName ?? user.uid}`}
+                      className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1.5")}
+                    >
+                      {user.photoURL ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={user.photoURL}
+                          alt=""
+                          className="w-5 h-5 rounded-full"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <User size={14} />
+                      )}
+                      <span className="max-w-24 truncate">
+                        {user.displayName ?? "Profil"}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={signOut}
+                      className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground")}
+                      aria-label="Logga ut"
+                    >
+                      <LogOut size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                  >
+                    Logga in
+                  </Link>
+                )
+              )}
               <Link
                 href="/projects/new"
                 className={cn(
@@ -119,16 +151,23 @@ export function Header() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-3 mt-2 border-t border-border">
-                <Link
-                  href="/login"
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "justify-start"
-                  )}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Logga in
-                </Link>
+                {!loading && user ? (
+                  <button
+                    onClick={() => { signOut(); setMobileOpen(false); }}
+                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "justify-start")}
+                  >
+                    <LogOut size={14} className="mr-1.5" />
+                    Logga ut
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "justify-start")}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Logga in
+                  </Link>
+                )}
                 <Link
                   href="/projects/new"
                   className={cn(
