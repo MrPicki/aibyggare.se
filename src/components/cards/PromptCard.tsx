@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Bookmark, BookmarkCheck } from "lucide-react";
+import Link from "next/link";
+import { Check, Copy, Bookmark, BookmarkCheck, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SAVED_KEY = "aibyggare:saved-prompts";
@@ -22,10 +23,18 @@ export interface PromptCardProps {
   /** Själva prompten — kopieras till urklipp. */
   prompt: string;
   accent: string;
+  slug?: string;
+  author?: string;
+  authorHandle?: string;
+  authorAvatarUrl?: string;
   className?: string;
 }
 
-export function PromptCard({ title, tool, badge, prompt, accent, className }: PromptCardProps) {
+export function PromptCard({
+  title, tool, badge, prompt, accent,
+  slug, author, authorHandle, authorAvatarUrl,
+  className,
+}: PromptCardProps) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(() => readSaved().includes(title));
 
@@ -65,6 +74,21 @@ export function PromptCard({ title, tool, badge, prompt, accent, className }: Pr
         {prompt}
       </p>
 
+      {author && authorHandle && (
+        <div className="mt-3 flex items-center gap-2">
+          {authorAvatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={authorAvatarUrl} alt="" className="h-5 w-5 rounded-full border border-ink/30 object-cover" />
+          )}
+          <Link
+            href={`/profile/${authorHandle}`}
+            className="font-mono text-[11px] font-semibold text-mud hover:text-ink transition-colors"
+          >
+            @{authorHandle}
+          </Link>
+        </div>
+      )}
+
       <div className="mt-4 flex items-center gap-2">
         <button
           onClick={copy}
@@ -86,6 +110,15 @@ export function PromptCard({ title, tool, badge, prompt, accent, className }: Pr
           {saved ? "Sparad" : "Spara"}
         </button>
       </div>
+
+      {slug && (
+        <Link
+          href={`/prompts/${slug}`}
+          className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wide text-ink group-hover:text-prompt-purple transition-colors"
+        >
+          Visa prompt <ArrowUpRight size={12} />
+        </Link>
+      )}
     </article>
   );
 }

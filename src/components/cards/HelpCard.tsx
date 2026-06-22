@@ -10,6 +10,8 @@ export function HelpCard({
   topic,
   accent,
   author,
+  username,
+  avatarUrl,
   answerCount,
   status,
   className,
@@ -51,8 +53,18 @@ export function HelpCard({
           >
             Hjälp till <ArrowUpRight size={13} />
           </Link>
-          <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
-            <span>{author}</span>
+          <div className="flex items-center gap-2 font-mono text-xs font-semibold text-mud">
+            {username ? (
+              <Link href={`/profile/${username}`} className="inline-flex items-center gap-1.5 hover:text-ink transition-colors">
+                {avatarUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="h-4 w-4 rounded-full border border-ink/30 object-cover" />
+                )}
+                {author}
+              </Link>
+            ) : (
+              <span>{author}</span>
+            )}
             <span className="inline-flex items-center gap-1">
               <MessageSquare size={12} /> {answerCount}
             </span>

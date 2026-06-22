@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, CheckCircle2 } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
@@ -26,6 +26,7 @@ export default async function HelpDetailPage({
   if (!question) notFound();
 
   const solved = question.status === "Löst";
+  const answers = question.answers ?? [];
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-14">
@@ -36,6 +37,7 @@ export default async function HelpDetailPage({
         <ArrowLeft size={14} /> Alla frågor
       </Link>
 
+      {/* ── Question ── */}
       <article className="chunky mt-6 rounded-3xl bg-paper">
         <div className="flex items-center justify-between border-b-2 border-ink px-5 py-3">
           <span
@@ -60,16 +62,83 @@ export default async function HelpDetailPage({
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-mud">{question.body}</p>
 
-          <div className="mt-6 flex items-center gap-4 border-t-2 border-dashed border-border pt-5 font-mono text-sm font-semibold text-mud">
-            <span>Frågat av {question.author}</span>
-            <span className="inline-flex items-center gap-1">
-              <MessageSquare size={14} /> {question.answerCount} svar
-            </span>
+          <div className="mt-6 flex items-center gap-3 border-t-2 border-dashed border-border pt-5">
+            {question.avatarUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={question.avatarUrl}
+                alt=""
+                className="h-7 w-7 rounded-full border-2 border-ink object-cover"
+              />
+            )}
+            <div className="flex items-center gap-3 font-mono text-sm font-semibold text-mud">
+              {question.username ? (
+                <Link href={`/profile/${question.username}`} className="hover:text-ink transition-colors">
+                  {question.author}
+                </Link>
+              ) : (
+                <span>{question.author}</span>
+              )}
+              <span className="inline-flex items-center gap-1">
+                <MessageSquare size={14} /> {question.answerCount} svar
+              </span>
+            </div>
           </div>
         </div>
       </article>
 
-      <div className="chunky mt-6 rounded-3xl bg-cream p-6 text-center sm:p-8">
+      {/* ── Answers ── */}
+      {answers.length > 0 && (
+        <section className="mt-8">
+          <p className="mb-4 font-mono text-[11px] font-bold uppercase tracking-widest text-mud">
+            {answers.length} {answers.length === 1 ? "svar" : "svar"}
+          </p>
+          <div className="space-y-4">
+            {answers.map((answer, i) => (
+              <article
+                key={i}
+                className={[
+                  "chunky rounded-3xl bg-paper",
+                  answer.isAccepted ? "ring-2 ring-build-green" : "",
+                ].join(" ")}
+              >
+                {answer.isAccepted && (
+                  <div className="flex items-center gap-2 border-b-2 border-ink bg-build-green/15 px-5 py-2.5">
+                    <CheckCircle2 size={14} className="text-build-green" />
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-build-green">
+                      Accepterat svar
+                    </span>
+                  </div>
+                )}
+                <div className="p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <Link
+                      href={`/profile/${answer.username}`}
+                      className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={answer.avatarUrl}
+                        alt=""
+                        className="h-8 w-8 rounded-full border-2 border-ink object-cover"
+                      />
+                      <div>
+                        <p className="font-mono text-xs font-bold text-ink">{answer.author}</p>
+                        <p className="font-mono text-[10px] text-mud">@{answer.username}</p>
+                      </div>
+                    </Link>
+                    <span className="font-mono text-[11px] text-mud">{answer.createdAtLabel}</span>
+                  </div>
+                  <p className="text-base leading-relaxed text-ink">{answer.body}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── CTA ── */}
+      <div className="chunky mt-8 rounded-3xl bg-cream p-6 text-center sm:p-8">
         <Sticker tilt={2} className="mb-3 bg-build-green">Hjälp till</Sticker>
         <p className="font-display text-lg font-bold text-ink">
           Vet du svaret? Snart kan du skriva det här.
