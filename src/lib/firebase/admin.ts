@@ -3,27 +3,32 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
-function initAdminApp() {
-  if (getApps().length > 0) {
-    return getApps()[0];
-  }
+function createAdminApp() {
+  if (getApps().length > 0) return getApps()[0];
 
-  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-
-  if (!serviceAccountKey) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY saknas i env — behövs för server-side Firebase");
-  }
-
-  const serviceAccount = JSON.parse(serviceAccountKey);
+  const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!key) throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY saknas i env");
 
   return initializeApp({
-    credential: cert(serviceAccount),
+    credential: cert(JSON.parse(key)),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
 }
 
-const adminApp = initAdminApp();
+// Wrapped at module level so import never throws — pages' try/catch handles null.
+let _adminAuth: ReturnType<typeof getAuth> | null = null;
+let _adminDb: ReturnType<typeof getFirestore> | null = null;
+let _adminStorage: ReturnType<typeof getStorage> | null = null;
 
-export const adminAuth = getAuth(adminApp);
-export const adminDb = getFirestore(adminApp);
-export const adminStorage = getStorage(adminApp);
+try {
+  const app = createAdminApp();
+  _adminAuth = getAuth(app);
+  _adminDb = getFirestore(app);
+  _adminStorage = getStorage(app);
+} catch (e) {
+  console.error("[firebase/admin] Initialisering misslyckades:", e);
+}
+
+export const adminAuth = _adminAuth;
+export const adminDb = _adminDb;
+export const adminStorage = _adminStorage;

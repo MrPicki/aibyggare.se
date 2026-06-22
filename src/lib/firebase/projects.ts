@@ -1,8 +1,14 @@
 import { adminDb } from "@/lib/firebase/admin";
 import type { Project, Comment } from "@/types/firestore";
 
+function requireDb() {
+  if (!adminDb) throw new Error("Firebase Admin ej tillgänglig");
+  return adminDb;
+}
+
 export async function getProjects(limitCount = 30): Promise<Project[]> {
-  const snap = await adminDb
+  const db = requireDb();
+  const snap = await db
     .collection("projects")
     .orderBy("createdAt", "desc")
     .limit(limitCount)
@@ -11,7 +17,8 @@ export async function getProjects(limitCount = 30): Promise<Project[]> {
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
-  const snap = await adminDb
+  const db = requireDb();
+  const snap = await db
     .collection("projects")
     .where("slug", "==", slug)
     .limit(1)
@@ -22,7 +29,8 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
 }
 
 export async function getProjectComments(projectId: string): Promise<Comment[]> {
-  const snap = await adminDb
+  const db = requireDb();
+  const snap = await db
     .collection("projects")
     .doc(projectId)
     .collection("comments")
