@@ -352,13 +352,103 @@ Auth → Middleware → Login-sida → Auto-profil → Onboarding
 
 ---
 
-## 🔜 Nästa steg — Fas 3: Projektflöde
+---
 
-**Fas 3 börjar med:**
-1. Lista projekt (flöde) — `/projects`
-2. Skapa projekt (formulär + bildupload) — `/projects/new`
-3. Projektdetalj-sida — `/projects/[slug]`
-4. Upvotes (atomic increment i Firestore)
-5. Kommentarer (sub-collection)
+## 2026-06-22 — Fas 3 ✅ Klar
 
-**Checkpoint Fas 3:** Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt fungerar.
+### Fas 3 — Projektflöde
+
+**Status:** ✅ Klar
+
+---
+
+#### Vad som byggdes
+
+**`src/lib/firebase/projects.ts`** (server-side Admin SDK):
+- `getProjects(limit)` — hämtar projekt sorted by createdAt desc
+- `getProjectBySlug(slug)` — hämtar projekt via slug-query
+- `getProjectComments(projectId)` — hämtar kommentarer i sub-collection
+
+**`src/lib/firebase/projects-client.ts`** (klient-SDK):
+- `slugify(text)` — konverterar titel till URL-slug (å→a, ä→a, ö→o)
+- `makeUniqueSlug(title)` — kontrollerar Firestore, lägger till suffix vid kollision
+- `uploadProjectImage(file, uid)` — laddar upp till `images/{uid}/projects/`
+- `createProject(data)` — skapar projekt-dokument i Firestore
+- `toggleUpvote(projectId, userId)` — Firestore-transaktion: toggle vote + updaterar upvoteCount
+- `hasUpvoted(projectId, userId)` — kontrollerar om `votes/{uid}_{projectId}` existerar
+- `addComment(input)` — lägger till kommentar i sub-collection + incrementerar commentCount
+- `subscribeToComments(projectId, callback)` — `onSnapshot` real-time listener
+
+**`src/lib/constants/project-status.ts`**:
+- `PROJECT_STATUS_OPTIONS` — 6 statusar med labels för select
+- `STATUS_LABEL` — kod → visningstext (t.ex. "mvp" → "MVP")
+- `STATUS_ACCENT` — kod → CSS-färgvariabel för header-bar
+
+**`src/components/projects/ProjectForm.tsx`**:
+- 9 fält: titel (med live slug-förhandsgranskning), tagline, status (select), beskrivning, stack (multi-select), projekt-URL, GitHub-URL, feedback-önskemål, omslagsbild
+- Bildupload: förhandsgranskning direkt, "ta bort"-knapp, validering max 5MB
+- URL-validering med `new URL()` try/catch
+- Slug: genereras automatiskt från titeln, visas som förhandsgranskning
+- Vid submit: bild → Storage → URL → createProject → redirect till `/projects/[slug]`
+
+**`src/components/projects/UpvoteButton.tsx`**:
+- Klient-komponent, hämtar initial upvote-status via `hasUpvoted`
+- `toggleUpvote` — Firestore-transaktion (atomisk increment/decrement)
+- Disabled om ej inloggad, optimistisk UI-uppdatering
+
+**`src/components/projects/CommentSection.tsx`**:
+- Klient-komponent, real-time via `onSnapshot`
+- Initialiseras med SSR-kommentarer (inga flimrar)
+- Avatar-initialer om ingen bild
+- Login-prompt för anonyma användare
+- Max 1000 tecken per kommentar
+
+**`src/app/projects/page.tsx`** (Server Component):
+- `export const dynamic = "force-dynamic"` — aldrig cached
+- Admin SDK för Firestore-fetch, graceful error (empty state vid fel)
+- `toCardProps(project)` — konverterar Firestore Project → ProjectCardProps
+
+**`src/app/projects/new/page.tsx`** (Client Component):
+- Auth-guard: redirect till `/login?from=/projects/new` om ej inloggad
+- Renderar `<ProjectForm />` när inloggad
+
+**`src/app/projects/[slug]/page.tsx`** (Server Component + Client):
+- `export const dynamic = "force-dynamic"`
+- Hämtar projekt via `getProjectBySlug(slug)` + kommentarer
+- Fallback till SEED_PROJECTS om inte i Firestore (för bakåtkompatibilitet med demo-slugs)
+- 404 om varken Firestore eller seed
+- Visar: header-bar med accent-färg + avatar + status, cover image, titel, tagline, stack, beskrivning, feedback-sektion, externa länkar, UpvoteButton, CommentSection
+
+---
+
+#### Problem och beslut
+
+| Problem | Beslut |
+|---------|--------|
+| `useEffect + setState` → lint-fel (slugPreview) | Beräknar slug direkt som `const slugPreview = slugify(form.title)` — ingen state |
+| `Github` icon saknas i lucide-react v1.21 | Inline SVG (samma som login-sidan) |
+| Slug-kollisioner i Firestore (ingen UNIQUE constraint) | `makeUniqueSlug` kontrollerar via query, lägger till 4-char suffix |
+| Kommentarräknare — atomicitet | `increment(1)` från firebase/firestore (atomic server-side) |
+
+---
+
+#### Kvalitetskontroll
+
+- `npm run build` ✅ Ren
+- `npm run lint` ✅ 0 fel
+- `/projects` — Server Component, dynamic SSR, Firestore-data ✅
+- `/projects/new` — Auth-guard, formulär med alla fält, bildupload ✅
+- `/projects/[slug]` — Firestore-hämtning, upvotes, real-time kommentarer ✅
+- Seed-data fallback på detaljsidan (bakåtkompatibilitet) ✅
+- Mobil: formulär och detaljsida responsiva ✅
+
+---
+
+## 🔜 Nästa steg — Fas 4: Hjälpfrågor
+
+**Fas 4 börjar med:**
+1. Lista hjälpfrågor med filter (Alla/Öppna/Löst + verktygsfilter)
+2. Skapa hjälpfråga — `/help/new` (strukturerat formulär)
+3. Frågedetalj-sida — `/help/[slug]`
+4. Svar och kommentarer (samma komponent som projekt, eller specialiserad)
+5. Markera som löst (acceptera svar)

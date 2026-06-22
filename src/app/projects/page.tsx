@@ -1,15 +1,39 @@
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { Sticker } from "@/components/ui/Sticker";
-import { SEED_PROJECTS } from "@/lib/seed";
+import { getProjects } from "@/lib/firebase/projects";
+import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
+import type { Project, ProjectStatus } from "@/types/firestore";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Byggen — AIbyggare.se",
-  description: "Projekt från folk som bygger med AI. Halvfärdigt, trasigt eller nästan lanserat — allt räknas.",
+  description:
+    "Projekt från folk som bygger med AI. Halvfärdigt, trasigt eller nästan lanserat — allt räknas.",
 };
 
-export default function ProjectsPage() {
-  const projects = SEED_PROJECTS;
+function toCardProps(p: Project) {
+  const status = p.status as ProjectStatus;
+  return {
+    title: p.title,
+    tagline: p.tagline,
+    slug: p.slug,
+    status: STATUS_LABEL[status] ?? p.status,
+    accent: STATUS_ACCENT[status] ?? "var(--build-green)",
+    tags: p.stack ?? [],
+    upvotes: p.upvoteCount ?? 0,
+    commentCount: p.commentCount ?? 0,
+  };
+}
+
+export default async function ProjectsPage() {
+  let projects: Project[] = [];
+  try {
+    projects = await getProjects(30);
+  } catch (e) {
+    console.error("[projects] Firestore fetch failed:", e);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
@@ -31,7 +55,7 @@ export default function ProjectsPage() {
       {projects.length > 0 ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <ProjectCard key={p.slug} {...p} />
+            <ProjectCard key={p.id} {...toCardProps(p)} />
           ))}
         </div>
       ) : (

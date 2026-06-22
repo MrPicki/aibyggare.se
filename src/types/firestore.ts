@@ -28,6 +28,8 @@ export type ProjectStatus =
 export interface Project {
   id: string;
   userId: string;
+  userDisplayName: string;
+  userAvatarUrl: string;
   title: string;
   slug: string;
   tagline: string;
@@ -72,6 +74,8 @@ export interface Post {
 export interface Comment {
   id: string;
   userId: string;
+  userDisplayName: string;
+  userAvatarUrl: string;
   projectId: string | null;
   postId: string | null;
   parentId: string | null;

@@ -441,16 +441,16 @@ Placering: `.claude/skills/`
 - [x] Onboarding-flöde (/onboarding)
 - [x] Route-skydd via proxy.ts (Edge Runtime JWT-check + Firestore Rules)
 
-### Fas 3 — Projektflöde *(första leverans)*
-- [ ] Lista projekt (flöde)
-- [ ] Skapa projekt (formulär)
-- [ ] Projektdetalj-sida
-- [ ] Projektkort-komponent
-- [ ] Upvotes
-- [ ] Kommentarer
-- [ ] Bildupload (Firebase Storage)
+### Fas 3 — Projektflöde ✅
+- [x] Lista projekt (flöde) — Firestore, dynamic SSR
+- [x] Skapa projekt (formulär) — titel, tagline, status, stack, URL:er, bild
+- [x] Projektdetalj-sida — Firestore + seed-fallback
+- [x] Projektkort-komponent — adapter Firestore → card props
+- [x] Upvotes — Firestore-transaktion, en röst per användare
+- [x] Kommentarer — sub-collection, real-time subscription
+- [x] Bildupload (Firebase Storage) — images/{uid}/projects/
 
-**Checkpoint fas 3:** Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt ska fungera.
+**Checkpoint fas 3:** ✅ Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt fungerar.
 
 ### Fas 4 — Hjälpfrågor
 - [ ] Lista hjälpfrågor med filter
@@ -558,7 +558,7 @@ Innan en fas markeras som klar:
 |-----|--------|
 | Fas 1 — Projektsetup | ✅ Klar |
 | Fas 2 — Databas och auth | ✅ Klar |
-| Fas 3 — Projektflöde | Ej påbörjad |
+| Fas 3 — Projektflöde | ✅ Klar |
 | Fas 4 — Hjälpfrågor | Ej påbörjad |
 | Fas 5 — Prompts/guider | Ej påbörjad |
 | Fas 6 — Profiler | Ej påbörjad |
