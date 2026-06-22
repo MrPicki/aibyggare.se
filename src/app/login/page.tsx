@@ -10,13 +10,24 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
 
+  function firebaseErrorMessage(err: unknown): string {
+    const code = (err as { code?: string })?.code ?? "";
+    const msg  = (err as { message?: string })?.message ?? String(err);
+    if (code === "auth/popup-blocked")         return "Popupen blockerades. Tillåt popups för den här sidan i webbläsaren.";
+    if (code === "auth/popup-closed-by-user")  return "Du stängde inloggningsfönstret. Försök igen.";
+    if (code === "auth/unauthorized-domain")   return "Den här domänen är inte auktoriserad i Firebase.";
+    if (code === "auth/operation-not-allowed") return "Inloggningsmetoden är inte aktiverad i Firebase Console.";
+    if (code === "auth/cancelled-popup-request") return "Bara ett inloggningsfönster åt gången.";
+    return `Fel: ${code || msg}`;
+  }
+
   async function handleGoogle() {
     setError(null);
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-    } catch {
-      setError("Kunde inte logga in med Google. Kontrollera att popups är tillåtna och försök igen.");
+    } catch (err) {
+      setError(firebaseErrorMessage(err));
     } finally {
       setGoogleLoading(false);
     }
@@ -27,8 +38,8 @@ export default function LoginPage() {
     setGithubLoading(true);
     try {
       await signInWithGitHub();
-    } catch {
-      setError("Kunde inte logga in med GitHub. Kontrollera att popups är tillåtna och försök igen.");
+    } catch (err) {
+      setError(firebaseErrorMessage(err));
     } finally {
       setGithubLoading(false);
     }
