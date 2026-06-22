@@ -5,13 +5,16 @@
 import type { ProjectCardProps } from "@/components/cards/ProjectCard";
 import type { PromptCardProps } from "@/components/cards/PromptCard";
 
+const F = "/seed/avatar-female.png";
+const M = "/seed/avatar-male.png";
+
 export const SEED_PROJECTS: ProjectCardProps[] = [
-  { title: "Smartbok.se", tagline: "AI-bokföring för enskild firma. Foton på kvitton in, ordning ut.", slug: "smartbok-se", status: "Hackig MVP", accent: "var(--supabase-green)", tags: ["Supabase", "Claude", "Vercel"], upvotes: 18, commentCount: 6 },
-  { title: "AIkostnad.se", tagline: "Räkna ut vad AI faktiskt kostar dig per månad. Jämför modeller.", slug: "aikostnad-se", status: "Live men nervös", accent: "var(--build-green)", tags: ["Next.js", "API", "Kalkylator"], upvotes: 24, commentCount: 7 },
-  { title: "Need Radar", tagline: "AI som dagligen letar marknadsmöjligheter i forum och trådar.", slug: "need-radar", status: "Byggs om", accent: "var(--warning-orange)", tags: ["Reddit", "Claude", "Automation"], upvotes: 15, commentCount: 4 },
-  { title: "Amazon Snipe", tagline: "Prisfel-scanner för Amazon som tjuter när något är felprissatt.", slug: "amazon-snipe", status: "MVP på livstöd", accent: "var(--hammer-yellow)", tags: ["Keepa", "Telegram", "Bot"], upvotes: 11, commentCount: 9 },
-  { title: "BTC Edge", tagline: "Polymarket-bot med hårda go/no-go-regler. Disciplin över hopp.", slug: "btc-edge", status: "Forskning först", accent: "var(--code-blue)", tags: ["Trading", "Backtest", "Bot"], upvotes: 9, commentCount: 3 },
-  { title: "Runnr", tagline: "AI-löpcoach för vanliga människor som inte vill ha en PT-app.", slug: "runnr", status: "Behöver testare", accent: "var(--prompt-purple)", tags: ["AI Coach", "Running", "Mobile"], upvotes: 21, commentCount: 8 },
+  { title: "Smartbok.se", tagline: "AI-bokföring för enskild firma. Foton på kvitton in, ordning ut.", slug: "smartbok-se", status: "Hackig MVP", accent: "var(--supabase-green)", tags: ["Supabase", "Claude", "Vercel"], upvotes: 18, commentCount: 6, authorName: "Frida", authorAvatarUrl: F },
+  { title: "AIkostnad.se", tagline: "Räkna ut vad AI faktiskt kostar dig per månad. Jämför modeller.", slug: "aikostnad-se", status: "Live men nervös", accent: "var(--build-green)", tags: ["Next.js", "API", "Kalkylator"], upvotes: 24, commentCount: 7, authorName: "Oskar", authorAvatarUrl: M },
+  { title: "Need Radar", tagline: "AI som dagligen letar marknadsmöjligheter i forum och trådar.", slug: "need-radar", status: "Byggs om", accent: "var(--warning-orange)", tags: ["Reddit", "Claude", "Automation"], upvotes: 15, commentCount: 4, authorName: "Jonas", authorAvatarUrl: M },
+  { title: "Amazon Snipe", tagline: "Prisfel-scanner för Amazon som tjuter när något är felprissatt.", slug: "amazon-snipe", status: "MVP på livstöd", accent: "var(--hammer-yellow)", tags: ["Keepa", "Telegram", "Bot"], upvotes: 11, commentCount: 9, authorName: "Sara", authorAvatarUrl: F },
+  { title: "BTC Edge", tagline: "Polymarket-bot med hårda go/no-go-regler. Disciplin över hopp.", slug: "btc-edge", status: "Forskning först", accent: "var(--code-blue)", tags: ["Trading", "Backtest", "Bot"], upvotes: 9, commentCount: 3, authorName: "Pelle", authorAvatarUrl: M },
+  { title: "Runnr", tagline: "AI-löpcoach för vanliga människor som inte vill ha en PT-app.", slug: "runnr", status: "Behöver testare", accent: "var(--prompt-purple)", tags: ["AI Coach", "Running", "Mobile"], upvotes: 21, commentCount: 8, authorName: "Nina", authorAvatarUrl: F },
 ];
 
 export const SEED_PROMPTS: Omit<PromptCardProps, "className">[] = [
@@ -56,6 +59,7 @@ export interface HelpQuestion {
   answerCount: number;
   /** "Öppen" eller "Löst". */
   status: "Öppen" | "Löst";
+  avatarUrl?: string;
 }
 
 export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
@@ -68,6 +72,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Frida",
     answerCount: 4,
     status: "Löst",
+    avatarUrl: F,
   },
   {
     slug: "vercel-build-funkar-lokalt",
@@ -78,6 +83,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Oskar",
     answerCount: 6,
     status: "Löst",
+    avatarUrl: M,
   },
   {
     slug: "sessionen-forsvinner-vid-reload",
@@ -88,6 +94,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Nina",
     answerCount: 3,
     status: "Öppen",
+    avatarUrl: F,
   },
   {
     slug: "diven-vill-inte-centreras",
@@ -98,6 +105,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Pelle",
     answerCount: 5,
     status: "Öppen",
+    avatarUrl: M,
   },
   {
     slug: "claude-skrev-om-hela-filen",
@@ -108,6 +116,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Sara",
     answerCount: 7,
     status: "Löst",
+    avatarUrl: F,
   },
   {
     slug: "stripe-webhook-200-men-inget-hander",
@@ -118,5 +127,6 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     author: "Johan",
     answerCount: 2,
     status: "Öppen",
+    avatarUrl: M,
   },
 ];

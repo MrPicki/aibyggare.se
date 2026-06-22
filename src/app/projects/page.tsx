@@ -24,6 +24,8 @@ function toCardProps(p: Project) {
     tags: p.stack ?? [],
     upvotes: p.upvoteCount ?? 0,
     commentCount: p.commentCount ?? 0,
+    authorName: p.userDisplayName || undefined,
+    authorAvatarUrl: p.userAvatarUrl || undefined,
   };
 }
 

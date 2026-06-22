@@ -13,6 +13,8 @@ export interface ProjectCardProps {
   tags: string[];
   upvotes: number;
   commentCount: number;
+  authorName?: string;
+  authorAvatarUrl?: string;
   className?: string;
 }
 
@@ -25,6 +27,8 @@ export function ProjectCard({
   tags,
   upvotes,
   commentCount,
+  authorName,
+  authorAvatarUrl,
   className,
 }: ProjectCardProps) {
   return (
@@ -39,10 +43,20 @@ export function ProjectCard({
         className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5"
         style={{ backgroundColor: accent }}
       >
-        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
-          Bygge
-        </span>
-        <span className="sticker bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink">
+        <div className="flex min-w-0 items-center gap-1.5">
+          {authorAvatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={authorAvatarUrl}
+              alt=""
+              className="h-5 w-5 shrink-0 rounded-full border border-ink/40 object-cover"
+            />
+          )}
+          <span className="truncate font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
+            {authorName ?? "Bygge"}
+          </span>
+        </div>
+        <span className="sticker shrink-0 bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink">
           {status}
         </span>
       </div>

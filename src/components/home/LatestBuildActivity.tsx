@@ -9,7 +9,7 @@ type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
 interface BuildActivityItem {
   id: string;
   type: ActivityType;
-  user: { name: string; handle: string; initials: string };
+  user: { name: string; handle: string; initials: string; avatarUrl?: string };
   projectName: string;
   projectUrl?: string;
   title: string;
@@ -38,11 +38,14 @@ const TYPE_ACCENT: Record<ActivityType, string> = {
   feedback: "var(--hammer-yellow)",
 };
 
+const F = "/seed/avatar-female.png";
+const M = "/seed/avatar-male.png";
+
 const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "1",
     type: "project",
-    user: { name: "Christoffer", handle: "@christoffer", initials: "C" },
+    user: { name: "Christoffer", handle: "@christoffer", initials: "C", avatarUrl: M },
     projectName: "Smartbok.se",
     projectUrl: "https://smartbok.se",
     title: "AI-bokföring för enskild firma",
@@ -57,7 +60,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "2",
     type: "problem",
-    user: { name: "Lina", handle: "@linabygger", initials: "L" },
+    user: { name: "Lina", handle: "@linabygger", initials: "L", avatarUrl: F },
     projectName: "Min första SaaS",
     title: "Vercel vägrar deploya efter Supabase-ändring",
     description: "Allt funkar lokalt men builden dör på env-variabler.",
@@ -71,7 +74,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "3",
     type: "project",
-    user: { name: "Adam", handle: "@adamcodes", initials: "A" },
+    user: { name: "Adam", handle: "@adamcodes", initials: "A", avatarUrl: M },
     projectName: "MenuPilot",
     projectUrl: "https://menupilot.se",
     title: "AI som gör veckomenyer från rester",
@@ -86,7 +89,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "4",
     type: "prompt",
-    user: { name: "Sara", handle: "@sarapromptar", initials: "S" },
+    user: { name: "Sara", handle: "@sarapromptar", initials: "S", avatarUrl: F },
     projectName: "Claude Code Workflow",
     title: "Prompt som stoppar Claude från att förstöra designen",
     description: "En prompt för att tvinga Claude att planera innan den kodar.",
@@ -99,7 +102,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "5",
     type: "idea",
-    user: { name: "Jonas", handle: "@jonasidé", initials: "J" },
+    user: { name: "Jonas", handle: "@jonasidé", initials: "J", avatarUrl: M },
     projectName: "Need Radar",
     title: "AI som hittar ouppfyllda behov på Reddit",
     description: "Daglig pipeline som rankar affärsidéer från forumtrådar.",
@@ -113,7 +116,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "6",
     type: "problem",
-    user: { name: "Maja", handle: "@majawebb", initials: "M" },
+    user: { name: "Maja", handle: "@majawebb", initials: "M", avatarUrl: F },
     projectName: "Portfolio med Lovable",
     title: "Claude skrev om hela layouten igen",
     description: "Bad om liten justering, fick ny design på halva sidan.",
@@ -126,7 +129,15 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   },
 ];
 
-function Avatar({ initials, accent }: { initials: string; accent: string }) {
+function Avatar({ initials, accent, avatarUrl }: { initials: string; accent: string; avatarUrl?: string }) {
+  if (avatarUrl) {
+    return (
+      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-ink" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink font-mono text-sm font-bold text-ink"
@@ -148,7 +159,7 @@ function ActivityCard({ item }: { item: BuildActivityItem }) {
       {/* ── Row 1: avatar + meta ── */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar initials={item.user.initials} accent={accent} />
+          <Avatar initials={item.user.initials} accent={accent} avatarUrl={item.user.avatarUrl} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-mono text-xs font-bold text-ink">{item.user.name}</span>

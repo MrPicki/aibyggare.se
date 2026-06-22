@@ -21,7 +21,11 @@ const AVAILABLE_TOOLS = [
   "GitHub", "TypeScript", "ChatGPT",
 ];
 
-// Guard: wait for auth before rendering the form
+const AVATAR_OPTIONS = [
+  { url: "/seed/avatar-female.png", label: "Tjej" },
+  { url: "/seed/avatar-male.png",   label: "Kille" },
+];
+
 export default function OnboardingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -35,7 +39,6 @@ export default function OnboardingPage() {
   return <OnboardingForm user={user} />;
 }
 
-// Separate component so useState can safely initialize from `user`
 function OnboardingForm({ user }: { user: User }) {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -43,6 +46,7 @@ function OnboardingForm({ user }: { user: User }) {
     displayName: user.displayName ?? "",
     bio: "",
     tools: [] as string[],
+    avatarUrl: AVATAR_OPTIONS[0].url,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -96,6 +100,7 @@ function OnboardingForm({ user }: { user: User }) {
         displayName: form.displayName.trim(),
         bio: form.bio.trim(),
         tools: form.tools,
+        avatarUrl: form.avatarUrl,
         updatedAt: serverTimestamp(),
       });
       router.push("/projects/new");
@@ -121,7 +126,44 @@ function OnboardingForm({ user }: { user: User }) {
 
       <form onSubmit={handleSubmit} className="space-y-7" noValidate>
 
-        {/* Username */}
+        {/* ── Avatar picker ── */}
+        <div>
+          <p className="block text-sm font-semibold text-ink mb-3">
+            Välj din profilbild
+          </p>
+          <div className="flex gap-5">
+            {AVATAR_OPTIONS.map((opt) => {
+              const selected = form.avatarUrl === opt.url;
+              return (
+                <button
+                  key={opt.url}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, avatarUrl: opt.url }))}
+                  aria-pressed={selected}
+                  aria-label={opt.label}
+                  className={[
+                    "relative h-20 w-20 overflow-hidden rounded-full border-4 transition-all duration-150",
+                    selected
+                      ? "border-build-green shadow-[0_0_0_3px_var(--build-green)]"
+                      : "border-ink opacity-40 hover:opacity-70",
+                  ].join(" ")}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={opt.url} alt={opt.label} className="h-full w-full object-cover" />
+                  {selected && (
+                    <span className="pointer-events-none absolute inset-0 flex items-end justify-center pb-1.5">
+                      <span className="rounded-full bg-build-green px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-paper">
+                        Vald
+                      </span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Username ── */}
         <div>
           <label htmlFor="username" className="block text-sm font-semibold text-ink mb-1.5">
             Användarnamn <span className="text-bug-red">*</span>
@@ -156,7 +198,7 @@ function OnboardingForm({ user }: { user: User }) {
           )}
         </div>
 
-        {/* Display name */}
+        {/* ── Display name ── */}
         <div>
           <label htmlFor="displayName" className="block text-sm font-semibold text-ink mb-1.5">
             Visningsnamn <span className="text-bug-red">*</span>
@@ -176,7 +218,7 @@ function OnboardingForm({ user }: { user: User }) {
           )}
         </div>
 
-        {/* Bio */}
+        {/* ── Bio ── */}
         <div>
           <label htmlFor="bio" className="block text-sm font-semibold text-ink mb-1.5">
             Kort bio{" "}
@@ -196,7 +238,7 @@ function OnboardingForm({ user }: { user: User }) {
           </p>
         </div>
 
-        {/* Tools */}
+        {/* ── Tools ── */}
         <div>
           <p className="block text-sm font-semibold text-ink mb-1.5">
             Vilka verktyg använder du?{" "}
