@@ -5,7 +5,8 @@ import {
   User,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
 } from "firebase/auth";
@@ -21,12 +22,23 @@ import { useRouter } from "next/navigation";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  error: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function firebaseErrorMessage(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? "";
+  const msg = (err as { message?: string })?.message ?? String(err);
+  if (code === "auth/unauthorized-domain")   return "Den här domänen är inte auktoriserad i Firebase.";
+  if (code === "auth/operation-not-allowed") return "Inloggningsmetoden är inte aktiverad i Firebase Console.";
+  if (code === "auth/account-exists-with-different-credential")
+    return "Du har redan ett konto med den e-postadressen via en annan inloggningsmetod.";
+  return `Fel: ${code || msg}`;
+}
 
 async function ensureProfile(user: User): Promise<boolean> {
   const ref = doc(db, "profiles", user.uid);
@@ -53,28 +65,35 @@ async function ensureProfile(user: User): Promise<boolean> {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
+    // Handle the result when the user returns from the redirect sign-in flow.
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const needsOnboarding = await ensureProfile(result.user);
+          router.push(needsOnboarding ? "/onboarding" : "/projects");
+        }
+      })
+      .catch((err) => setError(firebaseErrorMessage(err)));
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [router]);
 
   async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const needsOnboarding = await ensureProfile(result.user);
-    router.push(needsOnboarding ? "/onboarding" : "/projects");
+    setError(null);
+    await signInWithRedirect(auth, new GoogleAuthProvider());
   }
 
   async function signInWithGitHub() {
-    const provider = new GithubAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const needsOnboarding = await ensureProfile(result.user);
-    router.push(needsOnboarding ? "/onboarding" : "/projects");
+    setError(null);
+    await signInWithRedirect(auth, new GithubAuthProvider());
   }
 
   async function signOut() {
@@ -83,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithGitHub, signOut }}>
+    <AuthContext.Provider value={{ user, loading, error, signInWithGoogle, signInWithGitHub, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,44 +5,20 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithGitHub } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const { signInWithGoogle, signInWithGitHub, error } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
 
-  function firebaseErrorMessage(err: unknown): string {
-    const code = (err as { code?: string })?.code ?? "";
-    const msg  = (err as { message?: string })?.message ?? String(err);
-    if (code === "auth/popup-blocked")         return "Popupen blockerades. Tillåt popups för den här sidan i webbläsaren.";
-    if (code === "auth/popup-closed-by-user")  return "Du stängde inloggningsfönstret. Försök igen.";
-    if (code === "auth/unauthorized-domain")   return "Den här domänen är inte auktoriserad i Firebase.";
-    if (code === "auth/operation-not-allowed") return "Inloggningsmetoden är inte aktiverad i Firebase Console.";
-    if (code === "auth/cancelled-popup-request") return "Bara ett inloggningsfönster åt gången.";
-    return `Fel: ${code || msg}`;
-  }
-
+  // Redirect-based sign-in navigates the whole tab away, so these handlers
+  // only need to trigger the flow and show a brief "connecting" state.
   async function handleGoogle() {
-    setError(null);
     setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError(firebaseErrorMessage(err));
-    } finally {
-      setGoogleLoading(false);
-    }
+    await signInWithGoogle();
   }
 
   async function handleGitHub() {
-    setError(null);
     setGithubLoading(true);
-    try {
-      await signInWithGitHub();
-    } catch (err) {
-      setError(firebaseErrorMessage(err));
-    } finally {
-      setGithubLoading(false);
-    }
+    await signInWithGitHub();
   }
 
   return (
