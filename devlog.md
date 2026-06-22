@@ -474,11 +474,142 @@ Auth → Middleware → Login-sida → Auto-profil → Onboarding
 
 ---
 
-## 🔜 Nästa steg — Fas 4: Hjälpfrågor
+---
 
-**Fas 4 börjar med:**
-1. Lista hjälpfrågor med filter (Alla/Öppna/Löst + verktygsfilter)
-2. Skapa hjälpfråga — `/help/new` (strukturerat formulär)
-3. Frågedetalj-sida — `/help/[slug]`
-4. Svar och kommentarer (samma komponent som projekt, eller specialiserad)
-5. Markera som löst (acceptera svar)
+## 2026-06-22 — Profilbilder + onboarding-avatar-picker
+
+### Vad gjordes
+
+**Seed-profilbilder:**
+- `public/seed/avatar-female.png` + `public/seed/avatar-male.png` — pixelart-style illustrerade avatarer (1254×1254, varm beige bakgrund)
+- Används i all seed-data (SEED_USERS, SEED_PROJECTS, SEED_HELP_QUESTIONS, SEED_PROMPTS, LatestBuildActivity)
+- Fördelas 50/50 M/F i seed-data för variation
+
+**Onboarding avatar-picker (`src/app/onboarding/page.tsx`):**
+- Nytt `AVATAR_OPTIONS`-array med de två bilderna
+- Picker före username-fältet — två runda knappar (h-20 w-20 rounded-full)
+- Vald avatar: `border-build-green shadow-[0_0_0_3px_var(--build-green)]` + "Vald"-badge overlay
+- `avatarUrl` sparas till Firestore `profiles/{uid}` vid submit
+
+---
+
+## 2026-06-22 — Fullständig routing för "På byggbänken just nu"
+
+### Vad gjordes
+
+**Målet:** Varje kort i LatestBuildActivity på startsidan ska länka till rätt destination, utan ett enda dead end. Avatar + namn → publik profilsida. Aktivitetskort → rätt innehållssida.
+
+---
+
+#### Seed-data (src/lib/seed.ts) — stor omskrivning
+
+- `SeedUser`-interface: `username`, `displayName`, `bio`, `tools`, `avatarUrl`, `joined`, `projectSlugs`, `helpSlugs`, `promptSlugs`
+- `SEED_USERS` — 6 användare (christoffer, linabygger, adamcodes, sarapromptar, jonasbygger, majawebb)
+- `SeedAnswer`-interface: `author`, `username`, `avatarUrl`, `body`, `isAccepted?`, `createdAtLabel`
+- `HelpQuestion` utökad med `username?` och `answers?: SeedAnswer[]`
+- Två hjälpfrågor med mock-svarstrådar:
+  - `vercel-vagrar-deploya` (Lina) — 3 svar (Christoffer, Pelle, Nina)
+  - `claude-skrev-om-hela-layouten` (Maja) — 3 svar, Saras svar `isAccepted: true`
+- `SEED_PROJECTS`: lade till MenuPilot (`menupilot-se`, Adam/adamcodes/M)
+- `SEED_PROMPTS`: lade till `slug`, `author`, `authorHandle`, `authorAvatarUrl` på alla prompts
+
+---
+
+#### LatestBuildActivity (src/components/home/LatestBuildActivity.tsx)
+
+- `BuildActivityItem` fick `targetUrl: string` + `user.username: string`
+- SEED_ACTIVITY uppdaterat:
+  - Christoffer → `targetUrl: /projects/smartbok-se`
+  - Lina → `targetUrl: /help/vercel-vagrar-deploya`
+  - Adam → `targetUrl: /projects/menupilot-se`
+  - Sara → `targetUrl: /prompts/stopp-claude-designen`
+  - Jonas: handle korrigerad `@jonasidé` → `@jonasbygger`, `targetUrl: /projects/need-radar`
+  - Maja → `targetUrl: /help/claude-skrev-om-hela-layouten`
+- Avatar och namn är klickbara → `/profile/[username]`
+- Projekttitel och titeln på aktiviteten → `targetUrl`
+- "Visa tråd →" → `targetUrl` (ej längre hårdkodad `/projects`)
+
+---
+
+#### PromptCard (src/components/cards/PromptCard.tsx)
+
+- Ny valfria props: `slug?`, `author?`, `authorHandle?`, `authorAvatarUrl?`
+- Om `author` + `authorHandle`: visas inline avatar + `@handle`-länk till `/profile/[authorHandle]`
+- Om `slug`: "Visa prompt →"-länk längst ner på kortet
+
+---
+
+#### HelpCard (src/components/cards/HelpCard.tsx)
+
+- Destructar nu `username?` och `avatarUrl?` från `HelpQuestion`
+- Om `username`: author-länken går till `/profile/[username]`, med inline avatar
+
+---
+
+#### Publik profilsida (src/app/profile/[handle]/page.tsx) — fullständig omskrivning
+
+- **Var:** Client Component (visade bara inloggad användare) → Server Component (visar vem som helst)
+- Slår upp `SEED_USERS` på `username === handle`
+- Visar: stor rund avatar (h-24 w-24), displayName, @handle, joined-datum, bio
+- Verktyg: chunky chips med border-2 border-ink
+- Sektioner: Byggen (`SEED_PROJECTS` filtrerat på `projectSlugs`), Hjälpfrågor, Prompts
+- Empty state om alla sektioner är tomma
+- `generateStaticParams` från SEED_USERS
+
+---
+
+#### Prompt-detaljsida (src/app/prompts/[slug]/page.tsx) — ny sida
+
+- Server Component, slug-lookup i `SEED_PROMPTS`
+- Header-bar med `accent` bakgrund, `badge` och `tool`
+- Author med avatar + länk till `/profile/[authorHandle]`
+- Prompt-text i `<pre>`-liknande `font-mono whitespace-pre-wrap`-block
+- `<CopyButton>` — ny client component (`src/components/ui/CopyButton.tsx`) för clipboard-kopiering
+- CTA-sektion med "Dela en prompt" och "Se alla prompts →"
+
+---
+
+#### Hjälp-detaljsida (src/app/help/[slug]/page.tsx) — uppdaterad
+
+- Author visas med avatar + länk till `/profile/[username]`
+- Svarstråd renderas: om `question.answers` finns visas alla svar
+  - Accepterat svar: grön `ring-2 ring-build-green` + header-bar "Accepterat svar" med `CheckCircle2`
+  - Varje svar: avatar, namn, `@handle`-länk till profil, tidstämpel, brödtext
+
+---
+
+#### CopyButton (src/components/ui/CopyButton.tsx) — ny komponent
+
+- Client Component, hanterar `navigator.clipboard.writeText`
+- "Kopiera prompt" → "Kopierat!" (med Check-ikon) i 1,6 sekunder
+
+---
+
+### Commits
+
+| Hash | Innehåll |
+|------|----------|
+| `aefd047` | Tema-konsekvens, delad seed-data och floaty topbar (föregående session) |
+| `965628e` | Full routing för byggbänken — inga dead ends |
+
+---
+
+### Verifierat i webbläsare
+
+| Sida | Status |
+|------|--------|
+| `/profile/christoffer` | ✅ Avatar, bio, verktyg, Smartbok.se-korten |
+| `/help/vercel-vagrar-deploya` | ✅ Fråga, 3 svar med avatarer och profillänkar |
+| `/prompts/stopp-claude-designen` | ✅ Prompt-text, Saras avatar, kopiera-knapp |
+| Startsidan — aktivitetsfeed | ✅ Alla 6 kort har korrekt targetUrl + profilänkar |
+
+---
+
+## 🔜 Nästa steg — Fas 4–6: Riktiga backend-flöden
+
+**Prioritet:**
+1. **Fas 4 — Hjälpfrågor:** `/help`-listsida med filter, `/help/new`-formulär, riktiga svar i Firestore, markera löst
+2. **Fas 5 — Prompts:** `/prompts/new`-formulär, riktiga prompts i Firestore
+3. **Fas 6 — Profiler:** Riktiga Firestore-profiler på `/profile/[handle]` (nuvarande sida visar bara seed-data)
+
+**Seed-data är nu fullt konsekvent och länkad** — när Firestore-data kopplas på kan seed-fallbacks plockas bort fas för fas.

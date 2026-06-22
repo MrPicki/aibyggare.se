@@ -453,22 +453,26 @@ Placering: `.claude/skills/`
 **Checkpoint fas 3:** ✅ Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt fungerar.
 
 ### Fas 4 — Hjälpfrågor
-- [ ] Lista hjälpfrågor med filter
-- [ ] Skapa hjälpfråga (strukturerat formulär)
-- [ ] Frågedetalj-sida
-- [ ] Svar och kommentarer
-- [ ] Markera som löst
+- [x] Frågedetalj-sida med seed-data (slug-lookup, topic, status, author med avatar + profillänk)
+- [x] Svarstråd i seed-data (accepterat svar markerat med grön ring + "Accepterat svar"-bar)
+- [ ] Lista hjälpfrågor med filter (Alla/Öppna/Löst + verktygsfilter)
+- [ ] Skapa hjälpfråga (strukturerat formulär) — `/help/new`
+- [ ] Svar i Firestore (riktiga användare kan svara)
+- [ ] Markera som löst (acceptera svar — kräver Firestore + auth)
 
 ### Fas 5 — Prompts och guider
-- [ ] Lista prompts/guider
-- [ ] Skapa prompt (formulär med markdown-stöd)
-- [ ] Prompt-detaljsida med kodruta och kopiera-knapp
-- [ ] Bookmark/spara-funktion
+- [x] Prompt-detaljsida med kodruta, kopiera-knapp, author-länk (`/prompts/[slug]`)
+- [x] Kopiera-knapp (`CopyButton`-komponent, clipboard API)
+- [x] Bookmark/spara-funktion på PromptCard (localStorage, klient-side)
+- [ ] Lista prompts/guider — fungerar, men drar bara seed-data
+- [ ] Skapa prompt (formulär med markdown-stöd) — `/prompts/new`
+- [ ] Riktiga prompts i Firestore
 
 ### Fas 6 — Profiler
-- [ ] Profilvisning (byggarportfolio)
-- [ ] Redigera profil
-- [ ] Visa användarens projekt, prompts, frågor
+- [x] Publik profilsida (`/profile/[handle]`) — visar seed-användare med avatar, bio, verktyg, byggen, frågor, prompts
+- [x] Avatar-picker i onboarding (två illustrerade avatarer, sparas i Firestore)
+- [ ] Riktiga Firestore-profiler på profilsidan (nuvarande: seed-data fallback)
+- [ ] Redigera profil (settings-sida)
 - [ ] Statiska badges
 
 ### Fas 7 — Admin och moderering
@@ -559,12 +563,12 @@ Innan en fas markeras som klar:
 | Fas 1 — Projektsetup | ✅ Klar |
 | Fas 2 — Databas och auth | ✅ Klar |
 | Fas 3 — Projektflöde | ✅ Klar |
-| Fas 4 — Hjälpfrågor | Ej påbörjad |
-| Fas 5 — Prompts/guider | Ej påbörjad |
-| Fas 6 — Profiler | Ej påbörjad |
+| Fas 4 — Hjälpfrågor | 🔧 Delvis (detaljsida + seed-svar klara) |
+| Fas 5 — Prompts/guider | 🔧 Delvis (detaljsida + kopiering klara) |
+| Fas 6 — Profiler | 🔧 Delvis (publik profilsida + avatar-picker klara) |
 | Fas 7 — Admin | Ej påbörjad |
 | Fas 8 — Polish | Ej påbörjad |
 
 ---
 
-*Senast uppdaterad: 2026-06-22*
+*Senast uppdaterad: 2026-06-22 (session 4)*
