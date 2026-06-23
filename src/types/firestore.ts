@@ -55,13 +55,19 @@ export type PostStatus = "open" | "solved" | "archived";
 export interface Post {
   id: string;
   userId: string;
+  userDisplayName: string;
+  userAvatarUrl: string;
+  username?: string;        // denormalized from profiles (for profile links)
   type: PostType;
   title: string;
   slug: string;
-  body: string;
+  body: string;             // for help posts: "vad du försökte göra" (used as card summary)
+  tryFix?: string;          // help posts: "vad som gick fel / vad du är osäker på"
+  alreadyTried?: string | null;  // help posts: "vad du redan provat" (optional)
+  projectUrl?: string | null;    // help posts: "länk till projekt/kod" (optional)
   tool: string;
   status: PostStatus;
-  tags: string[];
+  tags: string[];           // for help posts: all selected tools
   isFeatured: boolean;
   acceptedCommentId: string | null;
   upvoteCount: number;

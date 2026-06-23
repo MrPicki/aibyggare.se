@@ -162,6 +162,7 @@ export interface HelpQuestion {
   status: "Öppen" | "Löst";
   avatarUrl?: string;
   answers?: SeedAnswer[];
+  tools?: string[];  // för filtrering (Firestore: tags; seed: derived from topic)
 }
 
 export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
@@ -276,6 +277,24 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     answerCount: 3,
     status: "Öppen",
     avatarUrl: F,
+    answers: [
+      {
+        author: "Christoffer",
+        username: "christoffer",
+        avatarUrl: M,
+        body: "Firebase Auth är asynkront — du läser förmodligen `currentUser` innan SDK:n hunnit återställa sessionen. Lyssna på `onAuthStateChanged` istället för att läsa `auth.currentUser` direkt. Den callbacken anropas alltid, även vid reload.",
+        isAccepted: false,
+        createdAtLabel: "för 10 min sen",
+      },
+      {
+        author: "Jonas",
+        username: "jonasbygger",
+        avatarUrl: M,
+        body: "Kollad persistence-inställningen? Som standard är Firebase Auth `browserLocalStorage` vilket borde hålla sessionen. Men om du kör i inkognito-läge eller har cookies blockerade tappar du sessionen vid stängning.",
+        isAccepted: false,
+        createdAtLabel: "för 25 min sen",
+      },
+    ],
   },
   {
     slug: "diven-vill-inte-centreras",

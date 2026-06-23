@@ -52,7 +52,13 @@ service cloud.firestore {
     match /posts/{postId}/comments/{commentId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      // Kommentarägaren kan uppdatera sin kommentar.
+      // Frågeägaren kan ENBART sätta isAccepted (för att markera accepterat svar).
+      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid)
+        || isAdmin()
+        || (isSignedIn()
+            && get(/databases/$(database)/documents/posts/$(postId)).data.userId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAccepted']));
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
     }
 
