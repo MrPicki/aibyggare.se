@@ -38,11 +38,8 @@ export interface CreateHelpInput {
   username: string;
   title: string;
   slug: string;
-  body: string;          // "vad du försökte göra" — används som summary i kort
-  tryFix: string;        // "vad som gick fel"
-  alreadyTried: string;  // valfri
-  projectUrl: string;    // valfri
-  tools: string[];       // alla valda verktyg → sparas i tags
+  body: string;
+  tool: string;
 }
 
 export async function createHelpPost(
@@ -57,11 +54,8 @@ export async function createHelpPost(
     title: data.title,
     slug: data.slug,
     body: data.body,
-    tryFix: data.tryFix,
-    alreadyTried: data.alreadyTried || null,
-    projectUrl: data.projectUrl || null,
-    tool: data.tools[0] ?? "Annat",
-    tags: data.tools,
+    tool: data.tool,
+    tags: [data.tool],
     status: "open",
     isFeatured: false,
     acceptedCommentId: null,

@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageSquare, ExternalLink } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
-import { AnswerSection } from "@/components/help/AnswerSection";
+import { HelpCommentSection } from "@/components/help/HelpCommentSection";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import type { Post, Comment } from "@/types/firestore";
-import type { HelpQuestion } from "@/lib/seed";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +16,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  try {
+    const { getHelpPostBySlug } = await import("@/lib/firebase/help");
+    const post = await getHelpPostBySlug(slug);
+    if (post) return { title: `${post.title} — AIbyggare.se`, description: post.body };
+  } catch {}
   const seed = SEED_HELP_QUESTIONS.find((q) => q.slug === slug);
   return {
     title: seed ? `${seed.title} — AIbyggare.se` : "Fråga — AIbyggare.se",
@@ -31,183 +35,88 @@ export default async function HelpDetailPage({
 }) {
   const { slug } = await params;
 
-  // Try Firestore first
-  let firestorePost: Post | null = null;
-  let firestoreAnswers: Comment[] = [];
+  let post: Post | null = null;
+  let comments: Comment[] = [];
 
   try {
-    const { getHelpPostBySlug, getPostAnswers } = await import(
-      "@/lib/firebase/help"
-    );
-    firestorePost = await getHelpPostBySlug(slug);
-    if (firestorePost) {
-      firestoreAnswers = await getPostAnswers(firestorePost.id);
-    }
+    const { getHelpPostBySlug, getPostAnswers } = await import("@/lib/firebase/help");
+    post = await getHelpPostBySlug(slug);
+    if (post) comments = await getPostAnswers(post.id);
   } catch (e) {
     console.error("[help/slug] Firestore fetch failed:", e);
   }
 
-  // Fall back to seed data
-  const seedPost: HelpQuestion | undefined = SEED_HELP_QUESTIONS.find(
-    (q) => q.slug === slug
-  );
+  // Seed-fallback
+  const seed = SEED_HELP_QUESTIONS.find((q) => q.slug === slug);
+  if (!post && !seed) notFound();
 
-  if (!firestorePost && !seedPost) notFound();
+  const title = post?.title ?? seed!.title;
+  const body = post?.body ?? seed!.body;
+  const topic = post?.tool ?? post?.tags?.[0] ?? seed!.topic;
+  const accent = toolAccent(topic);
+  const solved = post ? post.status === "solved" : seed!.status === "Löst";
+  const authorName = post?.userDisplayName ?? seed!.author;
+  const authorHandle = post?.username ?? seed!.username;
+  const authorAvatar = post?.userAvatarUrl ?? seed!.avatarUrl;
+  const commentCount = post?.commentCount ?? seed!.answerCount;
 
-  // ─── Render Firestore post ─────────────────────────────────────────────────
-  if (firestorePost) {
-    const solved = firestorePost.status === "solved";
-    const topic = firestorePost.tool || firestorePost.tags?.[0] || "Annat";
-    const accent = toolAccent(topic);
+  // Seed-svar som initialComments om ingen Firestore-post finns
+  const seedComments: Comment[] = !post && seed?.answers
+    ? seed.answers.map((a, i) => ({
+        id: `seed-${i}`,
+        userId: "",
+        userDisplayName: a.author,
+        userAvatarUrl: a.avatarUrl,
+        body: a.body,
+        createdAt: null,
+        updatedAt: null,
+      } as unknown as Comment))
+    : [];
 
-    return (
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-14">
-        <Link
-          href="/help"
-          className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
-        >
-          <ArrowLeft size={14} /> Alla frågor
-        </Link>
-
-        <article className="chunky mt-6 rounded-3xl bg-paper">
-          <div className="flex items-center justify-between border-b-2 border-ink px-5 py-3">
-            <span
-              className="sticker px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink"
-              style={{ backgroundColor: accent }}
-            >
-              {topic}
-            </span>
-            <span
-              className={
-                "font-mono text-[11px] font-bold uppercase tracking-widest " +
-                (solved ? "text-build-green" : "text-mud")
-              }
-            >
-              {solved ? "Löst" : "Öppen"}
-            </span>
-          </div>
-
-          <div className="p-6 sm:p-8">
-            <h1 className="font-display text-2xl font-bold leading-snug text-ink sm:text-3xl">
-              {firestorePost.title}
-            </h1>
-
-            {/* Vad de försökte göra */}
-            <div className="mt-6">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-mud mb-2">
-                Vad de försökte göra
-              </p>
-              <p className="text-base leading-relaxed text-ink whitespace-pre-wrap">
-                {firestorePost.body}
-              </p>
-            </div>
-
-            {/* Vad som gick fel */}
-            {firestorePost.tryFix && (
-              <div className="mt-5">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-mud mb-2">
-                  Vad som gick fel / vad de är osäkra på
-                </p>
-                <p className="text-base leading-relaxed text-ink whitespace-pre-wrap">
-                  {firestorePost.tryFix}
-                </p>
-              </div>
-            )}
-
-            {/* Vad de redan provat */}
-            {firestorePost.alreadyTried && (
-              <div className="mt-5">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-mud mb-2">
-                  Vad de redan provat
-                </p>
-                <p className="text-base leading-relaxed text-ink whitespace-pre-wrap">
-                  {firestorePost.alreadyTried}
-                </p>
-              </div>
-            )}
-
-            {/* Länk */}
-            {firestorePost.projectUrl && (
-              <div className="mt-5">
-                <a
-                  href={firestorePost.projectUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-mud hover:text-ink transition-colors underline underline-offset-2"
-                >
-                  <ExternalLink size={13} /> Länk till projekt/kod
-                </a>
-              </div>
-            )}
-
-            {/* Author */}
-            <div className="mt-6 flex items-center gap-3 border-t-2 border-dashed border-border pt-5">
-              {firestorePost.userAvatarUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={firestorePost.userAvatarUrl}
-                  alt=""
-                  className="h-7 w-7 rounded-full border-2 border-ink object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              )}
-              <div className="flex items-center gap-3 font-mono text-sm font-semibold text-mud">
-                {firestorePost.username ? (
-                  <Link
-                    href={`/profile/${firestorePost.username}`}
-                    className="hover:text-ink transition-colors"
-                  >
-                    {firestorePost.userDisplayName || "Byggare"}
-                  </Link>
-                ) : (
-                  <span>{firestorePost.userDisplayName || "Byggare"}</span>
-                )}
-                <span className="inline-flex items-center gap-1">
-                  <MessageSquare size={14} />{" "}
-                  {firestorePost.commentCount ?? 0} svar
-                </span>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <AnswerSection
-          postId={firestorePost.id}
-          postOwnerId={firestorePost.userId}
-          acceptedCommentId={firestorePost.acceptedCommentId}
-          initialAnswers={firestoreAnswers}
-        />
-      </div>
-    );
-  }
-
-  // ─── Render seed post ──────────────────────────────────────────────────────
-  const question = seedPost!;
-  const solved = question.status === "Löst";
-  const answers = question.answers ?? [];
+  const initialComments = post ? comments : seedComments;
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-14">
       <Link
         href="/help"
-        className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
+        className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-hammer-yellow transition-colors"
       >
         <ArrowLeft size={14} /> Alla frågor
       </Link>
 
-      {/* ── Question ── */}
-      <article className="chunky mt-6 rounded-3xl bg-paper">
-        <div className="flex items-center justify-between border-b-2 border-ink px-5 py-3">
-          <span
-            className="sticker px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink"
-            style={{ backgroundColor: question.accent }}
-          >
-            {question.topic}
-          </span>
+      <article className="chunky mt-6 overflow-hidden rounded-3xl bg-paper">
+        {/* Header-bar */}
+        <div
+          className="flex items-center justify-between border-b-2 border-ink px-5 py-3"
+          style={{ backgroundColor: accent }}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            {authorAvatar && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={authorAvatar}
+                alt=""
+                className="h-6 w-6 shrink-0 rounded-full border border-ink/40 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            )}
+            {authorHandle ? (
+              <Link
+                href={`/profile/${authorHandle}`}
+                className="truncate font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80 hover:text-ink transition-colors"
+              >
+                {authorName}
+              </Link>
+            ) : (
+              <span className="truncate font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
+                {authorName}
+              </span>
+            )}
+          </div>
           <span
             className={
-              "font-mono text-[11px] font-bold uppercase tracking-widest " +
-              (solved ? "text-build-green" : "text-mud")
+              "sticker shrink-0 bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide " +
+              (solved ? "text-build-green" : "text-ink")
             }
           >
             {solved ? "Löst" : "Öppen"}
@@ -216,114 +125,95 @@ export default async function HelpDetailPage({
 
         <div className="p-6 sm:p-8">
           <h1 className="font-display text-2xl font-bold leading-snug text-ink sm:text-3xl">
-            {question.title}
+            {title}
           </h1>
-          <p className="mt-4 text-lg leading-relaxed text-mud">
-            {question.body}
+
+          <p className="mt-5 text-base leading-relaxed text-ink whitespace-pre-wrap">
+            {body}
           </p>
 
-          <div className="mt-6 flex items-center gap-3 border-t-2 border-dashed border-border pt-5">
-            {question.avatarUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={question.avatarUrl}
-                alt=""
-                className="h-7 w-7 rounded-full border-2 border-ink object-cover"
-              />
-            )}
-            <div className="flex items-center gap-3 font-mono text-sm font-semibold text-mud">
-              {question.username ? (
-                <Link
-                  href={`/profile/${question.username}`}
-                  className="hover:text-ink transition-colors"
-                >
-                  {question.author}
-                </Link>
-              ) : (
-                <span>{question.author}</span>
-              )}
-              <span className="inline-flex items-center gap-1">
-                <MessageSquare size={14} /> {question.answerCount} svar
-              </span>
-            </div>
+          {/* Topic-tagg + kommentarantal */}
+          <div className="mt-6 flex items-center justify-between border-t-2 border-dashed border-border pt-4">
+            <span className="rounded-md border border-border bg-cream px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-mud">
+              {topic}
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs text-mud">
+              <MessageSquare size={13} /> {commentCount} svar
+            </span>
           </div>
         </div>
       </article>
 
-      {/* ── Seed answers ── */}
-      {answers.length > 0 && (
-        <section className="mt-8">
-          <p className="mb-4 font-mono text-[11px] font-bold uppercase tracking-widest text-mud">
-            {answers.length} svar
-          </p>
-          <div className="space-y-4">
-            {answers.map((answer, i) => (
-              <article
-                key={i}
-                className={[
-                  "chunky rounded-3xl bg-paper",
-                  answer.isAccepted ? "ring-2 ring-build-green" : "",
-                ].join(" ")}
-              >
-                {answer.isAccepted && (
-                  <div className="flex items-center gap-2 border-b-2 border-ink bg-build-green/15 px-5 py-2.5 rounded-t-3xl">
-                    <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-build-green">
-                      ✓ Accepterat svar
-                    </span>
-                  </div>
-                )}
-                <div className="p-5 sm:p-6">
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <Link
-                      href={`/profile/${answer.username}`}
-                      className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Kommentarssektion */}
+      <div className="mt-10">
+        {post ? (
+          <HelpCommentSection postId={post.id} initialComments={initialComments} />
+        ) : (
+          /* Seed-svar visas statiskt (ingen Firestore-post) */
+          <section>
+            <h2 className="font-display text-xl font-bold text-ink mb-5">
+              Hjälp från communityn{" "}
+              {initialComments.length > 0 && (
+                <span className="font-mono text-base font-semibold text-mud">({initialComments.length})</span>
+              )}
+            </h2>
+            {initialComments.length === 0 ? (
+              <p className="text-mud text-sm py-4">Ingen har svarat ännu.</p>
+            ) : (
+              <ul className="space-y-4 mb-8">
+                {initialComments.map((c) => (
+                  <li key={c.id} className="flex gap-3">
+                    {c.userAvatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={answer.avatarUrl}
+                        src={c.userAvatarUrl}
                         alt=""
-                        className="h-8 w-8 rounded-full border-2 border-ink object-cover"
+                        className="h-8 w-8 shrink-0 rounded-full border-2 border-ink mt-0.5"
                       />
-                      <div>
-                        <p className="font-mono text-xs font-bold text-ink">
-                          {answer.author}
-                        </p>
-                        <p className="font-mono text-[10px] text-mud">
-                          @{answer.username}
-                        </p>
+                    ) : (
+                      <div className="h-8 w-8 shrink-0 rounded-full border-2 border-ink bg-cream flex items-center justify-center font-mono text-xs font-bold text-mud mt-0.5">
+                        {(c.userDisplayName || "?")[0].toUpperCase()}
                       </div>
-                    </Link>
-                    <span className="font-mono text-[11px] text-mud">
-                      {answer.createdAtLabel}
-                    </span>
-                  </div>
-                  <p className="text-base leading-relaxed text-ink">
-                    {answer.body}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+                    )}
+                    <div className="flex-1">
+                      <span className="font-mono text-xs font-bold text-ink">
+                        {c.userDisplayName || "Anonym"}
+                      </span>
+                      <p className="mt-1 text-sm leading-relaxed text-ink">{c.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4 text-center">
+              <p className="text-sm text-mud">
+                <Link href="/login" className="font-semibold text-ink underline underline-offset-2 hover:text-hammer-yellow">
+                  Logga in
+                </Link>{" "}
+                för att hjälpa andra byggare.
+              </p>
+            </div>
+          </section>
+        )}
+      </div>
 
-      {/* ── CTA ── */}
+      {/* CTA */}
       <div className="chunky mt-8 rounded-3xl bg-cream p-6 text-center sm:p-8">
-        <Sticker tilt={2} className="mb-3 bg-build-green">
+        <Sticker tilt={2} className="mb-3 bg-hammer-yellow/60">
           Hjälp till
         </Sticker>
         <p className="font-display text-lg font-bold text-ink">
-          Vet du svaret? Logga in och skriv det.
+          Fastnat i något eget? Fråga communityn.
         </p>
         <p className="mx-auto mt-2 max-w-md text-mud">
-          Har du fastnat i något eget — beskriv det och få hjälp av communityn.
+          Beskriv vad du försöker göra och vad som gick fel — någon har troligen stött på samma sak.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <ChunkyLink href="/help/new" variant="yellow">
             Ställ en egen fråga
           </ChunkyLink>
-          <ChunkyLink href="/login" variant="paper">
-            Logga in för att svara
+          <ChunkyLink href="/help" variant="paper">
+            Se alla frågor →
           </ChunkyLink>
         </div>
       </div>

@@ -15,6 +15,20 @@ function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
   ]);
 }
 
+// Konverterar Firestore Timestamp-instanser till plain { seconds } — krävs
+// för att data ska kunna serialiseras genom RSC-gränsen till Client Components.
+function serializeDoc(data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== null && typeof v === "object" && "seconds" in v && "nanoseconds" in v) {
+      out[k] = { seconds: (v as { seconds: number }).seconds };
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 export async function getProjects(limitCount = 30): Promise<Project[]> {
   const db = requireDb();
   const snap = await withTimeout(
@@ -38,5 +52,5 @@ export async function getProjectComments(projectId: string): Promise<Comment[]> 
   const snap = await withTimeout(
     db.collection("projects").doc(projectId).collection("comments").orderBy("createdAt", "asc").get()
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment));
+  return snap.docs.map((d) => ({ id: d.id, ...serializeDoc(d.data()) } as Comment));
 }

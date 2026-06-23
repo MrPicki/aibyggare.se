@@ -3,27 +3,26 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { addComment, subscribeToComments } from "@/lib/firebase/projects-client";
+import { addAnswer, subscribeToAnswers } from "@/lib/firebase/help-client";
 import type { Comment } from "@/types/firestore";
 
-interface CommentSectionProps {
-  projectId: string;
+interface HelpCommentSectionProps {
+  postId: string;
   initialComments: Comment[];
 }
 
-export function CommentSection({ projectId, initialComments }: CommentSectionProps) {
+export function HelpCommentSection({ postId, initialComments }: HelpCommentSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Real-time subscription — bara för inloggade (övriga ser SSR-data)
   useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToComments(projectId, setComments);
+    if (!user) return; // Inloggade användare får real-time updates; övriga ser SSR-data
+    const unsub = subscribeToAnswers(postId, setComments);
     return unsub;
-  }, [projectId, user]);
+  }, [postId, user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,8 +30,8 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
     setSaving(true);
     setError("");
     try {
-      await addComment({
-        projectId,
+      await addAnswer({
+        postId,
         userId: user.uid,
         userDisplayName: user.displayName ?? user.email?.split("@")[0] ?? "Byggare",
         userAvatarUrl: user.photoURL ?? "",
@@ -40,7 +39,7 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
       });
       setBody("");
     } catch {
-      setError("Kunde inte skicka kommentaren. Försök igen.");
+      setError("Kunde inte skicka svaret. Försök igen.");
     } finally {
       setSaving(false);
     }
@@ -49,16 +48,15 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
   return (
     <section>
       <h2 className="font-display text-xl font-bold text-ink mb-5">
-        Kommentarer{" "}
+        Hjälp från communityn{" "}
         {comments.length > 0 && (
           <span className="font-mono text-base font-semibold text-mud">({comments.length})</span>
         )}
       </h2>
 
-      {/* Comment list */}
       {comments.length === 0 ? (
         <p className="text-mud text-sm py-4">
-          Inga kommentarer ännu. Bli först med att reagera.
+          Ingen har svarat ännu — bli först med att hjälpa till.
         </p>
       ) : (
         <ul className="space-y-4 mb-8">
@@ -97,35 +95,34 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
         </ul>
       )}
 
-      {/* Comment form */}
       {user ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Skriv en kommentar..."
+            placeholder="Skriv ditt svar eller tips här..."
             rows={3}
             maxLength={1000}
-            className="w-full px-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-build-green resize-none placeholder:text-mud/60"
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-hammer-yellow resize-none placeholder:text-mud/60"
           />
           {error && <p className="text-xs text-bug-red">{error}</p>}
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={saving || !body.trim()}
-              className="chunky-sm pressable rounded-xl bg-build-green px-5 py-2 font-mono text-xs font-bold uppercase tracking-wide text-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
+              className="chunky-sm pressable rounded-xl bg-hammer-yellow px-5 py-2 font-mono text-xs font-bold uppercase tracking-wide text-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
             >
-              {saving ? "Skickar..." : "Kommentera"}
+              {saving ? "Skickar..." : "Hjälp till"}
             </button>
           </div>
         </form>
       ) : (
         <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4 text-center">
           <p className="text-sm text-mud">
-            <Link href="/login" className="font-semibold text-ink underline underline-offset-2 hover:text-build-green">
+            <Link href="/login" className="font-semibold text-ink underline underline-offset-2 hover:text-hammer-yellow">
               Logga in
             </Link>{" "}
-            för att kommentera och hjälpa andra byggare.
+            för att hjälpa andra byggare.
           </p>
         </div>
       )}

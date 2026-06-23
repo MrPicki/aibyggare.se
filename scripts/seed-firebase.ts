@@ -602,6 +602,113 @@ async function ensureHelpPosts() {
   }
 }
 
+// ── Steg 4b: Projekt-kommentarer ─────────────────────────────────────────────
+
+interface ProjectCommentSeed {
+  projectSlug: string;
+  comments: { authorUsername: string; body: string; hoursAgo: number }[];
+}
+
+const PROJECT_COMMENTS: ProjectCommentSeed[] = [
+  {
+    projectSlug: "smartbok-se",
+    comments: [
+      { authorUsername: "linabygger", body: "Snyggt upplägg! Hur löser du OCR-biten för kvittona — kör du något tredjepartsbibliotek eller ren Claude?", hoursAgo: 300 },
+      { authorUsername: "adamcodes", body: "Sitter med liknande utmaning för kvittoskanningar. Vilket OCR-API valde du till slut?", hoursAgo: 250 },
+      { authorUsername: "jonasbygger", body: "Behövs verkligen i Sverige — Fortnox är en mardröm för enskilda firmor. Kör du Bokio-integration eller eget system?", hoursAgo: 200 },
+    ],
+  },
+  {
+    projectSlug: "aikostnad-se",
+    comments: [
+      { authorUsername: "sarapromptar", body: "Exakt verktyget jag saknat. Kom ihåg att räkna in context-window-priset — det skenar fort om man kör långa konversationer.", hoursAgo: 180 },
+      { authorUsername: "christoffer", body: "Kanon! Kör du live-data från respektive modell-API eller hårdkodade priser som uppdateras manuellt?", hoursAgo: 150 },
+      { authorUsername: "nina", body: "Lade till ditt verktyg i min bokmärkesmapp direkt. Sparade mig en halv timme med Excel.", hoursAgo: 100 },
+    ],
+  },
+  {
+    projectSlug: "need-radar",
+    comments: [
+      { authorUsername: "pelle", body: "Intressant idé. Reddit-API:et är ganska begränsat utan betald plan — har du kollat PushShift eller ett scrapers-baserat alternativ?", hoursAgo: 480 },
+      { authorUsername: "majawebb", body: "Hur hanterar du duplicerade trådar och cross-postning? Det verkar vara den svåraste biten.", hoursAgo: 420 },
+      { authorUsername: "linabygger", body: "Har du testat Hacker News Algolia-API:et också? Mer teknisk crowd men riktigt bra signal på vad devs saknar.", hoursAgo: 360 },
+    ],
+  },
+  {
+    projectSlug: "menupilot-se",
+    comments: [
+      { authorUsername: "frida", body: "Precis det här min familj behöver! Kan man utesluta ingredienser man inte vill ha, t.ex. lök?", hoursAgo: 220 },
+      { authorUsername: "christoffer", body: "Matrestor-idén är briljant. Hur mycket context skickar du med — hela kylen eller de 5 vanligaste ingredienserna?", hoursAgo: 200 },
+      { authorUsername: "nina", body: "Har testat och det fungerar bra! Saknar bara möjlighet att spara favoritmenyer mellan sessioner.", hoursAgo: 160 },
+    ],
+  },
+  {
+    projectSlug: "amazon-snipe",
+    comments: [
+      { authorUsername: "oskar", body: "Keepa-API:et är bra val. Har du stött på rate-limiting eller blockering från Amazon?", hoursAgo: 700 },
+      { authorUsername: "pelle", body: "Vilken Telegram-bot-lib kör du — python-telegram-bot eller aiogram? Aiogram är async och hanterar hög last bättre.", hoursAgo: 650 },
+      { authorUsername: "adamcodes", body: "Snyggt projekt! Hur definierar du ett 'prisfel' — procent under historiskt snitt, eller något mer sofistikerat?", hoursAgo: 600 },
+    ],
+  },
+  {
+    projectSlug: "btc-edge",
+    comments: [
+      { authorUsername: "johan", body: "Go/no-go-regler låter rätt. Vilka signals triggar en 'go' — Kelly-kriteriet eller något eget?", hoursAgo: 1000 },
+      { authorUsername: "oskar", body: "Polymarket-API är ganska nytt. Hur stabil har du upplevt den under hög trading-aktivitet?", hoursAgo: 900 },
+      { authorUsername: "sarapromptar", body: "'Disciplin > hopp' är det bästa mottot för trading-botar. Imponerad av att du faktiskt byggt ett verktyg mot ditt eget beteende.", hoursAgo: 800 },
+    ],
+  },
+  {
+    projectSlug: "runnr",
+    comments: [
+      { authorUsername: "frida", body: "Äntligen en löpapp som inte förutsätter att man redan springer 4 gånger i veckan! Finns det en iOS-build att testa?", hoursAgo: 160 },
+      { authorUsername: "majawebb", body: "React Native + Firebase är en riktigt bra kombination för just detta. Bra teknologival.", hoursAgo: 120 },
+      { authorUsername: "linabygger", body: "Testade via länken — träningsplanen kändes faktiskt realistisk för en nybörjare. Bra jobbat.", hoursAgo: 80 },
+    ],
+  },
+];
+
+async function ensureProjectComments() {
+  console.log("\n── Skapar projekt-kommentarer ──");
+  for (const pc of PROJECT_COMMENTS) {
+    // Hitta projektet
+    const projectSnap = await db.collection("projects").where("slug", "==", pc.projectSlug).limit(1).get();
+    if (projectSnap.empty) {
+      console.log(`  ⚠️  Projekt inte hittat: ${pc.projectSlug}`);
+      continue;
+    }
+    const projectDoc = projectSnap.docs[0];
+    const commentsRef = projectDoc.ref.collection("comments");
+
+    // Kolla om kommentarer redan finns
+    const existing = await commentsRef.limit(1).get();
+    if (!existing.empty) {
+      console.log(`  ⏭  Kommentarer finns redan: ${pc.projectSlug}`);
+      continue;
+    }
+
+    for (const c of pc.comments) {
+      const author = user(c.authorUsername);
+      await commentsRef.add({
+        userId: author.uid,
+        userDisplayName: author.displayName,
+        userAvatarUrl: author.avatarUrl,
+        username: author.username,
+        projectId: projectDoc.id,
+        postId: null,
+        parentId: null,
+        body: c.body,
+        createdAt: ts(c.hoursAgo / 24),
+        updatedAt: ts(c.hoursAgo / 24),
+      });
+    }
+
+    // Uppdatera commentCount till faktiskt antal
+    await projectDoc.ref.update({ commentCount: pc.comments.length });
+    console.log(`  ✅ Kommentarer: ${pc.projectSlug} (${pc.comments.length} st)`);
+  }
+}
+
 // ── Steg 5: Prompts ───────────────────────────────────────────────────────────
 
 interface PromptSeed {
@@ -692,6 +799,7 @@ async function main() {
   await ensureAuthUsers();
   await ensureProfiles();
   await ensureProjects();
+  await ensureProjectComments();
   await ensureHelpPosts();
   await ensurePrompts();
   console.log("\n🎉 Seed klar! All data är nu i Firebase.");
