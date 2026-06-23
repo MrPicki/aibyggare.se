@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { DrillIcon } from "@/components/brand/DrillIcon";
-import { getProjects } from "@/lib/firebase/projects";
 import { SEED_PROJECTS } from "@/lib/seed";
 import { STATUS_LABEL } from "@/lib/constants/project-status";
 import type { Project, ProjectStatus } from "@/types/firestore";
@@ -53,6 +52,9 @@ function fromSeed(p: (typeof SEED_PROJECTS)[number]): Row {
 export default async function ProjectsPage() {
   let firestoreProjects: Project[] = [];
   try {
+    // Dynamisk import: om firebase-admin kraschar vid laddning blir det en
+    // fångbar rejection istället för att ta ner hela sidan med 500.
+    const { getProjects } = await import("@/lib/firebase/projects");
     firestoreProjects = await getProjects(50);
   } catch (e) {
     console.error("[projects] Firestore fetch failed:", e);

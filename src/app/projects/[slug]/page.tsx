@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getProjectBySlug, getProjectComments } from "@/lib/firebase/projects";
 import { DrillButton } from "@/components/projects/DrillButton";
 import { CommentSection } from "@/components/projects/CommentSection";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
@@ -18,6 +17,7 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   try {
+    const { getProjectBySlug } = await import("@/lib/firebase/projects");
     const project = await getProjectBySlug(slug);
     if (project) {
       return {
@@ -39,10 +39,13 @@ export default async function ProjectDetailPage({
   const { slug } = await params;
 
   // Try Firestore first, fall back to seed data for demo projects
-  let project = null;
+  let project: import("@/types/firestore").Project | null = null;
   let comments: import("@/types/firestore").Comment[] = [];
 
   try {
+    const { getProjectBySlug, getProjectComments } = await import(
+      "@/lib/firebase/projects"
+    );
     project = await getProjectBySlug(slug);
     if (project) {
       comments = await getProjectComments(project.id);
