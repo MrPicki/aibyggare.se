@@ -711,4 +711,118 @@ from .../jwks-rsa/src/utils.js not supported
 1. **🔴 Lös firebase-admin ERR_REQUIRE_ESM på Vercel** — blockerar all riktig data. Högst prioritet
    innan mer backend byggs. Se "KVARSTÅENDE BLOCKERARE" ovan.
 2. Ta bort `/api/debug-firebase` när blockeraren är löst (diagnos-route, ska inte ligga kvar i prod).
-3. Därefter Fas 4–6 enligt plan: hjälpfrågor, prompts, riktiga profiler i Firestore.
+3. Därefter Fas 5–6 enligt plan: prompts, riktiga profiler i Firestore.
+
+---
+
+---
+
+## 2026-06-23 — Fas 4 ✅ Klar
+
+### Fas 4 — Hjälpfrågor
+
+**Status:** ✅ Klar  
+**Commit:** `5d43c1e`
+
+---
+
+#### Vad som byggdes
+
+**`src/lib/constants/tools.ts`** (nytt):
+- `TOOL_OPTIONS` — konstantarray med alla AI-verktyg (Claude, ChatGPT, Cursor, v0, Bolt, Replit, Lovable, Vercel, Supabase, Firebase, Stripe, Annat)
+- `TOOL_ACCENT` — mapping tool → CSS-variabelfärg (Claude → bug-red, ChatGPT → build-green, osv.)
+- `toolAccent(tool)` — hjälpfunktion för säker lookup med fallback
+
+**`src/lib/firebase/help-client.ts`** (nytt, klient-SDK):
+- `makeUniqueHelpSlug(title)` — sluggenerering med kollisionskontroll mot `posts`-collection
+- `createHelpPost(data)` — skapar post med type="help", status="open" i Firestore
+- `addAnswer(input)` — lägger till svar i `posts/{postId}/comments` + incrementerar commentCount
+- `subscribeToAnswers(postId, callback)` — real-time `onSnapshot` på svarstråd
+- `acceptAnswer(postId, commentId, previousCommentId)` — atomic batch: isAccepted=true på kommentar + status="solved" + acceptedCommentId på post
+
+**`src/lib/firebase/help.ts`** (nytt, Admin SDK):
+- `getHelpPosts(limitCount)` — hämtar posts med type="help", sorterar i minnet (undviker composit-index)
+- `getHelpPostBySlug(slug)` — söker på slug (enkelt index) + verifierar type i kod
+- `getPostAnswers(postId)` — hämtar kommentarer i sub-collection, sorterat asc
+
+**`src/types/firestore.ts`** (uppdaterat):
+- `Post` fick optional fält: `userDisplayName`, `userAvatarUrl`, `username?`, `tryFix?`, `alreadyTried?`, `projectUrl?`
+
+**`src/lib/seed.ts`** (uppdaterat):
+- `HelpQuestion` fick `tools?: string[]` för filtreringsstöd
+- "sessionen-forsvinner-vid-reload" fick 2 svar (Christoffer + Jonas) → nu 3 av 8 seed-frågor har svarstrådar
+
+**`src/components/help/HelpForm.tsx`** (nytt, klient-komponent):
+- 6 fält: titel, verktyg (multi-select-chips), body/tryDo, tryFix, alreadyTried (valfri), projectUrl (valfri)
+- Validation på allt; slug-förhandsgranskning under titelfältet
+- submit → `createHelpPost` → redirect till `/help/[slug]`
+
+**`src/components/help/AnswerSection.tsx`** (nytt, klient-komponent):
+- Real-time subscription via `subscribeToAnswers`
+- Initialdata från SSR (inga flimrar)
+- `timeAgo()` — relativ tidsstämpel på svenska
+- Acceptera-knapp visas bara för frågeägaren på ej-accepterade svar
+- Avatar/initialer fallback, länk till profil
+
+**`src/components/help/HelpFilterList.tsx`** (nytt, klient-komponent):
+- Status-filter (segmenterat: Alla/Öppna/Lösta)
+- Verktygsfilter (chip-knappar, single-select)
+- Filtrering sker i minnet, utan extra Firestore-anrop
+- Empty state vid inga matchningar
+
+**`src/app/help/page.tsx`** (omskriven):
+- `dynamic = "force-dynamic"` — aldrig cachad
+- Server Component hämtar Firestore (med seed-fallback)
+- `postToHelpQuestion(post)` — adapter Post → HelpQuestion
+- Renderar `<HelpFilterList posts={questions} />`
+
+**`src/app/help/new/page.tsx`** (omskriven):
+- Client Component med auth guard (redirect till /login?from=/help/new om ej inloggad)
+- Renderar `<HelpForm />` när inloggad
+
+**`src/app/help/[slug]/page.tsx`** (omskriven):
+- `dynamic = "force-dynamic"` — ingen `generateStaticParams` längre
+- Försöker Firestore (med seed-fallback)
+- **Firestore-post:** visar strukturerade fält (body/tryDo, tryFix, alreadyTried, projectUrl) + `<AnswerSection>`
+- **Seed-post:** visar body + statisk svarstråd + CTA att logga in
+
+**`firestore.rules`** (uppdaterat):
+- Ny regel för `posts/{postId}/comments/{commentId}`:
+  ```
+  allow update: if ... || (isSignedIn()
+      && get(...posts/$(postId)).data.userId == request.auth.uid
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAccepted']));
+  ```
+  → Frågeägaren kan ENBART sätta `isAccepted` — ingenting annat.
+
+---
+
+#### Problem och beslut
+
+| Problem | Beslut |
+|---------|--------|
+| `where("type","==","help").orderBy("createdAt","desc")` kräver composit-index | Tog bort orderBy, sorterar i minnet → inget index behövs |
+| firebase-admin ERR_REQUIRE_ESM på Vercel (kvarstående blockerare) | Samma try/catch-seed-fallback som i Fas 3 — sidan fungerar med seed |
+| Turbopack HMR cacheade gammal server-modul lokalt | Starta om dev-server för att rensa cache; drabbar inte production |
+
+---
+
+#### Verifierat
+
+| Vy | Status |
+|----|--------|
+| `/help` — lista + filter Alla/Öppna/Lösta + verktygsfilter | ✅ 8 seed-frågor, filterknappar renderade, tom-state vid nollresultat |
+| `/help/claude-skrev-om-hela-layouten` — detaljsida med svar | ✅ Accepterat svar (Sara), 2 vanliga svar, CTA-sektion |
+| `/help/new` — utan inloggning | ✅ Redirect till login |
+| `tsc --noEmit` | ✅ Inga fel |
+| `npm run lint` | ✅ 0 fel (1 pre-existerande varning i prompts/[slug]) |
+| `npm run build` | ✅ Ren, /help och /help/[slug] markeras som ƒ (dynamic) |
+
+---
+
+## 🔜 Nästa steg — Fas 5 och 6
+
+**Prioritet:**
+1. **🔴 Lös firebase-admin ERR_REQUIRE_ESM på Vercel** — blockerar all riktig Firestore-data
+2. **Fas 5 — Prompts:** `/prompts/new`-formulär, riktiga prompts i Firestore
+3. **Fas 6 — Profiler:** Riktiga Firestore-profiler, redigera profil

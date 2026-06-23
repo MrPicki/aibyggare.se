@@ -467,13 +467,13 @@ Placering: `.claude/skills/`
 
 **Checkpoint fas 3:** ✅ Besök startsida → logga in → skapa profil → lägg upp projekt → se i flödet → öppna detalj. Allt fungerar.
 
-### Fas 4 — Hjälpfrågor
+### Fas 4 — Hjälpfrågor ✅
 - [x] Frågedetalj-sida med seed-data (slug-lookup, topic, status, author med avatar + profillänk)
 - [x] Svarstråd i seed-data (accepterat svar markerat med grön ring + "Accepterat svar"-bar)
-- [ ] Lista hjälpfrågor med filter (Alla/Öppna/Löst + verktygsfilter)
-- [ ] Skapa hjälpfråga (strukturerat formulär) — `/help/new`
-- [ ] Svar i Firestore (riktiga användare kan svara)
-- [ ] Markera som löst (acceptera svar — kräver Firestore + auth)
+- [x] Lista hjälpfrågor med filter (Alla/Öppna/Löst + verktygsfilter) — `HelpFilterList` client component
+- [x] Skapa hjälpfråga (strukturerat formulär) — `/help/new` med auth guard
+- [x] Svar i Firestore (`posts/{postId}/comments`, real-time subscription, `AnswerSection`)
+- [x] Markera som löst (acceptera svar — Firestore batch, Security Rules uppdaterade)
 
 ### Fas 5 — Prompts och guider
 - [x] Prompt-detaljsida med kodruta, kopiera-knapp, author-länk (`/prompts/[slug]`)
@@ -578,7 +578,7 @@ Innan en fas markeras som klar:
 | Fas 1 — Projektsetup | ✅ Klar |
 | Fas 2 — Databas och auth | ✅ Klar |
 | Fas 3 — Projektflöde | ✅ Klar |
-| Fas 4 — Hjälpfrågor | 🔧 Delvis (detaljsida + seed-svar klara) |
+| Fas 4 — Hjälpfrågor | ✅ Klar |
 | Fas 5 — Prompts/guider | 🔧 Delvis (detaljsida + kopiering klara) |
 | Fas 6 — Profiler | 🔧 Delvis (publik profilsida + avatar-picker klara) |
 | Fas 7 — Admin | Ej påbörjad |
