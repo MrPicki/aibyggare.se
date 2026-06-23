@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrillIcon } from "@/components/brand/DrillIcon";
@@ -15,6 +16,7 @@ export interface ProjectCardProps {
   commentCount: number;
   authorName?: string;
   authorAvatarUrl?: string;
+  isFeatured?: boolean;
   className?: string;
 }
 
@@ -29,15 +31,27 @@ export function ProjectCard({
   commentCount,
   authorName,
   authorAvatarUrl,
+  isFeatured,
   className,
 }: ProjectCardProps) {
   return (
     <article
       className={cn(
-        "chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1",
+        "chunky pressable group relative flex h-full flex-col rounded-3xl bg-paper hover:-rotate-1",
         className,
       )}
     >
+      {isFeatured && (
+        <div className="pointer-events-none absolute -right-3 -top-3 z-10 rotate-[-12deg] drop-shadow-md">
+          <Image
+            src="/seed/stamp-featured.png"
+            alt="Mest borrad toppbygge"
+            width={72}
+            height={72}
+            className="h-[60px] w-[60px] md:h-[72px] md:w-[72px]"
+          />
+        </div>
+      )}
       {/* Färgad header-bar (ritningslapp) */}
       <div
         className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5"

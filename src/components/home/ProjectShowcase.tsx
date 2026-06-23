@@ -26,8 +26,8 @@ export function ProjectShowcase() {
         </div>
       </div>
 
-      {/* Carousel */}
-      <div className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Carousel — pt-4 ger plats för stämpeln som sticker upp ovanför kortets kant */}
+      <div className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 pt-4 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="hidden sm:block sm:w-[max(0px,calc((100vw-80rem)/2))] shrink-0" aria-hidden />
         {SEED_PROJECTS.map((p) => (
           <div key={p.slug} className="w-[280px] shrink-0 snap-start sm:w-[320px]">
