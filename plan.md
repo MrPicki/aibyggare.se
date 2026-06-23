@@ -95,6 +95,21 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
 
 **Princip:** Undvik överkomplexitet. Bygg robust och läsbart.
 
+### 🔴 KÄND BLOCKERARE (2026-06-23): firebase-admin laddar inte på Vercel
+
+`firebase-admin` kan inte laddas i Vercels serverless-runtime pga `ERR_REQUIRE_ESM`:
+`jwks-rsa@4.1.0` gör `require("jose")`, men `jose@6.2.3` är ESM-only.
+
+**Konsekvens:** Ingen riktig Firestore-data laddas i produktion. Alla sidor faller tillbaka på
+seed-data via `try/catch` runt dynamiska imports. **Detta MÅSTE lösas innan Fas 4–6 kan kopplas
+på riktig data.** Lösningsförslag: pinna `jose` till CJS-version via `overrides`, separera
+`firebase-admin/auth` från läs-vägen, eller uppgradera firebase-admin. Se `devlog.md` 2026-06-23.
+
+**Gjorda skydd (så produktionen inte kraschar med 500):**
+- `serverExternalPackages: ["firebase-admin"]` i `next.config.ts` (buntar inte admin-SDK:n)
+- Dynamiska `import()` inuti `try/catch` i alla server-sidor som rör firebase-admin
+- `/api/debug-firebase` — diagnos-route (ta bort när blockeraren är löst)
+
 ---
 
 ## Kodbasstruktur
@@ -569,6 +584,9 @@ Innan en fas markeras som klar:
 | Fas 7 — Admin | Ej påbörjad |
 | Fas 8 — Polish | Ej påbörjad |
 
+**🔴 Blockerare över alla faser:** firebase-admin laddar inte på Vercel (ERR_REQUIRE_ESM / jose).
+Riktig Firestore-data fungerar inte i produktion förrän detta är löst — se sektion under Teknisk stack.
+
 ---
 
-*Senast uppdaterad: 2026-06-22 (session 4)*
+*Senast uppdaterad: 2026-06-23 (session 5)*

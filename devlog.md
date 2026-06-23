@@ -613,3 +613,102 @@ Auth → Middleware → Login-sida → Auto-profil → Onboarding
 3. **Fas 6 — Profiler:** Riktiga Firestore-profiler på `/profile/[handle]` (nuvarande sida visar bara seed-data)
 
 **Seed-data är nu fullt konsekvent och länkad** — när Firestore-data kopplas på kan seed-fallbacks plockas bort fas för fas.
+
+---
+
+---
+
+## 2026-06-23 — Felsökning: 500 på projektsidor + `/projects` visade fel
+
+### Bakgrund — symptomet
+
+Användaren fick **svart error-sida ("This page couldn't load — A server error occurred")** på Vercel
+vid klick på "Se alla byggen" (`/projects`) och "Visa tråd" (`/projects/[slug]`). Lokalt funkade allt,
+builden var grön — felet syntes bara i produktion. Dessutom visade `/projects` fel innehåll
+(avskalad leaderboard som saknade status, taggar och kommentarer).
+
+---
+
+### ⚠️ Rotorsak — firebase-admin kraschar vid import på Vercel
+
+**Det här är den viktigaste lärdomen från sessionen. Läs noga.**
+
+`firebase-admin` kraschade vid **modul-laddning** i Vercels serverless-runtime — *innan* någon
+`try/catch` i `admin.ts` hann köra. En statisk `import` som kastar vid laddning tar ner hela
+sidan med en ofångbar 500. Lokalt och i builden maskerades felet helt.
+
+**Bevisat** genom att skapa `/api/debug-firebase` (trivial route med `try/catch` runt
+`import("@/lib/firebase/admin")`). När även den returnerade 500/`import: "FAILED"` var det
+bevisat att själva importen kraschar, inte vår kod.
+
+Felkedjan i två lager:
+
+1. **Next.js buntade `firebase-admin`** → dess dynamiska `require`/native-beroenden går sönder.
+   - **Fix:** `serverExternalPackages: ["firebase-admin"]` i `next.config.ts` (laddas direkt från
+     node_modules istället för att buntas). Commit `1784559`.
+2. **Statiska imports som kan krascha vid laddning** → ofångbar 500.
+   - **Fix:** bytte till dynamisk `import()` inuti `try/catch` i `src/app/projects/page.tsx`,
+     `src/app/projects/[slug]/page.tsx` och `/api/debug-firebase`. En import-krasch blir nu en
+     **fångbar** rejection och sidan faller tillbaka på seed-data. Commit `4ddd961`.
+
+**Resultat:** Svarta error-sidan är borta. `/projects` och `/projects/smartbok-se` ger 200.
+
+---
+
+### 🔴 KVARSTÅENDE BLOCKERARE — firebase-admin laddar fortfarande INTE i produktion
+
+Sidorna funkar nu **bara tack vare seed-fallbacken**. `/api/debug-firebase` på Vercel visar:
+
+```
+ERR_REQUIRE_ESM: require() of ES Module .../jose/dist/webapi/index.js
+from .../jwks-rsa/src/utils.js not supported
+```
+
+**Vad det betyder:** `firebase-admin` → `jwks-rsa@4.1.0` gör `require("jose")`, men `jose@6.2.3`
+är **ESM-only** och kan inte `require()`:as. Alltså:
+
+> **Riktig Firestore-data laddas INTE på Vercel än. Allt som visas på `/projects`,
+> `/projects/[slug]`, profilsidor osv. är seed-data.** Det måste lösas innan Fas 4–6
+> (riktiga frågor, prompts, profiler) kan kopplas på på riktigt.
+
+**Möjliga lösningar att utvärdera (ej testade än):**
+- Pinna `jose` till en CJS-kompatibel version via `overrides` i `package.json`
+- Separera `firebase-admin/auth` (det är `auth` som drar in `jwks-rsa`) från läs-vägen, så att
+  ren Firestore-läsning inte tvingar in jose
+- Kontrollera Node-version på Vercel + ev. firebase-admin-uppgradering som hanterar ESM-jose
+
+---
+
+### Ändring — `/projects` visar nu fulla projektkort
+
+**Status:** ✅ Klar · Commit `1c2c6d1`
+
+- `src/app/projects/page.tsx` — bytte ut den avskalade leaderboard-listan mot ett rutnät av
+  `ProjectCard` (samma komponent som startsidans `ProjectShowcase`). 22 rader in, 97 bort.
+- Båda sidorna drar nu från **samma** `SEED_PROJECTS` i `src/lib/seed.ts`.
+- Varje kort visar nu: namn, tagline, status-sticker, taggar, antal borrar, antal kommentarer,
+  "Visa bygget"-knapp. Sorterat efter flest borrar.
+- Tom-state visas **bara** om listan faktiskt är tom (omöjligt så länge seed finns).
+
+---
+
+### Verifierat
+
+- `tsc --noEmit` ✅ · `eslint` ✅ · `npm run build` ✅
+- Live: `/projects` → 200, `/projects/smartbok-se` → 200 (curl-poll)
+- Lokal DOM-snapshot: alla 7 byggen renderas sorterade efter borrar
+  (AIkostnad 24 → MenuPilot 21 → Runnr 21 → Smartbok 18 → Need Radar 15 → Amazon Snipe 11 → BTC Edge 9),
+  med status, taggar, "Visa bygget", inga console-errors.
+
+> 💡 **Notering om verktyg:** `preview_screenshot` timeoutar på den här appen — Firebase
+> klient-SDK håller en långlivad anslutning öppen så sidan når aldrig "network idle".
+> Använd `preview_snapshot` (DOM-träd) eller `curl` för verifiering istället.
+
+---
+
+### 🔜 Nästa steg (uppdaterad prioritet)
+
+1. **🔴 Lös firebase-admin ERR_REQUIRE_ESM på Vercel** — blockerar all riktig data. Högst prioritet
+   innan mer backend byggs. Se "KVARSTÅENDE BLOCKERARE" ovan.
+2. Ta bort `/api/debug-firebase` när blockeraren är löst (diagnos-route, ska inte ligga kvar i prod).
+3. Därefter Fas 4–6 enligt plan: hjälpfrågor, prompts, riktiga profiler i Firestore.
