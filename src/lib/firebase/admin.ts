@@ -3,6 +3,10 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
+// Kräver Node.js >=22 (engines i package.json).
+// Node.js 22.12+ stöder require(esm), vilket löser firebase-admin/auth →
+// jwks-rsa → jose@6 (ESM-only)-kedjan som kraschade på Node.js 18/20.
+
 function createAdminApp() {
   if (getApps().length > 0) return getApps()[0];
 
@@ -15,7 +19,6 @@ function createAdminApp() {
   });
 }
 
-// Wrapped at module level so import never throws — pages' try/catch handles null.
 let _adminAuth: ReturnType<typeof getAuth> | null = null;
 let _adminDb: ReturnType<typeof getFirestore> | null = null;
 let _adminStorage: ReturnType<typeof getStorage> | null = null;

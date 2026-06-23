@@ -95,20 +95,9 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
 
 **Princip:** Undvik överkomplexitet. Bygg robust och läsbart.
 
-### 🔴 KÄND BLOCKERARE (2026-06-23): firebase-admin laddar inte på Vercel
-
-`firebase-admin` kan inte laddas i Vercels serverless-runtime pga `ERR_REQUIRE_ESM`:
-`jwks-rsa@4.1.0` gör `require("jose")`, men `jose@6.2.3` är ESM-only.
-
-**Konsekvens:** Ingen riktig Firestore-data laddas i produktion. Alla sidor faller tillbaka på
-seed-data via `try/catch` runt dynamiska imports. **Detta MÅSTE lösas innan Fas 4–6 kan kopplas
-på riktig data.** Lösningsförslag: pinna `jose` till CJS-version via `overrides`, separera
-`firebase-admin/auth` från läs-vägen, eller uppgradera firebase-admin. Se `devlog.md` 2026-06-23.
-
-**Gjorda skydd (så produktionen inte kraschar med 500):**
+**Aktiva skydd (kvar för säkerhets skull):**
 - `serverExternalPackages: ["firebase-admin"]` i `next.config.ts` (buntar inte admin-SDK:n)
-- Dynamiska `import()` inuti `try/catch` i alla server-sidor som rör firebase-admin
-- `/api/debug-firebase` — diagnos-route (ta bort när blockeraren är löst)
+- `"engines": { "node": ">=22" }` i `package.json` — kräver Node.js 22 som stöder `require(esm)`
 
 ---
 
@@ -475,13 +464,16 @@ Placering: `.claude/skills/`
 - [x] Svar i Firestore (`posts/{postId}/comments`, real-time subscription, `AnswerSection`)
 - [x] Markera som löst (acceptera svar — Firestore batch, Security Rules uppdaterade)
 
-### Fas 5 — Prompts och guider
+### Fas 5 — Prompts och guider ✅
 - [x] Prompt-detaljsida med kodruta, kopiera-knapp, author-länk (`/prompts/[slug]`)
 - [x] Kopiera-knapp (`CopyButton`-komponent, clipboard API)
 - [x] Bookmark/spara-funktion på PromptCard (localStorage, klient-side)
-- [ ] Lista prompts/guider — fungerar, men drar bara seed-data
-- [ ] Skapa prompt (formulär med markdown-stöd) — `/prompts/new`
-- [ ] Riktiga prompts i Firestore
+- [x] Lista prompts — hämtar från Firestore, seed-fallback vid fel
+- [x] Skapa prompt (formulär) — `/prompts/new` med auth-guard
+- [x] Riktiga prompts i Firestore (4 seed-prompts + användarflöde klart)
+- [x] Auth-gate på prompt-text — inloggade ser full text, övriga ser lås-ikon
+- [x] Borrar-knapp på prompts (`PromptDrillButton`) — upvote med `votes`-subcollection
+- [x] Riktiga seed-konton — 11 Firebase Auth-konton + Firestore-profiler, 7 projekt, 8 help-posts, 4 prompts (idempotent seed-script)
 
 ### Fas 6 — Profiler
 - [x] Publik profilsida (`/profile/[handle]`) — visar seed-användare med avatar, bio, verktyg, byggen, frågor, prompts
@@ -579,14 +571,11 @@ Innan en fas markeras som klar:
 | Fas 2 — Databas och auth | ✅ Klar |
 | Fas 3 — Projektflöde | ✅ Klar |
 | Fas 4 — Hjälpfrågor | ✅ Klar |
-| Fas 5 — Prompts/guider | 🔧 Delvis (detaljsida + kopiering klara) |
+| Fas 5 — Prompts/guider | ✅ Klar |
 | Fas 6 — Profiler | 🔧 Delvis (publik profilsida + avatar-picker klara) |
 | Fas 7 — Admin | Ej påbörjad |
 | Fas 8 — Polish | Ej påbörjad |
 
-**🔴 Blockerare över alla faser:** firebase-admin laddar inte på Vercel (ERR_REQUIRE_ESM / jose).
-Riktig Firestore-data fungerar inte i produktion förrän detta är löst — se sektion under Teknisk stack.
-
 ---
 
-*Senast uppdaterad: 2026-06-23 (session 5)*
+*Senast uppdaterad: 2026-06-23 (session 6)*

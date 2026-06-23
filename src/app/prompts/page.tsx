@@ -1,15 +1,45 @@
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
-import { PromptCard } from "@/components/cards/PromptCard";
+import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard";
 import { Sticker } from "@/components/ui/Sticker";
 import { SEED_PROMPTS } from "@/lib/seed";
+import { toolAccent } from "@/lib/constants/tools";
+import type { Post } from "@/types/firestore";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Prompts — AIbyggare.se",
   description: "Prompts som faktiskt funkade. Sparade av byggare för byggare.",
 };
 
-export default function PromptsPage() {
-  const prompts = SEED_PROMPTS;
+function postToPromptCard(post: Post): PromptCardProps & { postId: string } {
+  return {
+    postId: post.id,
+    title: post.title,
+    tool: post.tool,
+    badge: post.tags[0] ?? "Prompt",
+    prompt: post.body,
+    accent: toolAccent(post.tool),
+    slug: post.slug,
+    upvoteCount: post.upvoteCount ?? 0,
+    author: post.userDisplayName,
+    authorHandle: post.username,
+    authorAvatarUrl: post.userAvatarUrl,
+  };
+}
+
+export default async function PromptsPage() {
+  let prompts: PromptCardProps[] = SEED_PROMPTS;
+
+  try {
+    const mod = await import("@/lib/firebase/prompts");
+    const posts = await mod.getPromptPosts(50);
+    if (posts.length > 0) {
+      prompts = posts.map(postToPromptCard);
+    }
+  } catch {
+    // Firestore otillgänglig — seed-data visas
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
@@ -31,7 +61,7 @@ export default function PromptsPage() {
       {prompts.length > 0 ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {prompts.map((p) => (
-            <PromptCard key={p.title} {...p} />
+            <PromptCard key={p.slug ?? p.title} {...p} />
           ))}
         </div>
       ) : (

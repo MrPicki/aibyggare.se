@@ -801,8 +801,8 @@ from .../jwks-rsa/src/utils.js not supported
 
 | Problem | Beslut |
 |---------|--------|
-| `where("type","==","help").orderBy("createdAt","desc")` kräver composit-index | Tog bort orderBy, sorterar i minnet → inget index behövs |
-| firebase-admin ERR_REQUIRE_ESM på Vercel (kvarstående blockerare) | Samma try/catch-seed-fallback som i Fas 3 — sidan fungerar med seed |
+| `where("type","==","help").orderBy("createdAt","desc")` kräver composit-index | Återinförde `orderBy("createdAt","desc")` explicit + skapade composit-index i `firestore.indexes.json` |
+| firebase-admin ERR_REQUIRE_ESM på Vercel (löst 2026-06-23) | `"engines":{"node":">=22"}` i package.json — Node.js 22 har stabil `require(esm)` |
 | Turbopack HMR cacheade gammal server-modul lokalt | Starta om dev-server för att rensa cache; drabbar inte production |
 
 ---
@@ -823,6 +823,99 @@ from .../jwks-rsa/src/utils.js not supported
 ## 🔜 Nästa steg — Fas 5 och 6
 
 **Prioritet:**
-1. **🔴 Lös firebase-admin ERR_REQUIRE_ESM på Vercel** — blockerar all riktig Firestore-data
-2. **Fas 5 — Prompts:** `/prompts/new`-formulär, riktiga prompts i Firestore
-3. **Fas 6 — Profiler:** Riktiga Firestore-profiler, redigera profil
+1. ✅ ~~**Lös firebase-admin ERR_REQUIRE_ESM på Vercel**~~ — fixat 2026-06-23
+2. ✅ ~~**Firestore-index (posts: type + createdAt)**~~ — skapat och verifierat 2026-06-23
+3. **Fas 5 — Prompts:** `/prompts/new`-formulär, riktiga prompts i Firestore
+4. **Fas 6 — Profiler:** Riktiga Firestore-profiler, redigera profil
+
+---
+
+## 2026-06-23 — Fix: firebase-admin ERR_REQUIRE_ESM (blocker löst, stabil lösning)
+
+**Rot-orsak:**
+`firebase-admin@14.0.0` → `jwks-rsa@4.1.0` gör `require("jose")` vid import av `firebase-admin/auth`. `jose@6.2.3` är ESM-only. På Node.js 18/20 kastar detta `ERR_REQUIRE_ESM`. `serverExternalPackages: ["firebase-admin"]` var redan satt i `next.config.ts` och förhindrar bundling-krasch, men hjälper inte om Node.js-versionen saknar `require(esm)`-stöd.
+
+**Lösning:**
+Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler kan nu laddas via `require()` utan fel. Vercel väljer Node.js-version baserat på `engines.node` i `package.json`. Satte `"engines": { "node": ">=22" }`.
+
+**Ändringar:**
+- `package.json`: tillagd `"engines": { "node": ">=22" }`
+- `src/lib/firebase/admin.ts`: återställd till komplett form med `firebase-admin/auth` + `firebase-admin/storage`
+
+**Verifierat lokalt (Node.js 22.22.3):**
+- `require("jwks-rsa")` (som internt gör `require("jose")`) → ✅ laddas utan fel
+- `tsc --noEmit` → ✅ inga fel
+- Ingen workaround, inga version-pins, ingen lazy import-hackery
+
+**Varför det är framtidssäkert:**
+- Node.js 22 är LTS fram till april 2027
+- `require(esm)` är en stabil, specad Node.js-funktion — försvinner inte
+- Hela `firebase-admin` fungerar — auth, firestore, storage — utan kodändringar
+- Ingen konfiguration att underhålla utöver engines-fältet
+
+---
+
+## 2026-06-23 — Firestore-index + komplett flödesverifiering
+
+**Firestore composit-index:**
+`getHelpPosts` med `where("type","==","help").orderBy("createdAt","desc").limit(50)` kräver ett composit-index. Lagt till i `firestore.indexes.json` och deployat via Firebase Console. Index skapades och aktiverades under session.
+
+**Verifierat (Playwright, 17/17):**
+
+| Kategori | Status |
+|----------|--------|
+| Alla sidor 200, inga 500 | ✅ |
+| `/help` filter (Alla/Öppna/Lösta + verktyg) | ✅ |
+| `/help/[slug]` detaljsida | ✅ |
+| `/help/new` → redirect till login | ✅ |
+| `/projects/new` → redirect till login | ✅ |
+| `/login` Google + GitHub | ✅ |
+| Firestore live-data (9 frågor, 9 projekt) | ✅ |
+| Inga kritiska konsolfeel | ✅ |
+
+---
+
+## 2026-06-23 — Fas 5 klar: Prompts med Firestore, auth-gate, borrar och riktiga seed-konton
+
+### Vad som byggdes
+
+**Prompts-flöde (Fas 5):**
+- `src/lib/firebase/prompts.ts` — Server-side Admin SDK: `getPromptPosts()` och `getPromptPostBySlug()`
+- `src/lib/firebase/prompts-client.ts` — Klient-SDK: `makeUniquePromptSlug()`, `createPromptPost()`, `getUsernameFromProfile()`, `togglePostUpvote()`, `hasPostUpvoted()`
+- `src/components/prompts/PromptForm.tsx` — Formulär med 4 fält (titel, verktyg, kategori, prompt-text), badge-förslag, validering, submit → Firestore → redirect
+- `src/components/prompts/PromptDrillButton.tsx` — Upvote-knapp (borrar) med drill-animation, samma mönster som DrillButton för projekt
+- `src/app/prompts/page.tsx` — Uppdaterad: hämtar från Firestore, seed-fallback vid fel
+- `src/app/prompts/[slug]/page.tsx` — Uppdaterad: SSR + auth-gate via `__session`-cookie, CopyButton, PromptDrillButton
+- `src/app/prompts/new/page.tsx` — Uppdaterad: auth-guard (redirect till login om ej inloggad), renderar PromptForm
+
+**Auth-gate på prompt-text:**
+- Inloggade användare ser full prompt-text + Kopiera-knapp + Borrar-knapp
+- Ej inloggade ser lås-ikon + "Logga in för att se prompten"
+- Server-side check via `cookies().__session` (inte bara klient-side)
+
+**Riktiga seed-konton (scripts/seed-firebase.ts):**
+- 11 Firebase Auth-konton med deterministiska UID:n (`seed_${username}`)
+- 11 Firestore-profiler med bio, verktyg, avatar-URL, gick-med-datum
+- 7 projekt, 8 help-posts (med answer-subsamlingar och acceptedCommentId), 4 prompts
+- Idempotent: kör-om gör ingenting (check-before-create via slug/uid)
+- Seed-emails (`${username}@seed.aibyggare.se`) — syns inte för riktiga användare
+
+### Problem lösta
+
+- `@/lib/auth/AuthContext` (fel sökväg) → korrigerat till `@/contexts/AuthContext`
+- `useEffect` saknades i React-import → lagt till
+- Firestore composite-index för `type + createdAt` behövde byggas om efter seed-data — väntade ~2 min, indexet aktiverades
+
+### Verifierat
+
+| Sida | Status |
+|------|--------|
+| `/projects` — 7 riktiga Firestore-projekt, sorterade efter upvotes | ✅ |
+| `/prompts` — 4 riktiga prompts, auth-gate på text, @handles länkade | ✅ |
+| `/help` — 8 riktiga help-posts (5 öppna, 3 lösta), filtrera fungerar | ✅ |
+| `/profile/christoffer` — riktig Firestore-profil, projekt synliga | ✅ |
+| Composite Firestore-index (type + createdAt) — aktivt | ✅ |
+
+### Nästa steg
+
+🔜 **Fas 6 — Profiler:** Redigera profil-sida, visa egna posts på profil, real-data profilsidor för alla seed-användare

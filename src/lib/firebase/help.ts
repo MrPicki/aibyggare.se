@@ -20,17 +20,15 @@ function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
 
 export async function getHelpPosts(limitCount = 50): Promise<Post[]> {
   const db = requireDb();
-  // Enkel where-filter (ingen orderBy) → kräver inget composit-index.
-  // Sortering sker i minnet efter fetch.
   const snap = await withTimeout(
-    db.collection("posts").where("type", "==", "help").limit(limitCount).get()
+    db
+      .collection("posts")
+      .where("type", "==", "help")
+      .orderBy("createdAt", "desc")
+      .limit(limitCount)
+      .get()
   );
-  const posts = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Post));
-  return posts.sort((a, b) => {
-    const aS = (a.createdAt as { seconds: number } | null)?.seconds ?? 0;
-    const bS = (b.createdAt as { seconds: number } | null)?.seconds ?? 0;
-    return bS - aS;
-  });
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Post));
 }
 
 export async function getHelpPostBySlug(slug: string): Promise<Post | null> {
