@@ -7,6 +7,11 @@ import type { NextConfig } from "next";
 const firebaseAppDomain = `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`;
 
 const nextConfig: NextConfig = {
+  // firebase-admin använder dynamiska require/native-beroenden som går sönder
+  // om Next.js försöker bundla det. Markera som externt så det laddas direkt
+  // från node_modules i serverless-funktionen — annars kraschar importen på
+  // Vercel med 500 redan innan vår try/catch i admin.ts hinner köra.
+  serverExternalPackages: ["firebase-admin"],
   images: {
     remotePatterns: [
       // Firebase Storage (project cover images, user avatars)
