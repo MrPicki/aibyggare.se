@@ -87,8 +87,8 @@ export interface Comment {
   parentId: string | null;
   body: string;
   isAccepted: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp | null;
 }
 
 // ─── Votes ───────────────────────────────────────────────────────────────────

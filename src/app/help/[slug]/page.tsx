@@ -67,11 +67,15 @@ export default async function HelpDetailPage({
         id: `seed-${i}`,
         userId: "",
         userDisplayName: a.author,
-        userAvatarUrl: a.avatarUrl,
+        userAvatarUrl: a.avatarUrl ?? "",
+        projectId: null,
+        postId: null,
+        parentId: null,
         body: a.body,
+        isAccepted: a.isAccepted ?? false,
         createdAt: null,
         updatedAt: null,
-      } as unknown as Comment))
+      }))
     : [];
 
   const initialComments = post ? comments : seedComments;
@@ -148,7 +152,12 @@ export default async function HelpDetailPage({
       {/* Kommentarssektion */}
       <div className="mt-10">
         {post ? (
-          <HelpCommentSection postId={post.id} initialComments={initialComments} />
+          <HelpCommentSection
+            postId={post.id}
+            postOwnerId={post.userId}
+            acceptedCommentId={post.acceptedCommentId}
+            initialComments={initialComments}
+          />
         ) : (
           /* Seed-svar visas statiskt (ingen Firestore-post) */
           <section>

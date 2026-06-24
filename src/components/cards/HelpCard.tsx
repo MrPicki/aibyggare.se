@@ -95,7 +95,6 @@ export function HelpCard({
               <Link
                 href={`/profile/${username}`}
                 className="hover:text-ink transition-colors"
-                onClick={(e) => e.stopPropagation()}
               >
                 @{username}
               </Link>
