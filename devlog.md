@@ -976,6 +976,11 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 - Visar nu externa länkar (Globe + inline GitHub/LinkedIn-SVG, eftersom lucide-versionen saknar de ikonerna).
 - Tog bort `generateStaticParams` (sidan är dynamisk nu).
 
+**6. Deploy till Vercel-produktion**
+- Fast-forwardade `main` från `bfd1dc6` → `22548ac` (de två nya commits: devlog-dok + Fas 6). Ren fast-forward, ingen merge-commit.
+- Push till `main` triggar Vercels produktions-deploy enligt det dokumenterade flödet.
+- **⚠️ Kunde inte verifiera live-sajten härifrån:** containerns nätverkspolicy släpper bara igenom paketregister + Anthropic. Utgående mot `aibyggare.vercel.app` ger `000` och proxyn nekar `fonts.googleapis.com` med 403 (samma orsak som att lokal build inte kunde hämta Google Fonts). Vercels egen byggmiljö når Google Fonts, så builden bör gå grön där precis som tidigare `main`-deployer. Verifiering av live-deployen ligger hos användaren (Vercel-dashboard / besök `/settings`).
+
 ### Problem och beslut
 
 | Problem | Beslut |
