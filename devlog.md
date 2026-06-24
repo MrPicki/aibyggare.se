@@ -1127,3 +1127,22 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 🔧 **Fas 8 — Polish: infrastrukturen klar** (SEO, sitemap, robots, loading/error/404, no-ai-look). Review-baserade punkter (responsiv/a11y/perf) kvar som manuella steg.
 
 > **Alla manuella steg är nu samlade i `plan.md` under "⚠️ MANUELLA STEG SOM DU MÅSTE GÖRA".**
+
+---
+
+## 2026-06-24 — Kvalitetsrevision + flödesschema (session 8)
+
+Granskade hela projektet mot **koden** (inte bara devloggen) och CLAUDE.md. La in
+ett **flödesschema** (Mermaid: användarflöde + arkitektur) och en **kvalitetsrevision**
+(per-fas-verdikt + prioriterade brister) i `plan.md`.
+
+**Verifierade brister (ärlig bild — allt håller inte måttet):**
+1. 🔴 **`/guides` + `/guides/new` är stubbar** — list-sidan permanent tom, new-sidan visar "Formuläret byggs just nu". Nav-återvändsgränd + placeholder i prod (bryter mot CLAUDE.md). Fas 5 hette "Prompts **och guider**" men guider byggdes aldrig.
+2. 🔴 **Ingen server-side innehållsvalidering** — `createProject`/`addComment`/post-skrivningar går direkt via klient-SDK; Firestore Rules validerar inte fältinnehåll/längd. "Aldrig lita på klient-data" uppfylls inte för innehåll.
+3. 🟡 **Username-unikhet ej atomär** — query-then-write race (plan flaggade behov av Cloud Function/transaktion, aldrig byggt).
+4. 🟡 **Denormalisering ej synkad** — profiländring uppdaterar inte `userDisplayName`/`userAvatarUrl` på befintliga projekt/posts/kommentarer.
+5. 🟢 Ingen rate limiting; palett i plan.md inaktuell vs `globals.css`.
+
+**Höll måttet:** auth/route-skydd, atomiska röster, realtidskommentarer, profil/settings/badges, admin-moderering (äkta server-verifiering), SEO-grund.
+
+Detta var en **analys** på användarens begäran — inga fixar gjorda denna vända. Bristerna ligger som prioriterad lista i `plan.md` för nästa steg.

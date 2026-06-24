@@ -625,4 +625,113 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-24 (session 7)*
+---
+
+## Flödesschema — hela AIbyggare.se
+
+> Renderas grafiskt på GitHub (Mermaid). Två vyer: användarresa/sidkarta och teknisk arkitektur.
+
+### Användarflöde och sidkarta
+
+```mermaid
+flowchart TD
+    V["Besokare"] --> R{"Inloggad?"}
+    R -->|Nej| PUB["Publikt - lasa byggen, hjalp, prompts, profiler"]
+    PUB --> LOGIN["/login - Google eller GitHub"]
+    R -->|Ja| HAS{"Har profil?"}
+    LOGIN --> CB["onIdTokenChanged + ensureProfile + satter __session-cookie"]
+    CB --> HAS
+    HAS -->|Nej, saknar username| ONB["/onboarding - username, namn, avatar, verktyg"]
+    HAS -->|Ja| HOME["Inloggad - startsida + header"]
+    ONB --> HOME
+
+    HOME --> A1["Lagg upp bygge - /projects/new"]
+    HOME --> A2["Stall fraga - /help/new"]
+    HOME --> A3["Dela prompt - /prompts/new"]
+    HOME --> A4["Redigera profil - /settings"]
+    HOME --> A5["Min profil - /profile/handle"]
+    HOME --> ADM{"role = admin?"}
+    ADM -->|Ja| ADMIN["/admin - statistik, rapporter, radera, utse featured"]
+
+    A1 --> PDET["Projektdetalj - rosta, kommentera, rapportera"]
+    A2 --> HDET["Hjalpdetalj - svara, rapportera"]
+    A3 --> QDET["Promptdetalj - kopiera, rosta, auth-gate"]
+    A5 --> BADGE["Profil - byggen, fragor, prompts, marken"]
+
+    PDET --> REP["Rapport -> reports-collection"]
+    HDET --> REP
+    REP --> ADMIN
+
+    GUIDES["/guides - STUB, ej byggd"]:::stub
+    HOME -.nav-lank.-> GUIDES
+    classDef stub fill:#B25A44,color:#fff,stroke:#373927;
+```
+
+### Teknisk arkitektur och dataflöde
+
+```mermaid
+flowchart LR
+    subgraph Klient["Klient (browser)"]
+      UI["Client Components"]
+      AC["AuthContext - ProfileLite"]
+    end
+    subgraph NextServer["Next.js server (Vercel)"]
+      SC["Server Components - SSR"]
+      API["/api/admin/action"]
+      GUARD["getAdminUser - verifyIdToken + role"]
+      MW["proxy.ts - UX-grind, JWT-exp"]
+    end
+    subgraph FB["Firebase"]
+      AUTH["Auth - Google/GitHub"]
+      FS["Firestore"]
+      ST["Storage"]
+      RULES["Security Rules"]
+    end
+
+    AC -->|getIdToken| AUTH
+    AC -->|__session-cookie| MW
+    UI -->|client SDK - skriv/las/realtid| FS
+    UI -->|bilduppladdning| ST
+    FS --- RULES
+    ST --- RULES
+    SC -->|Admin SDK - SSR-las| FS
+    API --> GUARD
+    GUARD -->|verifierar| AUTH
+    GUARD -->|laser role| FS
+    API -->|Admin SDK - mutationer| FS
+```
+
+---
+
+## Kvalitetsrevision — håller varje fas måttet? (session 8)
+
+> Granskad mot **koden**, inte bara devloggen, och mot CLAUDE.md:s krav (säkerhet, validering, empty states, mobil, inga placeholders).
+
+### Per fas
+
+| Fas | Verdikt | Kommentar |
+|-----|---------|-----------|
+| Fas 1 — Setup/design | ✅ Håller | Designtokens, fonts, layout på plats. *Anm:* palett i plan.md är inaktuell vs `globals.css`. |
+| Fas 2 — Auth/Rules | ✅ Håller med anm. | Auth + onboarding + route-skydd solitt. *Anm:* `__session`-cookie ej httpOnly (medveten tradeoff, server-verifiering gör forgery omöjlig). Username-unikhet ej atomär. |
+| Fas 3 — Projektflöde | ⚠️ Håller med brist | Flöde, atomiska upvotes, realtidskommentarer fungerar. **Brist: ingen server-side innehållsvalidering** — klient skriver direkt, rules validerar ej innehåll. |
+| Fas 4 — Hjälpfrågor | ⚠️ Samma brist | Filter, svar, markera löst OK. Samma valideringsbrist som Fas 3. |
+| Fas 5 — Prompts **& guider** | 🔧 **Brist** | Prompts: ✅ klart. **Guider: STUB** — `/guides` permanent tom, `/guides/new` visar "Formuläret byggs just nu". Nav-återvändsgränd + placeholder i prod. |
+| Fas 6 — Profiler | ⚠️ Håller med brist | Profilsida, settings, badges, länkar solitt. **Brist: denormaliserade `userDisplayName`/`userAvatarUrl` uppdateras INTE på befintligt innehåll vid profiländring.** |
+| Fas 7 — Admin | ✅ Håller | Server-side admin-verifiering, säker API, escalation-hål tätade i rules. *Kräver deploy + test (manuella steg).* |
+| Fas 8 — Polish | 🔧 Delvis | SEO/sitemap/robots/states ✅. Responsiv/a11y/perf-granskning + OG-bild kvar (kräver webbläsare → manuella steg). |
+
+### Prioriterade brister att åtgärda
+
+1. **🔴 Guider-stubben** — antingen bygg klart guides-flödet (som prompts) ELLER ta bort "Genvägar" ur navet tills det är klart. En placeholder i produktion bryter mot CLAUDE.md. *Rekommendation: ta bort ur nav nu, bygg som egen fas senare.*
+2. **🔴 Server-side validering** — lägg ett valideringslager (API-route eller Cloud Function) för projekt/post/kommentar-skrivningar, alternativt skärp Firestore Rules med `request.resource.data`-kontroller (längd, typ, obligatoriska fält). Idag kan klient-SDK:n skriva godtycklig data.
+3. **🟡 Atomär username-unikhet** — flytta unik-check till en transaktion eller en `usernames/{username}`-lock-collection. Nuvarande query-then-write kan ge dubbletter.
+4. **🟡 Denormaliserings-synk** — när en profil ändras, uppdatera (batch/Cloud Function) `userDisplayName`/`userAvatarUrl` på användarens projekt/posts/kommentarer. Annars visas gamla namn.
+5. **🟢 Rate limiting** — reports/kommentarer kan spammas. Lägg App Check eller enkel throttling före lansering.
+6. **🟢 Doc-drift** — uppdatera palett-tabellen i plan.md till de faktiska färgerna i `globals.css`.
+
+### Det som verkligen håller måttet
+Auth-flödet, route-skydd, atomiska röster (en per användare), realtidskommentarer, hela profil/settings/badge-kedjan, admin-moderering med äkta server-verifiering, och SEO-grunden. Kärnan av plattformen är solid och produktionsnära — bristerna ovan är avgränsade och åtgärdbara, inte strukturella.
+
+---
+
+*Senast uppdaterad: 2026-06-24 (session 8 — kvalitetsrevision + flödesschema)*
