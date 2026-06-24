@@ -489,14 +489,14 @@ Placering: `.claude/skills/`
 - [x] Markera featured project / featured guide — admin togglar `isFeatured`
 - [x] **Säkerhet:** server-side admin-verifiering (verifyIdToken + role), tätade privilege-escalation (role + isFeatured) i Firestore Rules
 
-### Fas 8 — Polish
-- [ ] Responsivitet-genomgång
-- [ ] Accessibility-review
-- [ ] Empty states, loading states, error states, skeletons
-- [ ] SEO metadata + Open Graph
-- [ ] Sitemap
-- [ ] Performance-optimering
-- [ ] `no-ai-look`-granskning
+### Fas 8 — Polish 🔧
+- [x] Empty states, loading states, error states, skeletons — `loading.tsx` (skeletons) för projects/help/prompts/profile, `error.tsx`, `not-found.tsx` (branded)
+- [x] SEO metadata + Open Graph — root `metadataBase`, title-mall, keywords, OG + Twitter Card (OG-bild kvar, se manuella steg)
+- [x] Sitemap — `sitemap.ts` (statiska + innehåll via Firestore/seed) + `robots.ts`
+- [ ] Responsivitet-genomgång — kräver webbläsare (manuellt steg)
+- [ ] Accessibility-review — kräver tangentbord/skärmläsare (manuellt steg)
+- [ ] Performance-optimering — kör Lighthouse på produktion (manuellt steg)
+- [x] `no-ai-look`-granskning — designsystemet är redan nordiskt/mänskligt; inga blå-lila gradients eller AI-klyschor
 
 ---
 
@@ -575,7 +575,53 @@ Innan en fas markeras som klar:
 | Fas 5 — Prompts/guider | ✅ Klar |
 | Fas 6 — Profiler | ✅ Klar |
 | Fas 7 — Admin | ✅ Klar |
-| Fas 8 — Polish | Ej påbörjad |
+| Fas 8 — Polish | 🔧 Infrastruktur klar (SEO, sitemap, robots, loading/error/404); review-punkter kvar |
+
+---
+
+## ⚠️ MANUELLA STEG SOM DU MÅSTE GÖRA
+
+> Koden är pushad och Vercel deployar automatiskt, men följande kan **inte** göras
+> via git/Vercel. Markera av när klart.
+
+### 🔴 Kritiskt — säkerhet och funktion (gör nu)
+
+- [ ] **Deploya Firestore Security Rules:** `firebase deploy --only firestore:rules`
+  Tills detta körs gäller de GAMLA reglerna i produktion → role-escalation- och
+  isFeatured-hålen är fortfarande öppna. Detta är den viktigaste åtgärden.
+- [ ] **Deploya Firestore-index:** `firebase deploy --only firestore:indexes`
+  Krävs för `comments.userId` (badge "Hjälpt någon" på profiler) och
+  `posts: type + createdAt`.
+- [ ] **Gör dig själv till admin:** sätt `role: 'admin'` på ditt eget dokument
+  `profiles/{din-uid}` i Firebase Console. Annars ser ingen `/admin`.
+
+### 🟡 Verifiera efter deploy
+
+- [ ] Bekräfta att Vercel-deployen är **Ready** (senaste commit).
+- [ ] Testa att en VANLIG användare **inte** kan: göra sig till admin, eller
+      sätta isFeatured på eget innehåll (öppna konsolen och försök skriva direkt).
+- [ ] Testa att röster/kommentarer från en ANNAN användare än ägaren funkar
+      (nya reglerna har carve-out för räknarna).
+- [ ] Testa hela kärnflödet på mobil: logga in → skapa projekt → kommentera →
+      rösta → ställ fråga → redigera profil.
+
+### 🟢 Polish / SEO (Fas 8 — kan göras löpande)
+
+- [ ] **Designa en OG-bild** (1200×630 PNG) och lägg som
+      `src/app/opengraph-image.png` — då får delningar på sociala medier en
+      snygg förhandsbild. Metadatan är redan förberedd.
+- [ ] Sätt `NEXT_PUBLIC_SITE_URL` i Vercel till den riktiga produktions-URL:en
+      (används av sitemap, robots och canonical/OG-länkar).
+- [ ] **Responsivitet-genomgång** i riktig webbläsare (kräver mänskligt öga —
+      kan ej göras i agent-containern).
+- [ ] **Accessibility-review** med tangentbord + skärmläsare.
+- [ ] **Performance** — kör Lighthouse på produktion.
+
+### Infrastruktur (engångs — troligen redan gjort)
+
+- [x] Firebase Auth: Google + GitHub aktiverade (Fas 2)
+- [x] Vercel env-variabler satta (Fas 1)
+- [ ] Verifiera att `storage.rules` är deployade: `firebase deploy --only storage`
 
 ---
 

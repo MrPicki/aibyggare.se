@@ -25,16 +25,45 @@ const fredoka = Fredoka({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.vercel.app";
+
 export const metadata: Metadata = {
-  title: "AIbyggare.se — För oss som bygger först och förstår sen",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "AIbyggare.se — För oss som bygger först och förstår sen",
+    template: "%s — AIbyggare.se",
+  },
   description:
     "En svensk community för AI-byggare, vibe coders och envisa nybörjare. Visa upp ditt bygge, få hjälp när du fastnar, dela prompts som faktiskt funkade.",
+  keywords: [
+    "AI-byggare",
+    "vibe coding",
+    "bygga med AI",
+    "Claude Code",
+    "Cursor",
+    "Lovable",
+    "community",
+    "Sverige",
+    "indie hacker",
+    "prompts",
+  ],
+  applicationName: "AIbyggare.se",
+  authors: [{ name: "AIbyggare.se" }],
+  alternates: { canonical: "/" },
   openGraph: {
     title: "AIbyggare.se — För oss som bygger först och förstår sen",
     description:
       "En svensk community för AI-byggare, vibe coders och envisa nybörjare.",
+    url: SITE_URL,
+    siteName: "AIbyggare.se",
     locale: "sv_SE",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AIbyggare.se",
+    description:
+      "Sveriges community för dig som bygger appar och produkter med AI.",
   },
 };
 

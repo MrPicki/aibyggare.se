@@ -1092,3 +1092,38 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 ### Status
 ✅ **Fas 7 — Admin och moderering KLAR.**
 🔜 **Nästa:** Fas 8 — Polish (responsivitet, a11y, empty/loading/error-states, SEO/OG, sitemap, prestanda).
+
+---
+
+## 2026-06-24 — Fas 8 (Polish): SEO-grund + globala states
+
+### Vad som byggdes
+
+**SEO-metadata (`src/app/layout.tsx`):**
+- `metadataBase` (från `NEXT_PUBLIC_SITE_URL`, fallback till prod-URL) → relativa OG/canonical-länkar blir absoluta.
+- Title-mall `%s — AIbyggare.se` så undersidor får konsekvent suffix.
+- `keywords`, `applicationName`, `authors`, `alternates.canonical`.
+- Komplett `openGraph` (url, siteName, locale, type) + `twitter` (summary_large_image).
+
+**Sitemap + robots:**
+- `src/app/sitemap.ts` — statiska rutter + dynamiskt innehåll (projekt/frågor/prompts/profiler). Försöker Firestore, faller tillbaka på seed-slugs → robust även om Firestore är nere.
+- `src/app/robots.ts` — tillåter allt utom `/admin`, `/settings`, `/onboarding`, `/api/`, `/login`, `/register`. Pekar på sitemap.
+
+**Globala states:**
+- `src/app/not-found.tsx` — branded 404 (sticker, chunky CTA:er).
+- `src/app/error.tsx` — branded error-boundary (client, `reset()`-knapp).
+- `src/components/ui/Skeletons.tsx` — återanvändbara `CardSkeleton`/`CardGridSkeleton`/`PageHeaderSkeleton`.
+- `loading.tsx` för `/projects`, `/help`, `/prompts`, `/profile/[handle]` — skeletons som matchar kortens form (ingen layout-shift vid datainladdning).
+
+### Vad som INTE kunde göras här (manuellt, kräver webbläsare)
+- **Responsivitet-genomgång, a11y-review, Lighthouse/performance** — kräver en riktig webbläsare och mänskligt öga; går inte i agent-containern. Flyttat till "Manuella steg" i plan.md.
+- **OG-bild** (1200×630 PNG) — behöver designas och läggas som `src/app/opengraph-image.png`. Metadatan är förberedd.
+
+### Verifierat
+- `tsc --noEmit` ✅ · `npm run lint` ✅
+- `npm run build` ⚠️ samma Google Fonts-blockering i containern (miljö, ej vår kod).
+
+### Status
+🔧 **Fas 8 — Polish: infrastrukturen klar** (SEO, sitemap, robots, loading/error/404, no-ai-look). Review-baserade punkter (responsiv/a11y/perf) kvar som manuella steg.
+
+> **Alla manuella steg är nu samlade i `plan.md` under "⚠️ MANUELLA STEG SOM DU MÅSTE GÖRA".**
