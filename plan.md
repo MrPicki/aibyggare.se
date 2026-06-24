@@ -116,9 +116,12 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
       projects/page.tsx
       projects/new/page.tsx
       projects/[slug]/page.tsx
-      help/page.tsx
-      help/new/page.tsx
-      help/[slug]/page.tsx
+      help/page.tsx            ← redirect → /problemhornan
+      help/new/page.tsx        ← redirect → /problemhornan/new
+      help/[slug]/page.tsx     ← redirect → /problemhornan/[slug]
+      problemhornan/page.tsx
+      problemhornan/new/page.tsx
+      problemhornan/[slug]/page.tsx
       prompts/page.tsx
       prompts/new/page.tsx
       prompts/[slug]/page.tsx
@@ -291,7 +294,7 @@ Firestore Rules och Storage Rules ersätter Supabase RLS. Reglerna sätts i `fir
 ## Navigationsstruktur
 
 **Primär navigation:**
-`Byggen` · `Hjälp` · `Prompts` · `Guider` · `Community` · `[Lägg upp]`
+`Byggen` · `Problemhörnan` · `Prompts` · `Guider` · `Community` · `[Lägg upp]`
 
 **Sekundär/profil:**
 `Min profil` · `Mina projekt` · `Sparat` · `Inställningar` · `Logga ut`
@@ -506,7 +509,7 @@ Viktiga sidor att bygga med SEO i åtanke från dag ett:
 
 - `/` — Startsida
 - `/projects` — Alla byggen
-- `/help` — Hjälpfrågor
+- `/problemhornan` — Problemhörnan (hjälpfrågor)
 - `/prompts` — Prompts
 - `/guides` — Guider
 - `/tools/claude-code` — Projekt + frågor + prompts om Claude Code
@@ -625,4 +628,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-24 (session 7)*
+*Senast uppdaterad: 2026-06-24 (session 8)*

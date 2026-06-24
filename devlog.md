@@ -1150,3 +1150,47 @@ Genomförde en multi-vinkel code-review på hela kodbasen med fokus på den sena
 - `tsc --noEmit` ✅ inga fel
 - `npm run lint` ✅ 0 fel/varningar
 - `npm run build` ✅ ren (alla 22 routes bygger korrekt, `/profile/[handle]` prerenderas korrekt)
+
+---
+
+## 2026-06-24 — Problemhörnan: komplett rebrand av hjälpsektionen
+
+**Commit:** `7a6a970`
+
+### Bakgrund och beslut
+
+Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identitet till **Problemhörnan** — mer personlig, minnesvärd och träffsäker för målgruppen. URL:en `/problemhornan` (utan å/ä/ö) valdes för teknisk kompatibilitet.
+
+### Vad som gjordes
+
+**Nya sidor (4 filer):**
+- `src/app/problemhornan/page.tsx` — listvy, copy: "Här hamnar buggar, trasiga deploys, Supabase-kaos..."
+- `src/app/problemhornan/new/page.tsx` — formulärsida, H1: "Vad har du kört fast med?", sticker "Nytt problem"
+- `src/app/problemhornan/[slug]/page.tsx` — detaljsida, breadcrumb "Alla problem" → `/problemhornan`, CTA-sektion med problemhörnan-länk
+- `src/app/problemhornan/loading.tsx` — skeleton loading state
+
+**`/help/*` konverterade till redirects (3 filer):**
+- `src/app/help/page.tsx` → `redirect("/problemhornan")`
+- `src/app/help/new/page.tsx` → `redirect("/problemhornan/new")`
+- `src/app/help/[slug]/page.tsx` → `redirect("/problemhornan/${slug}")`
+
+**Alla interna länkar uppdaterade (14 filer):**
+- Header + Footer: "Fastnat?" → "Problemhörnan", href `/help` → `/problemhornan`
+- HelpShowcase: "Fastnat? Du är inte ensam." → "Från Problemhörnan", länk uppdaterad
+- StuckBanner: båda CTA:erna pekar på `/problemhornan/*`
+- Hero: "Jag har fastnat"-knapp → `/problemhornan/new`
+- CommunityMarquee, about, community, contact: alla `/help/new` → `/problemhornan/new`
+- LatestBuildActivity: seed-`targetUrl` för problemkorten uppdaterade
+- HelpFilterList: empty-state-CTA pekar på `/problemhornan/new`
+- HelpForm: redirect efter submit + slug-preview + submit-knapp "Lägg upp problemet →"
+- proxy.ts: `/help/new` → `/problemhornan/new` (skyddat av Edge Runtime JWT-check)
+- sitemap.ts: `/help` → `/problemhornan`, alla problem-slugs under ny URL
+
+### Verifierat
+
+- `npm run build` ✅ — alla 29 routes, inga fel (inkl. `/help`, `/help/new`, `/help/[slug]` som nu är statiska redirect-sidor)
+- Inga kvarvarande `/help`-referenser i `src/` utanför `src/app/help/` (grep-verifierat)
+- Pushad till `main`, Vercel-deploy triggas automatiskt
+
+### Status
+✅ **Problemhörnan-rebranden klar.** Bakåtkompatibilitet bevarad via redirects.
