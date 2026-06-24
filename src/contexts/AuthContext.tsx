@@ -19,13 +19,24 @@ import {
 import { auth, db } from "@/lib/firebase/client";
 import { useRouter } from "next/navigation";
 
+// Lightweight profile slice shared across the app (header link, settings, etc.).
+// The full profile doc is read on the settings page; here we keep only what the
+// chrome needs so we fetch it once per session instead of on every page.
+export interface ProfileLite {
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+}
+
 interface AuthContextValue {
   user: User | null;
+  profile: ProfileLite | null;
   loading: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,11 +73,32 @@ async function ensureProfile(user: User): Promise<boolean> {
   return !data.username; // no username means onboarding not completed
 }
 
+async function readProfileLite(uid: string): Promise<ProfileLite | null> {
+  try {
+    const snap = await getDoc(doc(db, "profiles", uid));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return {
+      username: data.username ?? "",
+      displayName: data.displayName ?? "",
+      avatarUrl: data.avatarUrl ?? data.photoURL ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileLite | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  async function refreshProfile() {
+    if (!auth.currentUser) return;
+    setProfile(await readProfileLite(auth.currentUser.uid));
+  }
 
   useEffect(() => {
     // Handle the result when the user returns from the redirect sign-in flow.
@@ -88,8 +120,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (u) {
         const token = await u.getIdToken();
         document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
+        setProfile(await readProfileLite(u.uid));
       } else {
         document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+        setProfile(null);
       }
     });
     return unsubscribe;
@@ -111,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signInWithGoogle, signInWithGitHub, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, signInWithGoogle, signInWithGitHub, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

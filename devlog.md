@@ -946,4 +946,50 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 
 ---
 
-## 2026-06-24 — Session 7: säkrade branch + tog vid i Fas 6
+## 2026-06-24 — Session 7: säkrade branch + Fas 6 (settings + riktiga profiler)
+
+### Vad som gjordes
+
+**1. Säkrade opushat arbete**
+- Branchen `claude/continuation-lc92qk` fanns bara lokalt — pushade till origin.
+- Dokumenterade commit `bfd1dc6` (hjälp-omdesignen) i devloggen i efterhand, se entry ovan.
+
+**2. AuthContext — delad profil (`ProfileLite`)**
+- AuthContext exponerar nu `profile: { username, displayName, avatarUrl }` + `refreshProfile()`.
+- Hämtas en gång per session i `onIdTokenChanged` (delas av header, settings, m.fl.) istället för per sida.
+- **Varför:** Headern länkade profilen till `/profile/${user.displayName}` — men profil-routen slår upp på **username**. För riktiga användare (displayName med mellanslag/versaler) blev det en död länk. Nu länkas korrekt username.
+
+**3. Header**
+- Profillänk → `/profile/${profile.username}` (fallback `/onboarding` om username saknas).
+- Avatar visar den valda profilbilden (`profile.avatarUrl`) istället för bara OAuth-foto.
+- Ny "Inställningar"-kugg (desktop) + "Min profil"/"Inställningar"-länkar i mobilmenyn.
+
+**4. Settings-sida (`/settings`) — Redigera profil** *(Fas 6)*
+- Client component med auth-guard (redirect till `/login?from=/settings`); routen var redan skyddad i `proxy.ts`.
+- Laddar befintlig profil från Firestore, för-ifyller formuläret (loading-skeleton under hämtning).
+- Fält: avatar (två illustrerade + ev. OAuth-bild), username (unik-check exkl. en själv), visningsnamn, bio, verktyg, **externa länkar** (website/github/linkedin — fanns i datamodellen men hanterades inte förrän nu).
+- URL-validering (http/https) på länkar. Sparar via `updateDoc` → `refreshProfile()` → "Sparat ✓".
+
+**5. Riktiga Firestore-profiler på profilsidan (`/profile/[handle]`)** *(Fas 6)*
+- `src/lib/firebase/profiles.ts` (ny, Admin SDK): `getProfileByUsername`, `getProjectsByUser`, `getPostsByUser`. Querys på `userId`/`username` utan `orderBy` + sortering i minnet → **inga nya composite-index krävs**.
+- Profilsidan: `force-dynamic`, läser Firestore (med seed-fallback), normaliserar båda källor till en gemensam `ProfileView` så renderingen är identisk.
+- Visar nu externa länkar (Globe + inline GitHub/LinkedIn-SVG, eftersom lucide-versionen saknar de ikonerna).
+- Tog bort `generateStaticParams` (sidan är dynamisk nu).
+
+### Problem och beslut
+
+| Problem | Beslut |
+|---------|--------|
+| Header länkade till `displayName` istället för `username` → död länk för riktiga användare | Delade `ProfileLite` via AuthContext; header använder `username` |
+| Header-länk till username skulle 404:a för icke-seed-användare så länge profilsidan bara läste seed | Kopplade profilsidan till Firestore (samma vända) så riktiga profiler resolvar |
+| `Github`/`Linkedin` saknas i lucide-react-versionen | Inline-SVG-märken (samma konvention som login-sidan) |
+| Composite-index för `userId + createdAt` | Undvek helt — query på `userId`, sortera i minnet |
+
+### Verifierat
+- `tsc --noEmit` ✅ inga fel
+- `npm run lint` ✅ 0 fel
+- `npm run build` ⚠️ kan inte slutföras i denna container: `next/font/google` (Fredoka/Geist/IBM Plex Mono) blockeras av proxyn. Felen rör **inga** av våra filer — rent miljöproblem, samma typ som `preview_screenshot`-timeouten.
+
+### Nästa steg
+🔜 **Fas 6 sista punkt:** Statiska badges (Första bygget, Hjälpt någon, Delat prompt, Fått 10 upvotes, Projekt live).
+🔜 Därefter **Fas 7 — Admin** eller **Fas 8 — Polish**.

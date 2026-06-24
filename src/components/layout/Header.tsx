@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
@@ -30,7 +30,8 @@ function Wordmark() {
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
+  const profileHref = profile?.username ? `/profile/${profile.username}` : "/onboarding";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -72,16 +73,23 @@ export function Header() {
               (user ? (
                 <>
                   <Link
-                    href={`/profile/${user.displayName ?? user.uid}`}
+                    href={profileHref}
                     className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[13px] font-medium text-mud hover:text-ink transition-colors"
                   >
-                    {user.photoURL ? (
+                    {profile?.avatarUrl || user.photoURL ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.photoURL} alt="" className="h-6 w-6 rounded-full border-2 border-ink" referrerPolicy="no-referrer" />
+                      <img src={profile?.avatarUrl || user.photoURL!} alt="" className="h-6 w-6 rounded-full border-2 border-ink object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <User size={15} />
                     )}
-                    <span className="max-w-24 truncate">{user.displayName ?? "Profil"}</span>
+                    <span className="max-w-24 truncate">{profile?.displayName ?? user.displayName ?? "Profil"}</span>
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="rounded-xl p-2 text-mud hover:bg-hammer-yellow hover:text-ink transition-colors"
+                    aria-label="Inställningar"
+                  >
+                    <Settings size={16} />
                   </Link>
                   <button
                     onClick={signOut}
@@ -134,15 +142,31 @@ export function Header() {
               ))}
               <div className="mt-2 flex flex-col gap-2 border-t-2 border-dashed border-border pt-3">
                 {!loading && user ? (
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setMobileOpen(false);
-                    }}
-                    className="flex items-center gap-2 rounded-xl px-3 py-3 font-mono text-base font-medium text-mud hover:bg-bug-red/10 hover:text-bug-red transition-colors"
-                  >
-                    <LogOut size={16} /> Logga ut
-                  </button>
+                  <>
+                    <Link
+                      href={profileHref}
+                      className="flex items-center gap-2 rounded-xl px-3 py-3 font-mono text-base font-medium text-ink hover:bg-hammer-yellow transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <User size={16} /> Min profil
+                    </Link>
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2 rounded-xl px-3 py-3 font-mono text-base font-medium text-ink hover:bg-hammer-yellow transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Settings size={16} /> Inställningar
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setMobileOpen(false);
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-3 font-mono text-base font-medium text-mud hover:bg-bug-red/10 hover:text-bug-red transition-colors"
+                    >
+                      <LogOut size={16} /> Logga ut
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href="/login"

@@ -478,8 +478,8 @@ Placering: `.claude/skills/`
 ### Fas 6 — Profiler
 - [x] Publik profilsida (`/profile/[handle]`) — visar seed-användare med avatar, bio, verktyg, byggen, frågor, prompts
 - [x] Avatar-picker i onboarding (två illustrerade avatarer, sparas i Firestore)
-- [ ] Riktiga Firestore-profiler på profilsidan (nuvarande: seed-data fallback)
-- [ ] Redigera profil (settings-sida)
+- [x] Riktiga Firestore-profiler på profilsidan — läser `profiles` + användarens projekt/posts från Firestore, seed-fallback vid fel
+- [x] Redigera profil (settings-sida `/settings`) — namn, username, bio, verktyg, avatar, externa länkar
 - [ ] Statiska badges
 
 ### Fas 7 — Admin och moderering
@@ -572,10 +572,10 @@ Innan en fas markeras som klar:
 | Fas 3 — Projektflöde | ✅ Klar |
 | Fas 4 — Hjälpfrågor | ✅ Klar |
 | Fas 5 — Prompts/guider | ✅ Klar |
-| Fas 6 — Profiler | 🔧 Delvis (publik profilsida + avatar-picker klara) |
+| Fas 6 — Profiler | 🔧 Nästan klar (profilsida + settings + Firestore-profiler klara; badges kvar) |
 | Fas 7 — Admin | Ej påbörjad |
 | Fas 8 — Polish | Ej påbörjad |
 
 ---
 
-*Senast uppdaterad: 2026-06-23 (session 6)*
+*Senast uppdaterad: 2026-06-24 (session 7)*
