@@ -1127,3 +1127,26 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 🔧 **Fas 8 — Polish: infrastrukturen klar** (SEO, sitemap, robots, loading/error/404, no-ai-look). Review-baserade punkter (responsiv/a11y/perf) kvar som manuella steg.
 
 > **Alla manuella steg är nu samlade i `plan.md` under "⚠️ MANUELLA STEG SOM DU MÅSTE GÖRA".**
+
+---
+
+## 2026-06-24 — Code-review-analys: 4 findings åtgärdade (commit `e2bf973`)
+
+### Bakgrund
+
+Genomförde en multi-vinkel code-review på hela kodbasen med fokus på den senaste committen (`bfd1dc6`). Hittade 4 bekräftade fel via automatiserad analys (line-by-line + borttagnings-auditor + cross-file-kontroller) — alla åtgärdade i samma session.
+
+### Findings och fixes
+
+| # | Allvarlighetsgrad | Fil | Problem | Fix |
+|---|---|---|---|---|
+| 1 | 🔴 Funktionell regression | `HelpCommentSection.tsx` | `acceptAnswer`-funktionaliteten plockades bort när `AnswerSection` ersattes med `HelpCommentSection`. Frågeägare kunde inte längre markera ett svar som löst; alla poster fastnade som "Öppen". | Återinförde accept-logiken: `postOwnerId`/`acceptedCommentId`-props, "Markera som löst"-knapp (bara synlig för ägaren på ej accepterade svar), grön "Accepterat svar"-badge, anropar `acceptAnswer()` atomict via Firestore-batch. |
+| 2 | 🟡 Typfel + cast | `src/types/firestore.ts` + `help/[slug]/page.tsx` | `Comment.createdAt/updatedAt` var `Timestamp` (non-nullable) men koden satte dem till `null` för seed-kommentarer och behövde `as unknown as Comment` för att kompilera. | Ändrade typen till `Timestamp \| null` — matchar faktisk användning; tog bort `as unknown as Comment` och lade till alla obligatoriska fält i seed-objekten. |
+| 3 | 🟡 Duplikation | `projects.ts` + `help.ts` | `serializeDoc`, `requireDb`, `withTimeout` var byte-identiska i båda filerna. Ändring på ett ställe skulle lämna det andra bakom. | Extraherade till `src/lib/firebase/admin-utils.ts`. Båda filer importerar nu från det delade utilityt. |
+| 4 | 🔴 Build-krasch | `HelpCard.tsx` | `onClick={(e) => e.stopPropagation()}` på en `<Link>` i en Server Component → `Event handlers cannot be passed to Client Component props`. Kraschade prerendering av alla `/profile/[handle]`-sidor. | Tog bort `onClick` — inget klick-beteende behövde stoppas (artikel-elementet saknar `onClick`). |
+
+### Verifierat
+
+- `tsc --noEmit` ✅ inga fel
+- `npm run lint` ✅ 0 fel/varningar
+- `npm run build` ✅ ren (alla 22 routes bygger korrekt, `/profile/[handle]` prerenderas korrekt)
