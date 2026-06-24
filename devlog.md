@@ -1241,3 +1241,19 @@ Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identite
 
 ### Status
 ✅ **Seed-data klar för beta.** Alla problem och byggen har realistiska, varierade kommentarer från fiktiva byggare. Sidan ser levande ut för betatesterna.
+
+---
+
+## 2026-06-24 — Onboarding-flöde + välkomstguide + kommentarsspärr (session 10)
+
+**`/onboarding`:** Tredje avatar-slot (neutral), e-postfält readonly/privat, redirect till `/welcome`.
+
+**`/welcome` (ny sida):** Staplade Framer Motion-kort — 5 feature-kort animeras i kortlek-stil (spring-transition), progress-räknare "X av 5", sista kort byter knapp till "KOM IGÅNG". Efteråt: "Vad vill du göra nu?"-prompt med "Lägg upp mitt bygge" / "Jag har fastnat" + X-knapp + "Utforska på egen hand". Skyddad av middleware.
+
+**Kommentarsspärr:** Inloggad utan `username` → "Slutför din profil"-uppmaning i CommentSection och HelpCommentSection istället för formulär.
+
+**Avatar-neutral kopplad in överallt:** `ILLUSTRATED_AVATARS` i settings/page.tsx, LatestBuildActivity, seed.ts och seed-firebase.ts. Adam, Pelle och Johan tilldelade neutral för visuell variation i galleriet.
+
+**Avatarbilder:** Alla tre nedskalade från 2 MB → 35–43 KB (160×160 px, LANCZOS).
+
+**Verifierat:** Build ✅ — 29 routes, inga fel. Guidens alla 5 steg + slutprompt bekräftad via DOM-snapshot.
