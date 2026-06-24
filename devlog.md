@@ -1207,3 +1207,37 @@ Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identite
 **Syns på:** Problemhörnan-listvyn (HelpFilterList), startsidans HelpShowcase, profilsidor (profile/[handle]) — alla renderar via `HelpCard`. Detaljsidan har sin egna overlay.
 
 **Verifierat:** DOM-snapshot bekräftade badge (`image: "Problemet löst"`) på alla 3 lösta seed-kort; inga badge på öppna. Build ✅.
+
+---
+
+## 2026-06-24 — Seed-data fullt uppfylld för beta (session 9)
+
+### Vad som gjordes
+
+**`src/lib/seed.ts` (statisk fallback-data):**
+- Lade till 3 svar på `rls-blockerar-mina-egna-rader` (Christoffer, Jonas, Frida accepterat) — status: Löst
+- Lade till 3 svar på `vercel-build-funkar-lokalt` (Sara, Pelle, Oskar accepterat) — status: Löst
+- Lade till 3 svar på `diven-vill-inte-centreras` (Maja, Nina, Adam)
+- Lade till 3 svar på `claude-skrev-om-hela-filen` (Jonas, Maja, Sara accepterat) — status: Löst
+- Lade till 3 svar på `stripe-webhook-200-men-inget-hander` (Christoffer, Adam, Oskar)
+- Lade till 3:e svaret på `sessionen-forsvinner-vid-reload` (Sara om loading-state)
+- Fixade `claude-skrev-om-hela-layouten` status: "open" → "solved"
+
+**`scripts/seed-firebase.ts`:**
+- Samma svarsdata tillagd i `HELP_POSTS`-arrayen (för nya körningar)
+- Ny funktion `ensureMissingAnswers()` — hittar befintliga poster med 0 kommentarer och lägger till konfigurerade svar + uppdaterar `status`, `acceptedCommentId`, `commentCount`
+- Ny konstant `EXTRA_PROJECT_COMMENTS` + funktion `ensureExtraProjectComments()` — lägger till ytterligare kommentarer på alla 6 projekt som hade färre än sitt `commentCount`-värde. Idempotent via body-duplikat-check.
+- `main()` kallar nu båda nya funktionerna
+
+**Seed körd mot Firebase:**
+- 5 help-poster fick 3 svar vardera (15 kommentarer adderade)
+- Sessionen-posten fick sitt 3:e svar direkt via inline-script
+- Kommentarer adderade: smartbok +3, aikostnad +4, need-radar +1, menupilot +5, amazon-snipe +6, runnr +5 (totalt 24 projektkommentarer)
+
+### Verifierat
+- `npm run build` ✅ — alla 29 routes, inga fel
+- Seed-script körde rent: alla befintliga data hoppades över, ny data skapades
+- Alla problem har nu svar, de flesta lösta problem har accepterat svar och badge
+
+### Status
+✅ **Seed-data klar för beta.** Alla problem och byggen har realistiska, varierade kommentarer från fiktiva byggare. Sidan ser levande ut för betatesterna.
