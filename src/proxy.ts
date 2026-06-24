@@ -9,6 +9,7 @@ const PROTECTED_PATHS = [
   "/guides/new",
   "/settings",
   "/onboarding",
+  "/welcome",
   "/admin",
 ];
 
@@ -57,6 +58,7 @@ export const config = {
     "/guides/new",
     "/settings",
     "/onboarding",
+    "/welcome",
     "/admin",
   ],
 };

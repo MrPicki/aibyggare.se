@@ -22,8 +22,9 @@ const AVAILABLE_TOOLS = [
 ];
 
 const AVATAR_OPTIONS = [
-  { url: "/seed/avatar-female.png", label: "Tjej" },
-  { url: "/seed/avatar-male.png",   label: "Kille" },
+  { url: "/seed/avatar-female.png",  label: "Tjej" },
+  { url: "/seed/avatar-neutral.png", label: "Neutral" },
+  { url: "/seed/avatar-male.png",    label: "Kille" },
 ];
 
 export default function OnboardingPage() {
@@ -103,7 +104,7 @@ function OnboardingForm({ user }: { user: User }) {
         avatarUrl: form.avatarUrl,
         updatedAt: serverTimestamp(),
       });
-      router.push("/projects/new");
+      router.push("/welcome");
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
     } finally {
@@ -121,7 +122,7 @@ function OnboardingForm({ user }: { user: User }) {
         Välkommen till AIbyggare
       </h1>
       <p className="text-mud mb-10">
-        Tre snabba fält — sedan kan du visa upp ditt första bygge.
+        Sätt upp din profil — sedan visar vi dig runt.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-7" noValidate>
@@ -131,7 +132,7 @@ function OnboardingForm({ user }: { user: User }) {
           <p className="block text-sm font-semibold text-ink mb-3">
             Välj din profilbild
           </p>
-          <div className="flex gap-5">
+          <div className="flex gap-4">
             {AVATAR_OPTIONS.map((opt) => {
               const selected = form.avatarUrl === opt.url;
               return (
@@ -192,9 +193,7 @@ function OnboardingForm({ user }: { user: User }) {
           {errors.username ? (
             <p className="mt-1.5 text-xs text-bug-red">{errors.username}</p>
           ) : (
-            <p className="mt-1.5 text-xs text-mud">
-              Syns på din profil. Kan ändras senare.
-            </p>
+            <p className="mt-1.5 text-xs text-mud">Syns på din profil. Kan ändras senare.</p>
           )}
         </div>
 
@@ -218,6 +217,24 @@ function OnboardingForm({ user }: { user: User }) {
           )}
         </div>
 
+        {/* ── E-post (readonly, privat) ── */}
+        <div>
+          <label htmlFor="email" className="block text-sm font-semibold text-ink mb-1.5">
+            E-post
+            <span className="ml-2 inline-flex items-center rounded-md border border-border bg-cream px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wide text-mud">
+              Privat
+            </span>
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={user.email ?? ""}
+            readOnly
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-border bg-cream text-mud text-sm cursor-default select-none"
+          />
+          <p className="mt-1.5 text-xs text-mud">Visas aldrig för andra användare.</p>
+        </div>
+
         {/* ── Bio ── */}
         <div>
           <label htmlFor="bio" className="block text-sm font-semibold text-ink mb-1.5">
@@ -233,9 +250,7 @@ function OnboardingForm({ user }: { user: User }) {
             className="w-full px-3 py-2.5 rounded-xl border-2 border-ink bg-paper text-ink text-sm focus:outline-none focus:ring-2 focus:ring-build-green resize-none placeholder:text-mud/60"
             maxLength={160}
           />
-          <p className="mt-1 text-xs text-mud text-right">
-            {form.bio.length}/160
-          </p>
+          <p className="mt-1 text-xs text-mud text-right">{form.bio.length}/160</p>
         </div>
 
         {/* ── Tools ── */}
@@ -278,7 +293,7 @@ function OnboardingForm({ user }: { user: User }) {
           disabled={saving}
           className="chunky pressable w-full rounded-xl bg-build-green py-3 font-mono text-sm font-bold uppercase tracking-wide text-paper disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
-          {saving ? "Sparar..." : "Klar — visa upp mitt första bygge →"}
+          {saving ? "Sparar..." : "Spara profil och fortsätt →"}
         </button>
       </form>
     </div>

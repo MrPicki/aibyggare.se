@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, UserCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   addAnswer,
@@ -24,7 +24,7 @@ export function HelpCommentSection({
   acceptedCommentId: initialAcceptedId,
   initialComments,
 }: HelpCommentSectionProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [acceptedId, setAcceptedId] = useState<string | null>(initialAcceptedId);
   const [body, setBody] = useState("");
@@ -164,7 +164,7 @@ export function HelpCommentSection({
 
       {error && <p className="mb-3 font-mono text-xs text-bug-red">{error}</p>}
 
-      {user ? (
+      {user && profile?.username ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <textarea
             value={body}
@@ -184,6 +184,18 @@ export function HelpCommentSection({
             </button>
           </div>
         </form>
+      ) : user && !profile?.username ? (
+        <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4">
+          <div className="flex items-center gap-3">
+            <UserCircle size={20} className="shrink-0 text-mud" />
+            <p className="text-sm text-mud">
+              <Link href="/onboarding" className="font-semibold text-ink underline underline-offset-2 hover:text-hammer-yellow">
+                Slutför din profil
+              </Link>{" "}
+              för att svara — det tar mindre än en minut.
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4 text-center">
           <p className="text-sm text-mud">

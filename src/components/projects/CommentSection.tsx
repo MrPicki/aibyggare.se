@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserCircle } from "lucide-react";
 import { addComment, subscribeToComments } from "@/lib/firebase/projects-client";
 import type { Comment } from "@/types/firestore";
 
@@ -12,7 +13,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ projectId, initialComments }: CommentSectionProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
@@ -98,7 +99,7 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
       )}
 
       {/* Comment form */}
-      {user ? (
+      {user && profile?.username ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <textarea
             value={body}
@@ -119,6 +120,18 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
             </button>
           </div>
         </form>
+      ) : user && !profile?.username ? (
+        <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4">
+          <div className="flex items-center gap-3">
+            <UserCircle size={20} className="shrink-0 text-mud" />
+            <p className="text-sm text-mud">
+              <Link href="/onboarding" className="font-semibold text-ink underline underline-offset-2 hover:text-build-green">
+                Slutför din profil
+              </Link>{" "}
+              för att kommentera — det tar mindre än en minut.
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="chunky-sm rounded-xl border-2 border-dashed border-border p-4 text-center">
           <p className="text-sm text-mud">
