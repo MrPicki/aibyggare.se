@@ -32,11 +32,21 @@ export function HelpCard({
   const solved = status === "Löst";
 
   return (
-    <article
-      className={cn(
-        "chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1",
-        className,
+    <div className={cn("relative h-full", className)}>
+      {solved && (
+        <div className="pointer-events-none absolute -right-3 -top-3 z-10 rotate-[10deg] drop-shadow-md">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/seed/problemet-lost-badge.png"
+            alt="Problemet löst"
+            width={80}
+            height={80}
+            className="h-[56px] w-[56px] md:h-[68px] md:w-[68px]"
+          />
+        </div>
       )}
+    <article
+      className="chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1"
     >
       {/* Header-bar — matchar ProjectCard */}
       <div
@@ -85,10 +95,10 @@ export function HelpCard({
         {/* Footer */}
         <div className="mt-5 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
           <Link
-            href={`/help/${slug}`}
+            href={`/problemhornan/${slug}`}
             className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink transition-colors group-hover:text-hammer-yellow"
           >
-            Se frågan <ArrowUpRight size={13} />
+            Se problem <ArrowUpRight size={13} />
           </Link>
           <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
             {username ? (
@@ -106,5 +116,6 @@ export function HelpCard({
         </div>
       </div>
     </article>
+    </div>
   );
 }

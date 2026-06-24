@@ -87,7 +87,20 @@ export default async function ProblemhornanDetailPage({
         <ArrowLeft size={14} /> Alla problem
       </Link>
 
-      <article className="chunky mt-6 overflow-hidden rounded-3xl bg-paper">
+      <div className="relative mt-6">
+        {solved && (
+          <div className="pointer-events-none absolute -right-3 -top-3 z-10 rotate-[10deg] drop-shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/seed/problemet-lost-badge.png"
+              alt="Problemet löst"
+              width={80}
+              height={80}
+              className="h-[68px] w-[68px] md:h-[80px] md:w-[80px]"
+            />
+          </div>
+        )}
+      <article className="chunky overflow-hidden rounded-3xl bg-paper">
         <div
           className="flex items-center justify-between border-b-2 border-ink px-5 py-3"
           style={{ backgroundColor: accent }}
@@ -144,6 +157,7 @@ export default async function ProblemhornanDetailPage({
           </div>
         </div>
       </article>
+      </div>
 
       <div className="mt-10">
         {post ? (
