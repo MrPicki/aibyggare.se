@@ -32,6 +32,7 @@ const db = getFirestore();
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://aibyggare.se";
 const AVATAR_F = `${BASE_URL}/seed/avatar-female.png`;
+const AVATAR_N = `${BASE_URL}/seed/avatar-neutral.png`;
 const AVATAR_M = `${BASE_URL}/seed/avatar-male.png`;
 
 // ── Seed-data ─────────────────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ const USERS: SeedUser[] = [
     email: "pelle@seed.aibyggare.se",
     bio: "Bygger BTC Edge — en Polymarket-bot med hårda regler. Disciplin framför hopp.",
     tools: ["Trading", "Backtest", "Python", "Telegram"],
-    avatarUrl: AVATAR_M,
+    avatarUrl: AVATAR_N,
   },
   {
     uid: "seed_nina",
@@ -144,7 +145,7 @@ const USERS: SeedUser[] = [
     email: "johan@seed.aibyggare.se",
     bio: "E-handlare som automatiserar för mycket. Stripe-webhook-hjälten (eller skurken).",
     tools: ["Stripe", "Next.js", "Vercel", "Supabase"],
-    avatarUrl: AVATAR_M,
+    avatarUrl: AVATAR_N,
   },
 ];
 

@@ -25,8 +25,9 @@ const AVAILABLE_TOOLS = [
 ];
 
 const ILLUSTRATED_AVATARS = [
-  { url: "/seed/avatar-female.png", label: "Tjej" },
-  { url: "/seed/avatar-male.png",   label: "Kille" },
+  { url: "/seed/avatar-female.png",  label: "Tjej" },
+  { url: "/seed/avatar-neutral.png", label: "Neutral" },
+  { url: "/seed/avatar-male.png",    label: "Kille" },
 ];
 
 interface ProfileForm {

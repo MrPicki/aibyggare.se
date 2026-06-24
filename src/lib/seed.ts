@@ -6,6 +6,7 @@ import type { ProjectCardProps } from "@/components/cards/ProjectCard";
 import type { PromptCardProps } from "@/components/cards/PromptCard";
 
 const F = "/seed/avatar-female.png";
+const N = "/seed/avatar-neutral.png";
 const M = "/seed/avatar-male.png";
 
 // ─── Seed users (för profilsidor) ────────────────────────────────────────────
@@ -49,7 +50,7 @@ export const SEED_USERS: SeedUser[] = [
     displayName: "Adam",
     bio: "Byggde MenuPilot när jag inte kom på vad som skulle lagas till middag. Nu testar folk det.",
     tools: ["ChatGPT", "Next.js", "Firebase", "React"],
-    avatarUrl: M,
+    avatarUrl: N,
     joined: "april 2025",
     projectSlugs: ["menupilot-se"],
     helpSlugs: [],
@@ -95,9 +96,9 @@ export const SEED_PROJECTS: ProjectCardProps[] = [
   { title: "Smartbok.se", tagline: "AI-bokföring för enskild firma. Foton på kvitton in, ordning ut.", slug: "smartbok-se", status: "Hackig MVP", accent: "var(--supabase-green)", tags: ["Supabase", "Claude", "Vercel"], upvotes: 18, commentCount: 6, authorName: "Christoffer", authorAvatarUrl: M },
   { title: "AIkostnad.se", tagline: "Räkna ut vad AI faktiskt kostar dig per månad. Jämför modeller.", slug: "aikostnad-se", status: "Live men nervös", accent: "var(--build-green)", tags: ["Next.js", "API", "Kalkylator"], upvotes: 24, commentCount: 7, authorName: "Oskar", authorAvatarUrl: M, isFeatured: true },
   { title: "Need Radar", tagline: "AI som dagligen letar marknadsmöjligheter i forum och trådar.", slug: "need-radar", status: "Byggs om", accent: "var(--warning-orange)", tags: ["Reddit", "Claude", "Automation"], upvotes: 15, commentCount: 4, authorName: "Jonas", authorAvatarUrl: M },
-  { title: "MenuPilot", tagline: "AI som gör veckomenyer från matresterna hemma. Skriv vad du har i kylen och få middagsförslag.", slug: "menupilot-se", status: "Behöver feedback", accent: "var(--build-green)", tags: ["ChatGPT", "Next.js", "Firebase"], upvotes: 21, commentCount: 8, authorName: "Adam", authorAvatarUrl: M, isFeatured: true },
+  { title: "MenuPilot", tagline: "AI som gör veckomenyer från matresterna hemma. Skriv vad du har i kylen och få middagsförslag.", slug: "menupilot-se", status: "Behöver feedback", accent: "var(--build-green)", tags: ["ChatGPT", "Next.js", "Firebase"], upvotes: 21, commentCount: 8, authorName: "Adam", authorAvatarUrl: N, isFeatured: true },
   { title: "Amazon Snipe", tagline: "Prisfel-scanner för Amazon som tjuter när något är felprissatt.", slug: "amazon-snipe", status: "MVP på livstöd", accent: "var(--hammer-yellow)", tags: ["Keepa", "Telegram", "Bot"], upvotes: 11, commentCount: 9, authorName: "Sara", authorAvatarUrl: F },
-  { title: "BTC Edge", tagline: "Polymarket-bot med hårda go/no-go-regler. Disciplin över hopp.", slug: "btc-edge", status: "Forskning först", accent: "var(--code-blue)", tags: ["Trading", "Backtest", "Bot"], upvotes: 9, commentCount: 3, authorName: "Pelle", authorAvatarUrl: M },
+  { title: "BTC Edge", tagline: "Polymarket-bot med hårda go/no-go-regler. Disciplin över hopp.", slug: "btc-edge", status: "Forskning först", accent: "var(--code-blue)", tags: ["Trading", "Backtest", "Bot"], upvotes: 9, commentCount: 3, authorName: "Pelle", authorAvatarUrl: N },
   { title: "Runnr", tagline: "AI-löpcoach för vanliga människor som inte vill ha en PT-app.", slug: "runnr", status: "Behöver testare", accent: "var(--prompt-purple)", tags: ["AI Coach", "Running", "Mobile"], upvotes: 21, commentCount: 8, authorName: "Nina", authorAvatarUrl: F },
 ];
 
@@ -366,7 +367,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     username: "pelle",
     answerCount: 3,
     status: "Öppen",
-    avatarUrl: M,
+    avatarUrl: N,
     answers: [
       {
         author: "Maja",
@@ -442,7 +443,7 @@ export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
     username: "johan",
     answerCount: 3,
     status: "Öppen",
-    avatarUrl: M,
+    avatarUrl: N,
     answers: [
       {
         author: "Christoffer",

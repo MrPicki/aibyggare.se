@@ -40,6 +40,7 @@ const TYPE_ACCENT: Record<ActivityType, string> = {
 };
 
 const F = "/seed/avatar-female.png";
+const N = "/seed/avatar-neutral.png";
 const M = "/seed/avatar-male.png";
 
 const SEED_ACTIVITY: BuildActivityItem[] = [
@@ -77,7 +78,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
   {
     id: "3",
     type: "project",
-    user: { name: "Adam", handle: "@adamcodes", username: "adamcodes", initials: "A", avatarUrl: M },
+    user: { name: "Adam", handle: "@adamcodes", username: "adamcodes", initials: "A", avatarUrl: N },
     projectName: "MenuPilot",
     projectUrl: "https://menupilot.se",
     title: "AI som gör veckomenyer från rester",
