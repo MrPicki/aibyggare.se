@@ -919,3 +919,31 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 ### Nästa steg
 
 🔜 **Fas 6 — Profiler:** Redigera profil-sida, visa egna posts på profil, real-data profilsidor för alla seed-användare
+
+---
+
+## 2026-06-23 — Hjälp-omdesign + riktiga kommentarer på projekt (commit `bfd1dc6`)
+
+> Loggades i efterhand (session 7) — arbetet committades men dokumenterades inte direkt.
+
+### Vad som byggdes
+
+**Hjälpsektionen omdesignad så den matchar projektflödet visuellt:**
+- `HelpCard.tsx` — ny struktur som speglar `ProjectCard` exakt: author i header, status-badge, topic-tagg, "Se frågan"-knapp. Tidigare hade hjälp- och projektkort olika formspråk; nu känns de som samma plattform.
+- `help/[slug]/page.tsx` — stor omskrivning (–248 rader netto). Rensade bort de strukturerade fälten `tryFix`/`alreadyTried`/`projectUrl` från detaljsidan. En hjälpfråga är nu enkel: titel + beskrivning + kommentarer. Beslut: structured "vad testade du"-formulär var överarbetat för MVP och skapade friktion.
+- `HelpForm.tsx` — förenklat från 6 fält till 3: titel, verktyg (dropdown), beskrivning (–207 rader).
+- `HelpCommentSection.tsx` (ny) — ersätter den tidigare `AnswerSection` med structured/accepterade svar. Nu enkla kommentarer, samma mönster som projektens `CommentSection`. Accept-svar-funktionen togs bort från UI:t i denna vända (rules finns kvar i `firestore.rules`).
+
+**Riktiga kommentarer på projekt:**
+- `scripts/seed-firebase.ts` (+108 rader) — seedar nu 3 kommentarer per projekt från seed-användare i `projects/{id}/comments`. Projektdetaljsidor visar därmed levande diskussion direkt, inte tomma kommentarsfält.
+
+**Tekniska fixar:**
+- `projects.ts` + `help.ts` — Firestore `Timestamp` serialiseras nu till plain objects innan de korsar RSC-gränsen (Server → Client Component). Löser RSC-serialiseringsfel ("only plain objects can be passed").
+- `CommentSection.tsx` + `HelpCommentSection.tsx` — prenumererar bara på real-time (`onSnapshot`) om användaren är inloggad. Utloggade ser SSR-data. Sparar onödiga öppna Firestore-anslutningar för anonyma besökare.
+
+### Beslut värt att minnas
+- **Structured answers → enkla kommentarer:** Vi backade medvetet från "accepterat svar"-modellen i hjälp-UI:t. Det var Stack Overflow-tänk; communityn ska kännas mer som en byggbänk där folk slänger in tips. `acceptedCommentId` och rules ligger kvar om vi vill återinföra det senare.
+
+---
+
+## 2026-06-24 — Session 7: säkrade branch + tog vid i Fas 6
