@@ -1194,3 +1194,16 @@ Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identite
 
 ### Status
 ✅ **Problemhörnan-rebranden klar.** Bakåtkompatibilitet bevarad via redirects.
+
+---
+
+## 2026-06-24 — "Problemet löst"-badge på lösta problem (commit `07b0fac`)
+
+**Vad som gjordes:**
+- `public/seed/problemet-lost-badge.png` — skalad ner från 1254×1254/2 MB → 80×80/12 KB med PIL (LANCZOS + compress_level=9)
+- `HelpCard.tsx` — wrappar nu i `<div className="relative h-full">` (samma mönster som `ProjectCard`/`stamp-featured`). Badgen renderas `absolute -right-3 -top-3 z-10 rotate-[10deg]` när `status === "Löst"`. Fixade även kvarglömt `/help/${slug}` → `/problemhornan/${slug}` i footer-länken.
+- `problemhornan/[slug]/page.tsx` — samma badge-overlay på artikel-wrappern på detaljsidan.
+
+**Syns på:** Problemhörnan-listvyn (HelpFilterList), startsidans HelpShowcase, profilsidor (profile/[handle]) — alla renderar via `HelpCard`. Detaljsidan har sin egna overlay.
+
+**Verifierat:** DOM-snapshot bekräftade badge (`image: "Problemet löst"`) på alla 3 lösta seed-kort; inga badge på öppna. Build ✅.
