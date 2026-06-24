@@ -20,7 +20,12 @@ service cloud.firestore {
     match /profiles/{userId} {
       allow read: if true;
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // Ägaren får uppdatera sin profil men ALDRIG sin egen 'role' — annars
+      // kan vem som helst kringgå UI:t och göra sig själv till admin via
+      // klient-SDK:n. Endast admin (eller Admin SDK server-side) ändrar role.
+      allow update: if isAdmin()
+        || (isOwner(userId)
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
       allow delete: if isAdmin();
     }
 
@@ -28,7 +33,14 @@ service cloud.firestore {
     match /projects/{projectId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      // Admin: allt. Ägare: redigera eget innehåll men ALDRIG isFeatured/userId
+      // (featured är admin-only). Vem som helst inloggad: enbart räknarna
+      // (upvoteCount/commentCount) — det är röst- och kommentarsvägen.
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isFeatured', 'userId']))
+        || (isSignedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvoteCount', 'commentCount']));
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
     }
 
@@ -36,7 +48,13 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      // Samma princip som projects: featured är admin-only, räknarna öppna för
+      // röster, allt annat ägarstyrt.
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isFeatured', 'userId']))
+        || (isSignedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvoteCount', 'commentCount']));
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
     }
 

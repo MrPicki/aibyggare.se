@@ -4,6 +4,7 @@ import { ArrowLeft, MessageSquare } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { HelpCommentSection } from "@/components/help/HelpCommentSection";
+import { ReportButton } from "@/components/moderation/ReportButton";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import type { Post, Comment } from "@/types/firestore";
@@ -196,6 +197,18 @@ export default async function HelpDetailPage({
           </section>
         )}
       </div>
+
+      {/* Report (bara för riktiga Firestore-poster) */}
+      {post && (
+        <div className="mt-6 flex justify-end">
+          <ReportButton
+            targetType="post"
+            targetId={post.id}
+            targetTitle={post.title}
+            targetUrl={`/help/${post.slug}`}
+          />
+        </div>
+      )}
 
       {/* CTA */}
       <div className="chunky mt-8 rounded-3xl bg-cream p-6 text-center sm:p-8">

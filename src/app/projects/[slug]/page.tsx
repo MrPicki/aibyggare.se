@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { DrillButton } from "@/components/projects/DrillButton";
 import { CommentSection } from "@/components/projects/CommentSection";
+import { ReportButton } from "@/components/moderation/ReportButton";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import type { ProjectStatus } from "@/types/firestore";
 import { SEED_PROJECTS } from "@/lib/seed";
@@ -229,6 +230,16 @@ export default async function ProjectDetailPage({
       {/* Comments */}
       <div className="chunky mt-6 rounded-3xl bg-paper p-6 sm:p-8">
         <CommentSection projectId={project.id} initialComments={comments} />
+      </div>
+
+      {/* Report */}
+      <div className="mt-6 flex justify-end">
+        <ReportButton
+          targetType="project"
+          targetId={project.id}
+          targetTitle={project.title}
+          targetUrl={`/projects/${project.slug}`}
+        />
       </div>
     </div>
   );

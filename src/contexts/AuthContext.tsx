@@ -26,6 +26,7 @@ export interface ProfileLite {
   username: string;
   displayName: string;
   avatarUrl: string;
+  role: string;
 }
 
 interface AuthContextValue {
@@ -82,6 +83,7 @@ async function readProfileLite(uid: string): Promise<ProfileLite | null> {
       username: data.username ?? "",
       displayName: data.displayName ?? "",
       avatarUrl: data.avatarUrl ?? data.photoURL ?? "",
+      role: data.role ?? "user",
     };
   } catch {
     return null;

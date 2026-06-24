@@ -110,3 +110,19 @@ export interface Bookmark {
   postId: string | null;
   createdAt: Timestamp;
 }
+
+// ─── Reports (moderering) ─────────────────────────────────────────────────────
+export type ReportTargetType = "project" | "post" | "comment";
+export type ReportStatus = "open" | "resolved";
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  targetTitle: string;    // denormaliserat för admin-vyn (slipper extra fetch)
+  targetUrl: string;      // länk till innehållet
+  reason: string;
+  status: ReportStatus;
+  createdAt: Timestamp;
+}

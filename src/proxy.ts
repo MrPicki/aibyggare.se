@@ -9,6 +9,7 @@ const PROTECTED_PATHS = [
   "/guides/new",
   "/settings",
   "/onboarding",
+  "/admin",
 ];
 
 // Middleware runs in Edge Runtime — Firebase Admin SDK cannot be used here.
@@ -56,5 +57,6 @@ export const config = {
     "/guides/new",
     "/settings",
     "/onboarding",
+    "/admin",
   ],
 };

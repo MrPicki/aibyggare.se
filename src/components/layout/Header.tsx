@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut, User, Settings } from "lucide-react";
+import { Menu, X, LogOut, User, Settings, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
@@ -32,6 +32,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const { user, profile, loading, signOut } = useAuth();
   const profileHref = profile?.username ? `/profile/${profile.username}` : "/onboarding";
+  const isAdmin = profile?.role === "admin";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -84,6 +85,15 @@ export function Header() {
                     )}
                     <span className="max-w-24 truncate">{profile?.displayName ?? user.displayName ?? "Profil"}</span>
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="rounded-xl p-2 text-mud hover:bg-bug-red/10 hover:text-bug-red transition-colors"
+                      aria-label="Admin"
+                    >
+                      <ShieldCheck size={16} />
+                    </Link>
+                  )}
                   <Link
                     href="/settings"
                     className="rounded-xl p-2 text-mud hover:bg-hammer-yellow hover:text-ink transition-colors"
@@ -157,6 +167,15 @@ export function Header() {
                     >
                       <Settings size={16} /> Inställningar
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 rounded-xl px-3 py-3 font-mono text-base font-medium text-bug-red hover:bg-bug-red/10 transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <ShieldCheck size={16} /> Admin
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         signOut();

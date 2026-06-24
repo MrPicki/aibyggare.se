@@ -482,11 +482,12 @@ Placering: `.claude/skills/`
 - [x] Redigera profil (settings-sida `/settings`) — namn, username, bio, verktyg, avatar, externa länkar
 - [x] Statiska badges — 5 community-märken härledda från användarens egen data (Första bygget, Hjälpt någon, Delat prompt, 10 borrar, Projekt live)
 
-### Fas 7 — Admin och moderering
-- [ ] Admin dashboard (antal användare, projekt, frågor, kommentarer)
-- [ ] Rapporter-hantering
-- [ ] Ta bort innehåll
-- [ ] Markera featured project / featured guide
+### Fas 7 — Admin och moderering ✅
+- [x] Admin dashboard (`/admin`) — antal användare, projekt, frågor, prompts, kommentarer, öppna rapporter
+- [x] Rapporter-hantering — användares rapportknapp + admin löser rapporter
+- [x] Ta bort innehåll — admin raderar projekt/inlägg via säker API-route
+- [x] Markera featured project / featured guide — admin togglar `isFeatured`
+- [x] **Säkerhet:** server-side admin-verifiering (verifyIdToken + role), tätade privilege-escalation (role + isFeatured) i Firestore Rules
 
 ### Fas 8 — Polish
 - [ ] Responsivitet-genomgång
@@ -573,7 +574,7 @@ Innan en fas markeras som klar:
 | Fas 4 — Hjälpfrågor | ✅ Klar |
 | Fas 5 — Prompts/guider | ✅ Klar |
 | Fas 6 — Profiler | ✅ Klar |
-| Fas 7 — Admin | Ej påbörjad |
+| Fas 7 — Admin | ✅ Klar |
 | Fas 8 — Polish | Ej påbörjad |
 
 ---

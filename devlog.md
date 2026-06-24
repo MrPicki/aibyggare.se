@@ -1035,3 +1035,60 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 ✅ **Fas 6 — Profiler KLAR.** Publik profilsida (riktiga Firestore-profiler), settings/redigera profil, avatar-picker, externa länkar och statiska märken — allt på plats.
 
 🔜 **Nästa:** Fas 7 (Admin) eller Fas 8 (Polish). Glöm inte deploya `comments.userId`-indexet för "Hjälpt någon"-märket.
+
+---
+
+## 2026-06-24 — Fas 7 KLAR: Admin och moderering (med säkerhetshärdning)
+
+### Säkerhetsgrund (det viktigaste)
+
+**`src/lib/auth/admin-guard.ts`** — `getAdminUser()`:
+- Läser `__session`-cookien, verifierar den **kryptografiskt** med `adminAuth.verifyIdToken()` och kontrollerar `profiles/{uid}.role === 'admin'` server-side.
+- Detta är det RIKTIGA säkerhetsskiktet. `proxy.ts` (som nu även täcker `/admin`) är bara ett UX-skydd — det avkodar JWT utan kryptoverifiering och får aldrig vara enda grinden.
+- Används av både `/admin`-sidan (redirect om ej admin) och API-routen (403 om ej admin).
+
+### Två privilege-escalation-hål tätade i `firestore.rules`
+
+> ⚠️ **Måste deployas** (`firebase deploy --only firestore:rules`) — annars gäller gamla reglerna i produktion.
+
+1. **Role-escalation:** `profiles` tillät `allow update: if isOwner(...)` utan fältbegränsning. Eftersom klient-SDK:n är publik kunde vem som helst sätta `role:'admin'` på sin egen profil och bli admin. **Fix:** ägaren får uppdatera allt **utom** `role`; bara admin/Admin SDK ändrar role.
+2. **isFeatured self-promotion:** `projects`/`posts` tillät ägaren att sätta valfritt fält, inkl. `isFeatured` → självutnämnt "veckans bygge". **Fix:** ägaren får redigera eget innehåll utom `isFeatured`/`userId`; featured är admin-only.
+3. **Bonus — latent röst-gap:** gamla regeln tillät bara ägare/admin att uppdatera projekt/post, men röst-/kommentarskoden skriver `upvoteCount`/`commentCount` som icke-ägare. Nya regeln har ett carve-out: vem som helst inloggad får uppdatera **enbart** dessa räknare. Röster/kommentarer från andra än ägaren fungerar nu enligt reglerna.
+
+### Funktioner
+
+**Admin-dashboard (`/admin`)** — server-komponent, skyddad av `getAdminUser()`:
+- Statistik via `count()`-aggregering (billigt): användare, projekt, frågor, prompts, kommentarer, öppna rapporter.
+- Rapportlista med länk till innehållet + "Markera löst".
+- Senaste innehåll (projekt + inlägg) med "Utse" (featured-toggle) och "Radera".
+- `robots: noindex`.
+
+**Säker mutations-API (`/api/admin/action`):**
+- Re-verifierar admin på varje anrop. Explicit action-allowlist (`delete-project/post`, `feature-project/post`, `resolve-report`), manuell validering, avvisar path-liknande id:n (`/`).
+- Använder Admin SDK (kringgår rules — men routen gör egen admin-koll).
+
+**Rapportknapp (`src/components/moderation/ReportButton.tsx`)** — användarvänd:
+- Inloggade kan rapportera projekt/inlägg (skriver till `reports` med `reporterId == uid`, vilket rules kräver). Placerad på projekt- och hjälp-detaljsidor (bara för riktiga Firestore-poster).
+
+**`src/lib/firebase/admin-data.ts`:** `getAdminStats`, `getOpenReports`, `getRecentContent`.
+
+**Header:** admin-länk (`ShieldCheck`) visas bara om `profile.role === 'admin'` (role tillagd i `ProfileLite`).
+
+**Städning:** tog bort diagnostik-routen `/api/debug-firebase` (blockeraren den fanns för är sedan länge löst).
+
+### Beslut
+- **Manuell validering i API-routen, inte Zod.** Zod är inte installerat och används ingenstans i kodbasen (formulären validerar manuellt). Att dra in det bara här vore inkonsekvent; strikt allowlist + typkontroller ger samma skydd.
+
+### Verifierat
+- `tsc --noEmit` ✅ · `npm run lint` ✅ · `firestore.rules` brace-balanserad ✅
+- `npm run build` ⚠️ samma Google Fonts-blockering i containern (miljö, ej vår kod).
+- ⚠️ **Kunde inte testa Firestore Rules här** (ingen emulator). Reglernas `diff().affectedKeys()`-logik bör verifieras efter deploy: (a) en vanlig användare kan INTE sätta role/isFeatured på sig själv/sitt innehåll, (b) röster/kommentarer från andra användare fungerar fortfarande.
+
+### Deploy-checklista för produktion (Fas 6 + 7)
+1. `firebase deploy --only firestore:rules` — **kritiskt**, annars gäller escalation-hålen.
+2. `firebase deploy --only firestore:indexes` — för `comments.userId` (märket "Hjälpt någon").
+3. Sätt `role: 'admin'` på ditt eget `profiles/{uid}`-dokument (Firebase Console) för att se `/admin`.
+
+### Status
+✅ **Fas 7 — Admin och moderering KLAR.**
+🔜 **Nästa:** Fas 8 — Polish (responsivitet, a11y, empty/loading/error-states, SEO/OG, sitemap, prestanda).
