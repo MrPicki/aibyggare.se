@@ -9,7 +9,7 @@ import { PixelHammerLogo } from "@/components/brand/illustrations";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
-  { href: "/help", label: "Fastnat?" },
+  { href: "/problemhornan", label: "Problemhörnan" },
   { href: "/prompts", label: "Prompts" },
   { href: "/guides", label: "Genvägar" },
 ];

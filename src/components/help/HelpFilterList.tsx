@@ -108,8 +108,8 @@ export function HelpFilterList({ posts }: HelpFilterListProps) {
             frågan så kanske du är den första.
           </p>
           <div className="mt-6 flex justify-center">
-            <ChunkyLink href="/help/new" variant="yellow">
-              Ställ en fråga
+            <ChunkyLink href="/problemhornan/new" variant="yellow">
+              Lägg upp ett problem
             </ChunkyLink>
           </div>
         </div>

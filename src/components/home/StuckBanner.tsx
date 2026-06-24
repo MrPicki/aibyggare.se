@@ -60,11 +60,11 @@ export function StuckBanner() {
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ChunkyLink href="/help/new" variant="ink" size="lg">
-            Ställ en fråga
+          <ChunkyLink href="/problemhornan/new" variant="ink" size="lg">
+            Lägg upp ett problem
           </ChunkyLink>
-          <ChunkyLink href="/help" variant="paper" size="lg">
-            Se alla frågor →
+          <ChunkyLink href="/problemhornan" variant="paper" size="lg">
+            Problemhörnan →
           </ChunkyLink>
         </div>
       </div>

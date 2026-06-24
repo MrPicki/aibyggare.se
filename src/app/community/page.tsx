@@ -25,7 +25,7 @@ export default function CommunityPage() {
           Dra igång det första snacket — en fråga, en seger eller en bugg du fortfarande inte fattar.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <ChunkyLink href="/help/new" variant="yellow">
+          <ChunkyLink href="/problemhornan/new" variant="yellow">
             Ställ en fråga
           </ChunkyLink>
           <ChunkyLink href="/projects/new" variant="green">

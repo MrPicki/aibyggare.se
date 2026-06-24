@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 // Routes that require authentication.
 const PROTECTED_PATHS = [
   "/projects/new",
-  "/help/new",
+  "/problemhornan/new",
   "/prompts/new",
   "/guides/new",
   "/settings",
@@ -52,7 +52,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/projects/new",
-    "/help/new",
+    "/problemhornan/new",
     "/prompts/new",
     "/guides/new",
     "/settings",

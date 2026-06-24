@@ -4,7 +4,7 @@ import { NewsletterForm } from "@/components/layout/NewsletterForm";
 
 const footerLinks = [
   { href: "/projects", label: "Byggen" },
-  { href: "/help", label: "Fastnat?" },
+  { href: "/problemhornan", label: "Problemhörnan" },
   { href: "/prompts", label: "Prompts" },
   { href: "/guides", label: "Genvägar" },
   { href: "/community", label: "Byggsnack" },

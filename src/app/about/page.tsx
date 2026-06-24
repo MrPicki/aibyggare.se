@@ -37,7 +37,7 @@ export default function AboutPage() {
           <ChunkyLink href="/projects/new" variant="green">
             Lägg upp ett bygge
           </ChunkyLink>
-          <ChunkyLink href="/help/new" variant="yellow">
+          <ChunkyLink href="/problemhornan/new" variant="yellow">
             Ställ en fråga
           </ChunkyLink>
         </div>

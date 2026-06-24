@@ -72,7 +72,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
     upvotes: 9,
     comments: 4,
     createdAtLabel: "för 28 min sen",
-    targetUrl: "/help/vercel-vagrar-deploya",
+    targetUrl: "/problemhornan/vercel-vagrar-deploya",
   },
   {
     id: "3",
@@ -132,7 +132,7 @@ const SEED_ACTIVITY: BuildActivityItem[] = [
     upvotes: 14,
     comments: 7,
     createdAtLabel: "för 4 tim sen",
-    targetUrl: "/help/claude-skrev-om-hela-layouten",
+    targetUrl: "/problemhornan/claude-skrev-om-hela-layouten",
   },
 ];
 

@@ -38,7 +38,7 @@ export function CommunityMarquee() {
           <ChunkyLink href="/projects/new" variant="green" size="lg">
             Lägg upp ett bygge
           </ChunkyLink>
-          <ChunkyLink href="/help/new" variant="yellow" size="lg">
+          <ChunkyLink href="/problemhornan/new" variant="yellow" size="lg">
             Ställ en fråga
           </ChunkyLink>
         </div>

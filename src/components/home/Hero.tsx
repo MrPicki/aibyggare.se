@@ -115,7 +115,7 @@ export function Hero() {
           <ChunkyLink href="/projects/new" variant="green" size="lg">
             Lägg upp mitt bygge
           </ChunkyLink>
-          <ChunkyLink href="/help/new" variant="paper" size="lg">
+          <ChunkyLink href="/problemhornan/new" variant="paper" size="lg">
             Jag har fastnat
           </ChunkyLink>
         </div>

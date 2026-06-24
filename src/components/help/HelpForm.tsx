@@ -60,7 +60,7 @@ export function HelpForm() {
         body: form.body.trim(),
         tool: form.tool,
       });
-      router.push(`/help/${finalSlug}`);
+      router.push(`/problemhornan/${finalSlug}`);
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
       setSaving(false);
@@ -88,7 +88,7 @@ export function HelpForm() {
         />
         {slugPreview && (
           <p className="mt-1.5 font-mono text-xs text-mud">
-            aibyggare.se/help/<span className="text-ink font-semibold">{slugPreview}</span>
+            aibyggare.se/problemhornan/<span className="text-ink font-semibold">{slugPreview}</span>
           </p>
         )}
         {errors.title && <p className="mt-1 font-mono text-xs text-bug-red">{errors.title}</p>}
@@ -141,7 +141,7 @@ export function HelpForm() {
         disabled={saving}
         className="chunky pressable w-full rounded-2xl bg-hammer-yellow px-6 py-4 font-mono text-sm font-bold uppercase tracking-wide text-ink disabled:opacity-50"
       >
-        {saving ? "Skickar…" : "Lägg upp frågan →"}
+        {saving ? "Skickar…" : "Lägg upp problemet →"}
       </button>
     </form>
   );

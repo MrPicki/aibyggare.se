@@ -42,7 +42,7 @@ export default function ContactPage() {
         Sitter du fast i ett bygge istället? Då går det snabbare att fråga communityn direkt.
       </p>
       <div className="mt-4">
-        <ChunkyLink href="/help/new" variant="yellow">
+        <ChunkyLink href="/problemhornan/new" variant="yellow">
           Ställ en fråga
         </ChunkyLink>
       </div>

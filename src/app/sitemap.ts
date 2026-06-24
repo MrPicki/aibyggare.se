@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     "/",
     "/projects",
-    "/help",
+    "/problemhornan",
     "/prompts",
     "/guides",
     "/about",
@@ -65,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const contentRoutes: MetadataRoute.Sitemap = [
     ...projectSlugs.map((s) => ({ url: url(`/projects/${s}`), lastModified: now, priority: 0.7 })),
-    ...helpSlugs.map((s) => ({ url: url(`/help/${s}`), lastModified: now, priority: 0.6 })),
+    ...helpSlugs.map((s) => ({ url: url(`/problemhornan/${s}`), lastModified: now, priority: 0.6 })),
     ...promptSlugs.map((s) => ({ url: url(`/prompts/${s}`), lastModified: now, priority: 0.6 })),
     ...profileHandles.map((h) => ({ url: url(`/profile/${h}`), lastModified: now, priority: 0.5 })),
   ];

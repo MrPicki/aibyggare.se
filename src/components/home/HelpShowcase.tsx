@@ -12,19 +12,19 @@ export function HelpShowcase() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Sticker tilt={-1} className="mb-3 bg-warning-orange">Öppna frågor</Sticker>
+            <Sticker tilt={-1} className="mb-3 bg-warning-orange">Problemhörnan</Sticker>
             <h2 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              Fastnat? Du är inte ensam.
+              Från Problemhörnan
             </h2>
             <p className="mt-2 max-w-md text-mud">
-              Frågor från communityn som väntar på svar — kanske vet du något.
+              Buggar, frågor och byggkaos från folk som försöker komma vidare.
             </p>
           </div>
           <Link
-            href="/help"
+            href="/problemhornan"
             className="font-mono text-sm font-bold uppercase tracking-wide text-ink hover:text-warning-orange transition-colors"
           >
-            Se alla frågor →
+            Gå till Problemhörnan →
           </Link>
         </div>
 
