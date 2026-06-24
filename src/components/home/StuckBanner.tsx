@@ -59,9 +59,12 @@ export function StuckBanner() {
           {TOPICS[active]}
         </p>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ChunkyLink href="/help/new" variant="ink" size="lg">
             Ställ en fråga
+          </ChunkyLink>
+          <ChunkyLink href="/help" variant="paper" size="lg">
+            Se alla frågor →
           </ChunkyLink>
         </div>
       </div>

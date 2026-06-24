@@ -3,6 +3,7 @@ import { TabStrip } from "@/components/home/TabStrip";
 import { LatestBuildActivity } from "@/components/home/LatestBuildActivity";
 import { StatementBlock } from "@/components/home/StatementBlock";
 import { ProjectShowcase } from "@/components/home/ProjectShowcase";
+import { HelpShowcase } from "@/components/home/HelpShowcase";
 import { StuckBanner } from "@/components/home/StuckBanner";
 import { PromptShowcase } from "@/components/home/PromptShowcase";
 import { Testimonials } from "@/components/home/Testimonials";
@@ -16,6 +17,7 @@ export default function HomePage() {
       <LatestBuildActivity />
       <StatementBlock />
       <ProjectShowcase />
+      <HelpShowcase />
       <StuckBanner />
       <PromptShowcase />
       <Testimonials />
