@@ -116,6 +116,8 @@ Använd färg sparsamt. Whitespace och typografi ska bära designen.
       projects/page.tsx
       projects/new/page.tsx
       projects/[slug]/page.tsx
+      onboarding/page.tsx      ← profilsetup: avatar, username, e-post, bio, verktyg
+      welcome/page.tsx         ← välkomstguide (5 feature-kort + action prompt)
       help/page.tsx            ← redirect → /problemhornan
       help/new/page.tsx        ← redirect → /problemhornan/new
       help/[slug]/page.tsx     ← redirect → /problemhornan/[slug]
@@ -280,14 +282,16 @@ Firestore Rules och Storage Rules ersätter Supabase RLS. Reglerna sätts i `fir
 **Loginmetoder:** Google, GitHub
 
 **Flöde efter första login:**
-1. Firebase Auth hanterar inloggning.
-2. `onAuthStateChanged` detekterar ny användare — kontrollera om `users/{uid}` finns i Firestore.
-3. Om profil saknas → redirect till `/onboarding`.
-4. Onboarding samlar in: username, display name, kort bio, vilka verktyg de använder.
-5. Profildokument skapas i `users/{uid}`.
-6. Redirect till `/projects/new` eller dashboard med CTA.
+1. Firebase Auth hanterar inloggning (redirect-baserat OAuth, first-party cookie).
+2. `getRedirectResult` + `onIdTokenChanged` detekterar ny användare — kontrollerar om `profiles/{uid}` finns och om `username` är satt.
+3. Om profil saknas eller `username` är tomt → redirect till `/onboarding`.
+4. `/onboarding` samlar in: avatar (tjej/neutral/kille), username, visningsnamn, e-post (readonly/privat), bio (valfri), verktyg (valfria). Sparas i `profiles/{uid}`.
+5. Redirect till `/welcome` — en välkomstguide med 5 staplade feature-kort (Framer Motion, kortlek-animation). Avslutas med "Vad vill du göra nu?"-prompt: Lägg upp bygge / Jag har fastnat / Stäng.
+6. `/welcome` är skyddad av middleware (kräver inloggning).
 
-**Viktigt:** Onboardingen ska vara snabb — max 3–4 fält, inga långa formulär.
+**Kommentarsspärr:** Inloggad utan `username` (onboarding ej klar) ser "Slutför din profil"-uppmaning istället för kommentarsformulär i `CommentSection` och `HelpCommentSection`.
+
+**Avatarer:** Tre illustrerade alternativ — `avatar-female.png`, `avatar-neutral.png`, `avatar-male.png` (160×160px, ~40KB styck). Väljs i onboarding och settings.
 
 ---
 
@@ -379,6 +383,7 @@ Firestore Rules och Storage Rules ersätter Supabase RLS. Reglerna sätts i `fir
 | Inga projekt | "Det är tomt här än så länge. Bli först med att visa vad du bygger." |
 | Inga hjälpfrågor | "Inga öppna frågor just nu. Har du fastnat? Ställ första frågan." |
 | Ej inloggad försöker kommentera | "Logga in för att svara och hjälpa andra byggare." |
+| Inloggad utan profil (username saknas) | "Slutför din profil för att kommentera — det tar mindre än en minut." (länk till /onboarding) |
 | Projekt publicerat | "Snyggt. Ditt bygge är live på AIbyggare." |
 
 ---
@@ -480,7 +485,7 @@ Placering: `.claude/skills/`
 
 ### Fas 6 — Profiler
 - [x] Publik profilsida (`/profile/[handle]`) — visar seed-användare med avatar, bio, verktyg, byggen, frågor, prompts
-- [x] Avatar-picker i onboarding (två illustrerade avatarer, sparas i Firestore)
+- [x] Avatar-picker i onboarding (tre illustrerade avatarer: tjej/neutral/kille, sparas i Firestore)
 - [x] Riktiga Firestore-profiler på profilsidan — läser `profiles` + användarens projekt/posts från Firestore, seed-fallback vid fel
 - [x] Redigera profil (settings-sida `/settings`) — namn, username, bio, verktyg, avatar, externa länkar
 - [x] Statiska badges — 5 community-märken härledda från användarens egen data (Första bygget, Hjälpt någon, Delat prompt, 10 borrar, Projekt live)
@@ -628,4 +633,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-24 (session 8)*
+*Senast uppdaterad: 2026-06-24 (session 10)*
