@@ -480,7 +480,7 @@ Placering: `.claude/skills/`
 - [x] Avatar-picker i onboarding (två illustrerade avatarer, sparas i Firestore)
 - [x] Riktiga Firestore-profiler på profilsidan — läser `profiles` + användarens projekt/posts från Firestore, seed-fallback vid fel
 - [x] Redigera profil (settings-sida `/settings`) — namn, username, bio, verktyg, avatar, externa länkar
-- [ ] Statiska badges
+- [x] Statiska badges — 5 community-märken härledda från användarens egen data (Första bygget, Hjälpt någon, Delat prompt, 10 borrar, Projekt live)
 
 ### Fas 7 — Admin och moderering
 - [ ] Admin dashboard (antal användare, projekt, frågor, kommentarer)
@@ -572,7 +572,7 @@ Innan en fas markeras som klar:
 | Fas 3 — Projektflöde | ✅ Klar |
 | Fas 4 — Hjälpfrågor | ✅ Klar |
 | Fas 5 — Prompts/guider | ✅ Klar |
-| Fas 6 — Profiler | 🔧 Nästan klar (profilsida + settings + Firestore-profiler klara; badges kvar) |
+| Fas 6 — Profiler | ✅ Klar |
 | Fas 7 — Admin | Ej påbörjad |
 | Fas 8 — Polish | Ej påbörjad |
 

@@ -81,3 +81,19 @@ export async function getPostsByUser(userId: string, type: Post["type"]): Promis
     .filter((p) => p.type === type)
     .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
 }
+
+// True om användaren har skrivit minst en kommentar/svar någonstans (märket
+// "Hjälpt någon"). collectionGroup kräver ett COLLECTION_GROUP-index på
+// comments.userId (se firestore.indexes.json). try/catch → om indexet saknas
+// visas bara inte märket, sidan kraschar aldrig.
+export async function hasHelpedSomeone(userId: string): Promise<boolean> {
+  try {
+    const db = requireDb();
+    const snap = await withTimeout(
+      db.collectionGroup("comments").where("userId", "==", userId).limit(1).get()
+    );
+    return !snap.empty;
+  } catch {
+    return false;
+  }
+}

@@ -5,8 +5,10 @@ import { Sticker } from "@/components/ui/Sticker";
 import { ProjectCard, type ProjectCardProps } from "@/components/cards/ProjectCard";
 import { HelpCard, type HelpCardProps } from "@/components/cards/HelpCard";
 import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard";
+import { ProfileBadges } from "@/components/profile/ProfileBadges";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import { toolAccent } from "@/lib/constants/tools";
+import type { BadgeStats } from "@/lib/constants/badges";
 import type { Project, Post, ProjectStatus } from "@/types/firestore";
 import {
   SEED_USERS,
@@ -49,6 +51,7 @@ interface ProfileView {
   projects: ProjectCardProps[];
   helpCards: HelpCardProps[];
   promptCards: PromptCardProps[];
+  badgeStats: BadgeStats;
 }
 
 // ─── Firestore → card adapters ───────────────────────────────────────────────
@@ -99,20 +102,27 @@ function promptToCard(p: Post): PromptCardProps {
   };
 }
 
+function sumUpvotes(items: { upvoteCount?: number }[]): number {
+  return items.reduce((acc, it) => acc + (it.upvoteCount ?? 0), 0);
+}
+
 // ─── Source resolvers ────────────────────────────────────────────────────────
 async function fromFirestore(handle: string): Promise<ProfileView | null> {
   try {
-    const { getProfileByUsername, getProjectsByUser, getPostsByUser } = await import(
-      "@/lib/firebase/profiles"
-    );
+    const { getProfileByUsername, getProjectsByUser, getPostsByUser, hasHelpedSomeone } =
+      await import("@/lib/firebase/profiles");
     const profile = await getProfileByUsername(handle);
     if (!profile) return null;
 
-    const [projects, helpPosts, promptPosts] = await Promise.all([
+    const [projects, helpPosts, promptPosts, helpedSomeone] = await Promise.all([
       getProjectsByUser(profile.id),
       getPostsByUser(profile.id, "help"),
       getPostsByUser(profile.id, "prompt"),
+      hasHelpedSomeone(profile.id),
     ]);
+
+    const totalUpvotes =
+      sumUpvotes(projects) + sumUpvotes(helpPosts) + sumUpvotes(promptPosts);
 
     return {
       displayName: profile.displayName,
@@ -127,6 +137,14 @@ async function fromFirestore(handle: string): Promise<ProfileView | null> {
       projects: projects.map(projectToCard),
       helpCards: helpPosts.map(helpToCard),
       promptCards: promptPosts.map(promptToCard),
+      badgeStats: {
+        projectCount: projects.length,
+        liveProjectCount: projects.filter((p) => p.status === "live").length,
+        promptCount: promptPosts.length,
+        helpQuestionCount: helpPosts.length,
+        totalUpvotes,
+        helpedSomeone,
+      },
     };
   } catch {
     return null; // Firestore unavailable — caller falls back to seed
@@ -136,6 +154,17 @@ async function fromFirestore(handle: string): Promise<ProfileView | null> {
 function fromSeed(handle: string): ProfileView | null {
   const user = SEED_USERS.find((u) => u.username === handle);
   if (!user) return null;
+
+  const projects = SEED_PROJECTS.filter((p) => user.projectSlugs.includes(p.slug));
+  const helpCards = SEED_HELP_QUESTIONS.filter((q) => user.helpSlugs.includes(q.slug));
+  const promptCards = SEED_PROMPTS.filter(
+    (p) => p.slug && user.promptSlugs.includes(p.slug)
+  );
+
+  const totalUpvotes =
+    projects.reduce((acc, p) => acc + (p.upvotes ?? 0), 0) +
+    promptCards.reduce((acc, p) => acc + (p.upvoteCount ?? 0), 0);
+
   return {
     displayName: user.displayName,
     username: user.username,
@@ -143,13 +172,20 @@ function fromSeed(handle: string): ProfileView | null {
     avatarUrl: user.avatarUrl,
     joinedLabel: user.joined,
     tools: user.tools,
-    projects: SEED_PROJECTS.filter((p) => user.projectSlugs.includes(p.slug)),
-    helpCards: SEED_HELP_QUESTIONS.filter((q) =>
-      user.helpSlugs.includes(q.slug)
-    ) as unknown as HelpCardProps[],
-    promptCards: SEED_PROMPTS.filter(
-      (p) => p.slug && user.promptSlugs.includes(p.slug)
-    ) as unknown as PromptCardProps[],
+    projects,
+    helpCards: helpCards as unknown as HelpCardProps[],
+    promptCards: promptCards as unknown as PromptCardProps[],
+    badgeStats: {
+      projectCount: projects.length,
+      // Seed-status är friform ("Live men nervös") — matcha på ordet "live".
+      liveProjectCount: projects.filter((p) => /live/i.test(p.status)).length,
+      promptCount: promptCards.length,
+      helpQuestionCount: helpCards.length,
+      totalUpvotes,
+      helpedSomeone: SEED_HELP_QUESTIONS.some((q) =>
+        q.answers?.some((a) => a.username === user.username)
+      ),
+    },
   };
 }
 
@@ -282,6 +318,9 @@ export default async function PublicProfilePage({
               </div>
             </div>
           )}
+
+          {/* Märken */}
+          <ProfileBadges stats={view.badgeStats} />
         </div>
       </article>
 

@@ -998,3 +998,40 @@ Node.js 22.12 (november 2024) lade till stabil `require(esm)` — ESM-moduler ka
 ### Nästa steg
 🔜 **Fas 6 sista punkt:** Statiska badges (Första bygget, Hjälpt någon, Delat prompt, Fått 10 upvotes, Projekt live).
 🔜 Därefter **Fas 7 — Admin** eller **Fas 8 — Polish**.
+
+---
+
+## 2026-06-24 — Fas 6 KLAR: statiska community-märken
+
+### Vad som byggdes
+
+**`src/lib/constants/badges.ts`** (ny):
+- 5 märken som speglar communityns kärnhandlingar: **Första bygget** (≥1 projekt), **Hjälpt någon** (skrivit minst en kommentar/svar någonstans), **Delat en prompt** (≥1 prompt), **10 borrar** (≥10 borrar totalt), **Projekt live** (projekt med live-status).
+- Märken är **härledda, inte lagrade** — varje märke har ett predikat mot `BadgeStats`. Ingen achievement-tabell att hålla i synk; statusen följer alltid datan.
+
+**`src/components/profile/ProfileBadges.tsx`** (ny):
+- Server-komponent. Visar hela uppsättningen: intjänade i full accentfärg, övriga dämpade (streckad border) som mål att sikta mot. Räknare "(x/5)". `title`/`aria-label` med beskrivning.
+
+**`src/lib/firebase/profiles.ts`** — `hasHelpedSomeone(userId)`:
+- collectionGroup-query på `comments` där `userId == uid`, `limit(1)`. Admin SDK kringgår Security Rules, så **bara ett index** behövs (ingen rules-ändring).
+- try/catch → om indexet saknas visas bara inte märket; sidan kraschar aldrig.
+
+**`firestore.indexes.json`** — ny `fieldOverride`:
+- `comments.userId` med `COLLECTION_GROUP`-scope. **⚠️ Måste deployas** (Firebase Console / `firebase deploy --only firestore:indexes`) för att "Hjälpt någon" ska aktiveras i produktion. Övriga 4 märken kräver inget index.
+
+**`src/app/profile/[handle]/page.tsx`**:
+- Räknar fram `BadgeStats` i båda källorna. Firestore: summerar borrar över projekt+help+prompts, `helpedSomeone` via collectionGroup. Seed: matchar live på ordet "live" (seed-status är friform), `helpedSomeone` genom att skanna seed-svar på username.
+- Renderar `<ProfileBadges>` i profilkortet under verktygen.
+
+### Beslut värt att minnas
+- **"Hjälpt någon" = skrivit en kommentar var som helst** (inte strikt "på någon annans fråga"). Att exkludera egna inlägg kräver att man känner förälderns ägare per kommentar → onödig komplexitet för ett statiskt MVP-märke. Approximationen är ärlig nog och kan skärpas senare.
+- **Visar även icke-upplåsta märken (dämpade)** — ger nya byggare tydliga, lågtröskliga mål som alla mappar mot communityns kärnhandlingar.
+
+### Verifierat
+- `tsc --noEmit` ✅ · `npm run lint` ✅ · `firestore.indexes.json` giltig JSON ✅
+- `npm run build` ⚠️ samma Google Fonts-blockering i containern (miljö, ej vår kod).
+
+### Status
+✅ **Fas 6 — Profiler KLAR.** Publik profilsida (riktiga Firestore-profiler), settings/redigera profil, avatar-picker, externa länkar och statiska märken — allt på plats.
+
+🔜 **Nästa:** Fas 7 (Admin) eller Fas 8 (Polish). Glöm inte deploya `comments.userId`-indexet för "Hjälpt någon"-märket.
