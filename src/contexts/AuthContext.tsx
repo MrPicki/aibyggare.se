@@ -27,6 +27,9 @@ export interface ProfileLite {
   displayName: string;
   avatarUrl: string;
   role: string;
+  totalXp: number;
+  level: number;
+  onboardingCompleted: boolean;
 }
 
 interface AuthContextValue {
@@ -65,13 +68,18 @@ async function ensureProfile(user: User): Promise<boolean> {
       bio: "",
       tools: [],
       role: "user",
+      builderStatus: "",
+      totalXp: 0,
+      level: 0,
+      onboardingCompleted: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
     return true; // new user — needs onboarding
   }
   const data = snap.data();
-  return !data.username; // no username means onboarding not completed
+  // Onboarding klar = uttryckligt flagga ELLER (äldre konton) ett username satt.
+  return !(data.onboardingCompleted || data.username);
 }
 
 async function readProfileLite(uid: string): Promise<ProfileLite | null> {
@@ -84,6 +92,9 @@ async function readProfileLite(uid: string): Promise<ProfileLite | null> {
       displayName: data.displayName ?? "",
       avatarUrl: data.avatarUrl ?? data.photoURL ?? "",
       role: data.role ?? "user",
+      totalXp: typeof data.totalXp === "number" ? data.totalXp : 0,
+      level: typeof data.level === "number" ? data.level : 0,
+      onboardingCompleted: !!(data.onboardingCompleted || data.username),
     };
   } catch {
     return null;

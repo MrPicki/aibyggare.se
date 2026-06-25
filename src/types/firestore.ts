@@ -12,6 +12,14 @@ export interface Profile {
   linkedinUrl: string;
   tools: string[];
   role: "user" | "admin";
+  /** Var användaren är i byggresan (sätts i onboarding). */
+  builderStatus?: string;
+  /** XP ("Byggkraft") — sätts bara server-side via XP-routen. */
+  totalXp?: number;
+  /** Härlett från totalXp — sätts bara server-side. */
+  level?: number;
+  onboardingCompleted?: boolean;
+  onboardingCompletedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

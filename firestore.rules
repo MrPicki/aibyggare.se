@@ -20,13 +20,21 @@ service cloud.firestore {
     match /profiles/{userId} {
       allow read: if true;
       allow create: if isOwner(userId);
-      // Ägaren får uppdatera sin profil men ALDRIG sin egen 'role' — annars
-      // kan vem som helst kringgå UI:t och göra sig själv till admin via
-      // klient-SDK:n. Endast admin (eller Admin SDK server-side) ändrar role.
+      // Ägaren får uppdatera sin profil men ALDRIG 'role', 'totalXp' eller
+      // 'level' — de sätts bara av Admin SDK server-side (XP-routen). Annars
+      // kan vem som helst kringgå UI:t och ge sig själv admin eller fri XP.
       allow update: if isAdmin()
         || (isOwner(userId)
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['role', 'totalXp', 'level']));
       allow delete: if isAdmin();
+
+      // XP-händelser skrivs ENBART av Admin SDK (bypassar regler). Läsbara
+      // publikt så progress kan visas. Ingen klient får skriva direkt.
+      match /xpEvents/{eventType} {
+        allow read: if true;
+        allow write: if false;
+      }
     }
 
     // ── Projects ─────────────────────────────────────────────────────────────
