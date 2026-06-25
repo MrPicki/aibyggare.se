@@ -65,6 +65,9 @@ interface FormState {
   tools: string[];
   builderStatus: string;
   bio: string;
+  websiteUrl: string;
+  githubUrl: string;
+  linkedinUrl: string;
 }
 
 function xpForCompletedSteps(count: number): number {
@@ -80,7 +83,7 @@ export function OnboardingFlow({ user }: { user: User }) {
   const { refreshProfile } = useAuth();
   const reduce = useReducedMotion();
 
-  const [step, setStep] = useState(0); // 0–4 kort, 5 = sista kortet
+  const [step, setStep] = useState(0); // 0–5 kort, 6 = sista kortet
   const [form, setForm] = useState<FormState>({
     avatarUrl: AVATAR_OPTIONS[0].url,
     username: "",
@@ -88,6 +91,9 @@ export function OnboardingFlow({ user }: { user: User }) {
     tools: [],
     builderStatus: "",
     bio: "",
+    websiteUrl: "",
+    githubUrl: "",
+    linkedinUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -142,7 +148,7 @@ export function OnboardingFlow({ user }: { user: User }) {
     completeStep(1);
   }
 
-  // Sista steget: spara hela profilen + markera onboarding klar.
+  // Länk-kortet (sista formulärsteget): spara hela profilen + markera klar.
   async function handleFinish() {
     setSaving(true);
     setErrors({});
@@ -154,15 +160,15 @@ export function OnboardingFlow({ user }: { user: User }) {
         tools: form.tools,
         avatarUrl: form.avatarUrl,
         builderStatus: form.builderStatus,
+        websiteUrl: form.websiteUrl.trim(),
+        githubUrl: form.githubUrl.trim(),
+        linkedinUrl: form.linkedinUrl.trim(),
         onboardingCompleted: true,
         onboardingCompletedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      // XP för sista steget (bio) — idempotent.
-      void grantXpClient("onboarding_bio_set");
-      showToast("onboarding_bio_set");
       await refreshProfile();
-      setStep(5); // sista kortet
+      setStep(6); // sista kortet (Nästan Level 1)
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
     } finally {
@@ -214,7 +220,7 @@ export function OnboardingFlow({ user }: { user: User }) {
       {/* Kort-container med stack-känsla bakom */}
       <div className="relative mb-8 min-h-[440px]">
         {/* Dekorativa kort bakom */}
-        {step < 5 && (
+        {step < 6 && (
           <>
             <div className="absolute inset-x-3 top-3 h-full rounded-3xl border-2 border-ink/20 bg-paper/40" aria-hidden />
             <div className="absolute inset-x-1.5 top-1.5 h-full rounded-3xl border-2 border-ink/30 bg-paper/60" aria-hidden />
@@ -418,8 +424,39 @@ export function OnboardingFlow({ user }: { user: User }) {
                     className="w-full resize-none rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
                   />
                   <p className="mt-1 text-right text-xs text-mud">{form.bio.length}/160</p>
+                </div>
+                <CardButton onClick={() => completeStep(4)}>Fortsätt</CardButton>
+              </Card>
+            )}
+
+            {/* ── Kort 6: Länkar ── */}
+            {step === 5 && (
+              <Card
+                badge="Visa upp"
+                title="Var hittar man dig?"
+                text="Länka din sida, GitHub eller LinkedIn om du vill. Helt valfritt — du kan lägga till det senare."
+              >
+                <div className="space-y-3">
+                  <LinkInput
+                    label="Hemsida"
+                    placeholder="https://dinsida.se"
+                    value={form.websiteUrl}
+                    onChange={(v) => setForm((f) => ({ ...f, websiteUrl: v }))}
+                  />
+                  <LinkInput
+                    label="GitHub"
+                    placeholder="https://github.com/dittnamn"
+                    value={form.githubUrl}
+                    onChange={(v) => setForm((f) => ({ ...f, githubUrl: v }))}
+                  />
+                  <LinkInput
+                    label="LinkedIn"
+                    placeholder="https://linkedin.com/in/dittnamn"
+                    value={form.linkedinUrl}
+                    onChange={(v) => setForm((f) => ({ ...f, linkedinUrl: v }))}
+                  />
                   {errors.submit && (
-                    <p className="mt-1.5 text-xs text-bug-red">{errors.submit}</p>
+                    <p className="text-xs text-bug-red">{errors.submit}</p>
                   )}
                 </div>
                 <CardButton onClick={handleFinish} disabled={saving}>
@@ -429,7 +466,7 @@ export function OnboardingFlow({ user }: { user: User }) {
             )}
 
             {/* ── Sista kortet: Nästan Level 1 ── */}
-            {step === 5 && (
+            {step === 6 && (
               <FinalActionCard
                 onProject={() => router.push("/projects/new")}
                 onProblem={() => router.push("/problemhornan/new")}
@@ -440,8 +477,8 @@ export function OnboardingFlow({ user }: { user: User }) {
       </div>
 
       {/* XP-mätare under korten */}
-      <OnboardingXpBar xp={step >= 5 ? 80 : displayedXp} />
-      {step === 5 && (
+      <OnboardingXpBar xp={displayedXp} />
+      {step === 6 && (
         <p className="mt-3 text-center font-mono text-xs font-bold text-ink">
           20 Byggkraft kvar till Level 1
         </p>
@@ -497,6 +534,34 @@ function CardButton({
   );
 }
 
+function LinkInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-wide text-mud">
+        {label}
+      </label>
+      <input
+        type="url"
+        inputMode="url"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+      />
+    </div>
+  );
+}
+
 function FinalActionCard({
   onProject,
   onProblem,
@@ -515,6 +580,9 @@ function FinalActionCard({
         </h1>
         <p className="mt-2 text-sm text-mud">
           Din byggare är skapad. Nu saknas bara ett riktigt första steg på byggbänken.
+        </p>
+        <p className="mt-3 font-display text-base font-bold text-build-green">
+          Lägg upp ditt bygge eller ställ en fråga — och levla upp.
         </p>
       </div>
 

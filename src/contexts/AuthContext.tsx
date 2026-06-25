@@ -17,7 +17,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 // Lightweight profile slice shared across the app (header link, settings, etc.).
 // The full profile doc is read on the settings page; here we keep only what the
@@ -107,11 +107,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   async function refreshProfile() {
     if (!auth.currentUser) return;
     setProfile(await readProfileLite(auth.currentUser.uid));
   }
+
+  // Robust onboarding-grind: en inloggad användare som inte slutfört onboarding
+  // skickas alltid dit, oavsett om getRedirectResult triggade (den kan returnera
+  // null med proxy/cookie-setupen). Kör inte på auth-/onboarding-sidorna själva.
+  useEffect(() => {
+    if (loading || !user || !profile) return;
+    if (profile.onboardingCompleted) return;
+    const exempt = ["/onboarding", "/login", "/register"];
+    if (exempt.some((p) => pathname === p || pathname.startsWith(p + "/"))) return;
+    router.replace("/onboarding");
+  }, [user, profile, loading, pathname, router]);
 
   useEffect(() => {
     // Handle the result when the user returns from the redirect sign-in flow.
