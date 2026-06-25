@@ -23,7 +23,7 @@ function relativeLabel(ts: { seconds?: number } | null | undefined): string {
   return `för ${days} dag${days !== 1 ? "ar" : ""} sen`;
 }
 
-function projectToActivity(p: Project): BuildActivityItem {
+function projectToActivity(p: Project, level?: number): BuildActivityItem {
   const ts = p.createdAt as { seconds?: number } | null;
   return {
     id: p.id,
@@ -34,6 +34,7 @@ function projectToActivity(p: Project): BuildActivityItem {
       username: p.username ?? "",
       initials: (p.userDisplayName || "B").slice(0, 1).toUpperCase(),
       avatarUrl: p.userAvatarUrl || undefined,
+      level,
     },
     projectName: p.title,
     projectUrl: p.projectUrl || undefined,
@@ -48,7 +49,7 @@ function projectToActivity(p: Project): BuildActivityItem {
   };
 }
 
-function helpToActivity(post: Post): BuildActivityItem {
+function helpToActivity(post: Post, level?: number): BuildActivityItem {
   const ts = post.createdAt as { seconds?: number } | null;
   return {
     id: post.id,
@@ -59,6 +60,7 @@ function helpToActivity(post: Post): BuildActivityItem {
       username: post.username ?? "",
       initials: (post.userDisplayName || "B").slice(0, 1).toUpperCase(),
       avatarUrl: post.userAvatarUrl || undefined,
+      level,
     },
     projectName: post.title,
     title: post.title,
@@ -77,9 +79,10 @@ export default async function HomePage() {
   let activityItems: BuildActivityItem[] | undefined;
 
   try {
-    const [{ getProjects }, { getHelpPosts }] = await Promise.all([
+    const [{ getProjects }, { getHelpPosts }, { getLevelsForUsers }] = await Promise.all([
       import("@/lib/firebase/projects"),
       import("@/lib/firebase/help"),
+      import("@/lib/firebase/profiles"),
     ]);
     const [projects, helpPosts] = await Promise.all([
       getProjects(5),
@@ -87,9 +90,16 @@ export default async function HomePage() {
     ]);
 
     if (projects.length > 0 || helpPosts.length > 0) {
+      // Hämta författarnas levels i en batch för badge bredvid namnet.
+      const authorIds = [
+        ...projects.map((p) => p.userId),
+        ...helpPosts.map((p) => p.userId),
+      ].filter(Boolean) as string[];
+      const levels = await getLevelsForUsers(authorIds);
+
       const mixed: BuildActivityItem[] = [
-        ...projects.map(projectToActivity),
-        ...helpPosts.map(helpToActivity),
+        ...projects.map((p) => projectToActivity(p, levels[p.userId])),
+        ...helpPosts.map((p) => helpToActivity(p, levels[p.userId])),
       ];
       // Sort newest first by createdAt seconds
       mixed.sort((a, b) => {

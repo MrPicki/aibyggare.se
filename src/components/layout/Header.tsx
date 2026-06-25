@@ -7,6 +7,7 @@ import { Menu, X, LogOut, User, Settings, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
+import { LevelBadge } from "@/components/levels/LevelBadge";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
@@ -96,6 +97,7 @@ export function Header() {
                       <User size={15} />
                     )}
                     <span className="max-w-24 truncate">{profile?.displayName ?? user.displayName ?? "Profil"}</span>
+                    {profile && <LevelBadge level={profile.level} />}
                   </Link>
                   {isAdmin && (
                     <Link

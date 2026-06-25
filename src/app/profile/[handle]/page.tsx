@@ -6,6 +6,8 @@ import { ProjectCard, type ProjectCardProps } from "@/components/cards/ProjectCa
 import { HelpCard, type HelpCardProps } from "@/components/cards/HelpCard";
 import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard";
 import { ProfileBadges } from "@/components/profile/ProfileBadges";
+import { LevelBadge } from "@/components/levels/LevelBadge";
+import { LevelProgressBar } from "@/components/levels/LevelProgressBar";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import { toolAccent } from "@/lib/constants/tools";
 import type { BadgeStats } from "@/lib/constants/badges";
@@ -39,11 +41,14 @@ function LinkedinMark({ size = 13 }: { size?: number }) {
 
 // ─── Unified view model (Firestore and seed both normalize to this) ──────────
 interface ProfileView {
+  uid: string;
   displayName: string;
   username: string;
   bio: string;
   avatarUrl: string;
   joinedLabel: string;
+  level: number;
+  totalXp: number;
   tools: string[];
   websiteUrl?: string;
   githubUrl?: string;
@@ -125,11 +130,14 @@ async function fromFirestore(handle: string): Promise<ProfileView | null> {
       sumUpvotes(projects) + sumUpvotes(helpPosts) + sumUpvotes(promptPosts);
 
     return {
+      uid: profile.id,
       displayName: profile.displayName,
       username: profile.username,
       bio: profile.bio,
       avatarUrl: profile.avatarUrl,
       joinedLabel: profile.joinedYear ? String(profile.joinedYear) : "",
+      level: profile.level,
+      totalXp: profile.totalXp,
       tools: profile.tools,
       websiteUrl: profile.websiteUrl || undefined,
       githubUrl: profile.githubUrl || undefined,
@@ -166,11 +174,15 @@ function fromSeed(handle: string): ProfileView | null {
     promptCards.reduce((acc, p) => acc + (p.upvoteCount ?? 0), 0);
 
   return {
+    uid: `seed_${user.username}`,
     displayName: user.displayName,
     username: user.username,
     bio: user.bio,
     avatarUrl: user.avatarUrl,
     joinedLabel: user.joined,
+    // Seed-användare får en rimlig demo-level utifrån aktivitet.
+    level: Math.min(5, 1 + projects.length + helpCards.length),
+    totalXp: 0,
     tools: user.tools,
     projects,
     helpCards: helpCards as unknown as HelpCardProps[],
@@ -246,21 +258,26 @@ export default async function PublicProfilePage({
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
-            {/* Avatar */}
-            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-ink bg-cream">
-              {view.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={view.avatarUrl}
-                  alt={view.displayName}
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center font-display text-3xl font-bold text-mud">
-                  {(view.displayName || "?")[0].toUpperCase()}
-                </span>
-              )}
+            {/* Avatar med level-badge */}
+            <div className="relative shrink-0">
+              <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-ink bg-cream">
+                {view.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={view.avatarUrl}
+                    alt={view.displayName}
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center font-display text-3xl font-bold text-mud">
+                    {(view.displayName || "?")[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="absolute -bottom-1 -right-1">
+                <LevelBadge level={view.level} size="md" />
+              </div>
             </div>
 
             {/* Info */}
@@ -323,6 +340,11 @@ export default async function PublicProfilePage({
           <ProfileBadges stats={view.badgeStats} />
         </div>
       </article>
+
+      {/* ── Level-progress ── */}
+      <div className="mt-6">
+        <LevelProgressBar ownerUid={view.uid} totalXp={view.totalXp} />
+      </div>
 
       {/* ── Projects ── */}
       {view.projects.length > 0 && (

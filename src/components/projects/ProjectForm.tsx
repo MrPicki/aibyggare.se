@@ -10,6 +10,8 @@ import {
   uploadProjectImage,
   createProject,
 } from "@/lib/firebase/projects-client";
+import { grantXpClient } from "@/lib/xp/grant-client";
+import { LevelUpBurst } from "@/components/levels/LevelUpBurst";
 import { PROJECT_STATUS_OPTIONS } from "@/lib/constants/project-status";
 import type { ProjectStatus } from "@/types/firestore";
 
@@ -49,7 +51,7 @@ function urlOrEmpty(v: string): boolean {
 }
 
 export function ProjectForm() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +60,8 @@ export function ProjectForm() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const pendingSlug = useRef<string | null>(null);
 
   const slugPreview = slugify(form.title);
 
@@ -139,7 +143,16 @@ export function ProjectForm() {
         feedbackWanted: form.feedbackWanted.trim(),
       });
 
-      router.push(`/projects/${slug}`);
+      // Första bygget ger Byggkraft → ev. Level 1. Idempotent server-side.
+      const xp = await grantXpClient("first_project_created");
+      await refreshProfile();
+
+      if (xp?.leveledUp) {
+        pendingSlug.current = slug;
+        setLevelUp(xp.level); // LevelUpBurst navigerar vidare när den stängs
+      } else {
+        router.push(`/projects/${slug}`);
+      }
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
       setSaving(false);
@@ -147,6 +160,13 @@ export function ProjectForm() {
   }
 
   return (
+    <>
+    {levelUp !== null && (
+      <LevelUpBurst
+        level={levelUp}
+        onDone={() => router.push(`/projects/${pendingSlug.current ?? ""}`)}
+      />
+    )}
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
 
       {/* Titel */}
@@ -354,5 +374,6 @@ export function ProjectForm() {
         {saving ? "Publicerar..." : "Publicera bygget →"}
       </button>
     </form>
+    </>
   );
 }

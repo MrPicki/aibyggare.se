@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -9,6 +9,8 @@ import {
   createHelpPost,
 } from "@/lib/firebase/help-client";
 import { TOOL_OPTIONS } from "@/lib/constants/tools";
+import { grantXpClient } from "@/lib/xp/grant-client";
+import { LevelUpBurst } from "@/components/levels/LevelUpBurst";
 
 interface FormState {
   title: string;
@@ -19,11 +21,13 @@ interface FormState {
 const INITIAL: FormState = { title: "", tool: "", body: "" };
 
 export function HelpForm() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState<FormState>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const pendingSlug = useRef<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -60,7 +64,16 @@ export function HelpForm() {
         body: form.body.trim(),
         tool: form.tool,
       });
-      router.push(`/problemhornan/${finalSlug}`);
+      // Första frågan ger Byggkraft → ev. Level 1. Idempotent server-side.
+      const xp = await grantXpClient("first_problem_created");
+      await refreshProfile();
+
+      if (xp?.leveledUp) {
+        pendingSlug.current = finalSlug;
+        setLevelUp(xp.level);
+      } else {
+        router.push(`/problemhornan/${finalSlug}`);
+      }
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
       setSaving(false);
@@ -70,6 +83,13 @@ export function HelpForm() {
   const slugPreview = slugify(form.title);
 
   return (
+    <>
+    {levelUp !== null && (
+      <LevelUpBurst
+        level={levelUp}
+        onDone={() => router.push(`/problemhornan/${pendingSlug.current ?? ""}`)}
+      />
+    )}
     <form onSubmit={handleSubmit} className="mt-10 space-y-7" noValidate>
       {/* Rubrik */}
       <div>
@@ -144,5 +164,6 @@ export function HelpForm() {
         {saving ? "Skickar…" : "Lägg upp problemet →"}
       </button>
     </form>
+    </>
   );
 }

@@ -3,13 +3,14 @@ import { MessageSquare, ExternalLink } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { DrillIcon } from "@/components/brand/DrillIcon";
+import { LevelBadge } from "@/components/levels/LevelBadge";
 
 export type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
 
 export interface BuildActivityItem {
   id: string;
   type: ActivityType;
-  user: { name: string; handle: string; username: string; initials: string; avatarUrl?: string };
+  user: { name: string; handle: string; username: string; initials: string; avatarUrl?: string; level?: number };
   projectName: string;
   projectUrl?: string;
   title: string;
@@ -178,6 +179,9 @@ function ActivityCard({ item }: { item: BuildActivityItem }) {
               >
                 {item.user.name}
               </Link>
+              {typeof item.user.level === "number" && (
+                <LevelBadge level={item.user.level} />
+              )}
               <span className="font-mono text-[11px] text-mud">{item.user.handle}</span>
               <span
                 className="sticker px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide"
