@@ -141,6 +141,184 @@ export const SEED_PROMPTS: Omit<PromptCardProps, "className">[] = [
   },
 ];
 
+// ─── Guides ───────────────────────────────────────────────────────────────────
+export interface SeedGuide {
+  slug: string;
+  title: string;
+  tool: string;
+  category: string;
+  accent: string;
+  summary: string;
+  body: string;
+  readMinutes: number;
+  author: string;
+  authorHandle: string;
+  authorAvatarUrl: string;
+}
+
+export const SEED_GUIDES: SeedGuide[] = [
+  {
+    slug: "bygg-fullstack-app-med-claude-pa-en-kvall",
+    title: "Bygg en fullstack-app med Claude på en kväll",
+    tool: "Claude Code",
+    category: "Workflow",
+    accent: "var(--bug-red)",
+    summary: "Exakt det arbetsflöde jag följer varje gång: spec → skeleton → data → UI → deploy. Från idé till Vercel på 4–6 timmar utan att tappa tråden.",
+    body: `Det här är mitt faktiska arbetsflöde — inte det ideala, utan det som faktiskt funkar när man har en kväll att bygga.
+
+**Steg 1: Skriv en spec (30 min)**
+Innan du öppnar terminalen — skriv en CLAUDE.md-fil. Vad ska appen göra? Vilken stack? Vilka sidor finns? Vad är MVP och vad är "nice to have"? Claude läser den här filen och fattar bättre beslut genom hela projektet.
+
+**Steg 2: Skapa projektskelett (20 min)**
+\`npx create-next-app@latest\` och Vercel-kopplingen direkt. Då kan du deploya i slutet av varje steg och se att det faktiskt funkar på riktigt.
+
+**Steg 3: Datamodell och backend (1 tim)**
+Beskriv datamodellen för Claude och låt den skriva Firestore-regler och typer. Seed-data direkt — en tom databas ser alltid trasig ut.
+
+**Steg 4: UI komponenter (2 tim)**
+En sida i taget. Håll Claude fokuserad på en fil i taget, annars börjar den skriva om saker som redan funkar.
+
+**Steg 5: Deployen (20 min)**
+\`git push\` och kolla att Vercel-bygget går igenom. Testa på mobil. Hitta tre saker som ser konstiga ut och fixa dem.
+
+Det viktigaste tricket: committa efter varje steg som funkar. Då kan du alltid gå tillbaka om Claude plötsligt bestämmer sig för att "förbättra" arkitekturen.`,
+    readMinutes: 4,
+    author: "Christoffer",
+    authorHandle: "christoffer",
+    authorAvatarUrl: M,
+  },
+  {
+    slug: "firebase-auth-pa-20-minuter",
+    title: "Firebase Auth på 20 minuter — komplett guide",
+    tool: "Firebase",
+    category: "Setup-guide",
+    accent: "var(--warning-orange)",
+    summary: "Google + GitHub OAuth, skyddade routes med middleware, uid sparad i Firestore. Steg för steg utan onödigt krångel.",
+    body: `Firebase Auth är snabbaste vägen till fungerande login — om man vet ordningen att göra saker.
+
+**Förutsättningar**
+- Firebase-projekt skapat på console.firebase.google.com
+- \`firebase\`-paket installerat: \`npm install firebase firebase-admin\`
+
+**Steg 1: Aktivera providers (5 min)**
+Firebase Console → Authentication → Sign-in method → aktivera Google och GitHub. För GitHub: skapa en OAuth App på github.com/settings/applications och klistra in Client ID + Secret.
+
+**Steg 2: Klientkonfiguration (5 min)**
+Skapa \`src/lib/firebase/client.ts\`:
+\`\`\`
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const app = getApps().length ? getApps()[0] : initializeApp({ /* config */ });
+export const auth = getAuth(app);
+\`\`\`
+
+**Steg 3: Auth-context (5 min)**
+En React context som lyssnar på \`onAuthStateChanged\` och exponerar \`user\` och \`loading\`. Lägg den i \`src/contexts/AuthContext.tsx\` och wrappa \`<body>\` i layout.tsx.
+
+**Steg 4: Skyddad route med middleware (5 min)**
+Next.js \`middleware.ts\` i projektroten — kolla \`__session\`-cookien (Firebase sätter den automatiskt) och redirecta till /login om den saknas.
+
+**Gotcha**: Firebase Admin SDK kräver \`FIREBASE_SERVICE_ACCOUNT_KEY\` som env-variabel. Lägg ALDRIG in den i klientkod — bara i server-komponenter och API-routes.`,
+    readMinutes: 5,
+    author: "Nina",
+    authorHandle: "nina",
+    authorAvatarUrl: F,
+  },
+  {
+    slug: "claude-code-som-teknisk-medgrundare",
+    title: "Hur jag använder Claude Code som teknisk medgrundare",
+    tool: "Claude Code",
+    category: "Arbetsmetod",
+    accent: "var(--bug-red)",
+    summary: "CLAUDE.md, devlog och sessionshantering — hur jag fått en AI att minnas projektet, hålla arkitekturen konsekvent och stoppa mig från dåliga idéer.",
+    body: `Det tog ett par veckor att inse att Claude Code inte är ett verktyg — det är en kollega. Och som alla kollegor presterar den bättre om den vet vad projektet handlar om.
+
+**CLAUDE.md är allt**
+Den viktigaste filen i projektet. Skriv: vad appen ska göra, vilken stack, vilka konventioner, vad som är MVP och vad som inte är det. Varje gång Claude missar sammanhanget — lägg till det i CLAUDE.md istället för att förklara om.
+
+**Devlog som minne**
+Jag håller en \`devlog.md\` som jag instruerar Claude att läsa i slutet av varje session och uppdatera med vad som gjordes. Nästa session börjar med: "Läs CLAUDE.md och devlog.md". Claude vet var vi befann oss.
+
+**Sessionshantering**
+Context tar slut. Istället för att tappa tråden mitt i en funktion — avsluta naturliga steg, committa, starta ny session. "Vi var på att implementera X, commit Y är senaste kända fungerande state."
+
+**Den viktigaste regeln**
+Be Claude förklara sin plan *innan* den skriver koden. "Vad tänker du ändra och varför?" En dålig plan är lättare att stoppa än dålig kod att städa upp.
+
+Det tar 30 minuter att sätta upp det här första gången. Det sparar timmar varje vecka efter det.`,
+    readMinutes: 4,
+    author: "Christoffer",
+    authorHandle: "christoffer",
+    authorAvatarUrl: M,
+  },
+  {
+    slug: "nextjs-vercel-deployment-checklista",
+    title: "Next.js på Vercel: min deployment-checklista",
+    tool: "Vercel",
+    category: "Deployment",
+    accent: "var(--code-blue)",
+    summary: "Från npm run build till live. Env-variabler, domains, preview-deploys och de vanligaste fällorna — i rätt ordning.",
+    body: `Jag har deployt tillräckligt många Next.js-appar för att veta exakt vad som går fel och när. Här är checklistan.
+
+**Innan du pushar**
+- [ ] \`npm run build\` lokalt — fixa alla fel innan CI behöver göra det
+- [ ] Kolla att alla env-variabler finns i \`.env.local\` och är dokumenterade
+- [ ] Ta bort alla \`console.log\` med känslig data
+
+**I Vercel-dashboarden**
+- [ ] Lägg in alla env-variabler under Settings → Environment Variables
+- [ ] Välj rätt miljöer (Production, Preview, Development) per variabel
+- [ ] Sätt \`NEXT_PUBLIC_SITE_URL\` till din faktiska domän — används av sitemap och OG-taggar
+
+**Domänhantering**
+- [ ] Lägg till custom domän under Settings → Domains
+- [ ] Vänta på DNS-propagering (5 min–48 tim beroende på TTL)
+- [ ] Kolla att HTTPS-certifikatet är aktivt
+
+**Efter första deploy**
+- [ ] Testa på mobil — inte bara på desktop
+- [ ] Kolla Network-tabben i DevTools för 4xx/5xx-fel
+- [ ] Verifiera att OG-bild och metadata ser bra ut via opengraph.xyz
+
+**Vanligaste fällan**: env-variabeln finns lokalt men inte i Vercel. Appen crashar i production utan bra felmeddelande. Lösning: explicit kasta ett fel om kritiska variabler saknas i \`src/lib/config.ts\`.`,
+    readMinutes: 3,
+    author: "Oskar",
+    authorHandle: "oskar",
+    authorAvatarUrl: M,
+  },
+  {
+    slug: "prompt-engineering-for-kodare",
+    title: "Prompt-engineering för kodare: 5 tekniker som faktiskt funkar",
+    tool: "Claude",
+    category: "Prompt-teknik",
+    accent: "var(--prompt-purple)",
+    summary: "Inte filosofi — konkreta tekniker: role-prompting, constraint-lists, debug-first, chain-of-thought och iteration-loops. Med exempel du kan kopiera direkt.",
+    body: `Efter hundratals timmar med AI-assisterad kodning har jag landat i fem tekniker som konsekvent ger bättre resultat än att bara beskriva vad man vill ha.
+
+**1. Role-prompting**
+"Du är en senior TypeScript-arkitekt med fokus på säkerhet. Granska den här koden." Rollen sätter förväntningarna på vad som ska prioriteras — utan den får du en generell genomgång.
+
+**2. Constraint-lists**
+Lista explicit vad AI:n INTE ska göra: "Rör inte befintliga typer. Lägg inte till nya npm-paket. Ändra inte fil-struktur." Utan constraints tenderar AI:n att 'förbättra' saker du inte bad om.
+
+**3. Debug-first**
+Innan du ber om en fix: "Förklara vad som orsakar felet, utan att skriva något kod." Du förstår problemet bättre och AI:n ger en mer träffsäker lösning. Dubbel vinst.
+
+**4. Chain-of-thought**
+"Tänk högt och lista stegen innan du kodar." AI:n avslöjar sin plan och du kan stoppa den om planen är fel — istället för att städa upp kod som var baserad på fel antaganden.
+
+**5. Iteration-loops**
+Dela upp stora uppgifter i explicita steg med check-points: "Bygg bara datalagret nu. Visa mig resultatet. Sedan gör vi UI." En AI som håller på med en sak i taget gör färre misstag.
+
+Kombinera alla fem för komplexa uppgifter. Börja med constraint-list, be om chain-of-thought, och ha debug-first som default när något går fel.`,
+    readMinutes: 5,
+    author: "Sara",
+    authorHandle: "sarapromptar",
+    authorAvatarUrl: F,
+  },
+];
+
 // ─── Help questions ───────────────────────────────────────────────────────────
 export interface SeedAnswer {
   author: string;
