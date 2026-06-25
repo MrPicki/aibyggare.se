@@ -1298,3 +1298,64 @@ Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identite
 
 ### Status
 ✅ **Projektdetaljsidan klar.** Alla 7 seed-projekt visar nu rik information med problem-motivering, feedbackönskan och realistiska kommentarer.
+
+---
+
+## 2026-06-25 — Fas 8 klar: community soul + live feed + "Möt byggarna" (session 12)
+
+### Vad som gjordes
+
+**Fas 8 Polish — community-identitet och startsideupplevelse:**
+
+**`src/components/home/Testimonials.tsx`:**
+- Bytte ut placeholder-namn ("Byggare #1–5") mot 6 riktiga seed-användare med avatarer, jobbroller och autentiska citat
+- Varje citat har tilt-variation för handgjord känsla
+- `figcaption` länkar till `/profile/[handle]` via `<Link>`
+
+**`src/app/about/page.tsx`:**
+- Komplett omskrivning med fullständigt builder-manifesto (3 stycken), `TRUTHS`-lista (6 kärnvärden), 4 sektionskort (Byggen/Problemhörnan/Prompts/Genvägar), filosoficitat-block och 3 CTAs
+- Ersätter den gles platshållaren med ett genuint identitetsdokument för projektet
+
+**`src/components/home/TabStrip.tsx`:**
+- 5 flikar (tillade "Genvägar" med Map-ikon + code-blue och "Hitta byggare" med Users + soft-teal)
+- Varje flik har nu `sub`-text (sekundär rad) för mer specifikt innehåll
+- Mer beskrivande `text`-fält per flik
+
+**`src/components/layout/Header.tsx`:**
+- Aktiv nav-markering: `usePathname()` + `pathname.startsWith(link.href + "/")` ger exakt aktiv-detektion
+- Aktiv stil: `bg-hammer-yellow text-ink shadow-[2px_2px_0_0_var(--ink)]` (chunky underline-effekt)
+- Lade till "Byggare" → `/community` i navbaren (5:e länk)
+
+**`src/components/home/LatestBuildActivity.tsx`:**
+- Exporterade `BuildActivityItem` och `ActivityType` (var privata)
+- Komponenten tar nu `{ items?: BuildActivityItem[] }` och faller tillbaka på `SEED_ACTIVITY` om inget skickas
+
+**`src/app/page.tsx`:**
+- Ombyggd till `async` server-komponent med `export const dynamic = "force-dynamic"`
+- `relativeLabel()`: svenska relativa tidsetiketter från Firestore-timestamps
+- `projectToActivity()` + `helpToActivity()`: mappar Firestore-dokument till `BuildActivityItem`
+- Hämtar `getProjects(5)` + `getHelpPosts(4)` parallellt, mergar, sorterar efter `createdAt`, skär till 6 objekt
+- try/catch: Firestore-fel → `undefined` → seed-data i `LatestBuildActivity`
+
+**`src/components/home/CommunityMarquee.tsx`:**
+- Dubbel rad: `ROW_A` (community-ord) + `ROW_B` (verktygsnamn med 40% opacity, reverse-riktning)
+- Ny `MarqueeRow`-komponent med `reverse`-prop
+
+**`src/app/globals.css`:**
+- Ny `marquee-reverse`-keyframe (translateX(-50%) → 0) och CSS-klass
+- `--animate-marquee-reverse` custom property (42s, lite långsammare)
+
+**`src/app/community/page.tsx`:**
+- Komplett ombyggnad från platshållare till "Möt byggarna"-sida
+- `FEATURED_BUILDERS`: 6 seed-profiler med avatarer, roller, bio, verktyg
+- `STATS`: 4 community-nyckeltal (100+ projekt, 50+ frågor, etc.)
+- `BuilderCard`: klickbart profilkort med chunky hover-rotation
+- Filosoficitat-block, "Vad gör man här"-sektioner (4 kort med CTAs)
+- Avslutande dark CTA-block med inloggningsuppmaning
+
+### Verifierat
+- `tsc --noEmit` ✅ — inga typfel
+- `npm run build` ✅ — inga fel, alla sidor statiska/dynamiska korrekt
+
+### Status
+✅ **Fas 8 klar.** Alla kodsteg genomförda. Kvarvarande är manuella review-steg: responsivitetsgenomgång i riktig webbläsare, a11y-test med tangentbord, Lighthouse-körning på produktion.

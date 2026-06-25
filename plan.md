@@ -497,10 +497,15 @@ Placering: `.claude/skills/`
 - [x] Markera featured project / featured guide — admin togglar `isFeatured`
 - [x] **Säkerhet:** server-side admin-verifiering (verifyIdToken + role), tätade privilege-escalation (role + isFeatured) i Firestore Rules
 
-### Fas 8 — Polish 🔧
+### Fas 8 — Polish ✅
 - [x] Empty states, loading states, error states, skeletons — `loading.tsx` (skeletons) för projects/help/prompts/profile, `error.tsx`, `not-found.tsx` (branded)
 - [x] SEO metadata + Open Graph — root `metadataBase`, title-mall, keywords, OG + Twitter Card (OG-bild kvar, se manuella steg)
 - [x] Sitemap — `sitemap.ts` (statiska + innehåll via Firestore/seed) + `robots.ts`
+- [x] Community soul — About manifesto, Testimonials med riktiga byggare, TabStrip med 5 flikar
+- [x] Aktiv nav-markering i Header (usePathname + hammer-yellow active style)
+- [x] Live aktivitetsfeed på startsidan (async server component, Firestore + seed-fallback)
+- [x] CommunityMarquee — dubbel rad (tools på rad 2, reverse-animation)
+- [x] Community-sida (`/community`) — "Möt byggarna" med stats, byggarkort, how-to och CTA
 - [ ] Responsivitet-genomgång — kräver webbläsare (manuellt steg)
 - [ ] Accessibility-review — kräver tangentbord/skärmläsare (manuellt steg)
 - [ ] Performance-optimering — kör Lighthouse på produktion (manuellt steg)
@@ -583,7 +588,7 @@ Innan en fas markeras som klar:
 | Fas 5 — Prompts/guider | ✅ Klar |
 | Fas 6 — Profiler | ✅ Klar |
 | Fas 7 — Admin | ✅ Klar |
-| Fas 8 — Polish | 🔧 Infrastruktur klar (SEO, sitemap, robots, loading/error/404); review-punkter kvar |
+| Fas 8 — Polish | ✅ Klar (manuella review-steg kvar: responsivitet, a11y, Lighthouse) |
 
 ---
 
@@ -633,4 +638,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-25 (session 11)*
+*Senast uppdaterad: 2026-06-25 (session 12)*
