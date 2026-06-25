@@ -25,35 +25,43 @@ const fredoka = Fredoka({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AIbyggare.se — För oss som bygger först och förstår sen",
+    default: "AIbyggare.se — För oss som bygger med AI",
     template: "%s — AIbyggare.se",
   },
   description:
-    "En svensk community för AI-byggare, vibe coders och envisa nybörjare. Visa upp ditt bygge, få hjälp när du fastnar, dela prompts som faktiskt funkade.",
+    "Sveriges community för AI-byggare, vibe coders och envisa nybörjare. Visa upp ditt bygge, få hjälp när du fastnar, dela prompts som faktiskt funkade.",
   keywords: [
-    "AI-byggare",
+    "AI byggare",
     "vibe coding",
     "bygga med AI",
     "Claude Code",
     "Cursor",
     "Lovable",
-    "community",
-    "Sverige",
+    "Bolt",
+    "community Sverige",
     "indie hacker",
-    "prompts",
+    "prompts AI",
+    "Next.js",
+    "Firebase",
+    "Supabase",
+    "Vercel",
+    "AI-projekt",
+    "apputveckling AI",
   ],
   applicationName: "AIbyggare.se",
-  authors: [{ name: "AIbyggare.se" }],
-  alternates: { canonical: "/" },
+  authors: [{ name: "AIbyggare.se", url: SITE_URL }],
+  creator: "AIbyggare.se",
+  publisher: "AIbyggare.se",
+  alternates: { canonical: SITE_URL },
   openGraph: {
-    title: "AIbyggare.se — För oss som bygger först och förstår sen",
+    title: "AIbyggare.se — För oss som bygger med AI",
     description:
-      "En svensk community för AI-byggare, vibe coders och envisa nybörjare.",
+      "Sveriges community för AI-byggare, vibe coders och envisa nybörjare. Bygg med AI. Visa upp. Få hjälp.",
     url: SITE_URL,
     siteName: "AIbyggare.se",
     locale: "sv_SE",
@@ -61,10 +69,44 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AIbyggare.se",
+    title: "AIbyggare.se — För oss som bygger med AI",
     description:
-      "Sveriges community för dig som bygger appar och produkter med AI.",
+      "Sveriges community för AI-byggare, vibe coders och envisa nybörjare. Bygg med AI. Visa upp. Få hjälp.",
+    site: "@aibyggare",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "AIbyggare.se",
+  alternateName: "AI Byggare Sverige",
+  url: SITE_URL,
+  description:
+    "Sveriges community för AI-byggare, vibe coders och envisa nybörjare.",
+  inLanguage: "sv",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/projects?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+  sameAs: [
+    "https://www.instagram.com/aibyggare",
+    "https://twitter.com/aibyggare",
+  ],
 };
 
 export default function RootLayout({
@@ -77,6 +119,12 @@ export default function RootLayout({
       lang="sv"
       className={`${geistSans.variable} ${plexMono.variable} ${fredoka.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
           <AnnouncementMarquee />

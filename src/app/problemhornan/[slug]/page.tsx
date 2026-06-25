@@ -11,21 +11,42 @@ import type { Post, Comment } from "@/types/firestore";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const canonical = `${SITE_URL}/problemhornan/${slug}`;
+  const ogImage = `${SITE_URL}/problemhornan/${slug}/opengraph-image`;
+  const ogBase = { url: canonical, images: [{ url: ogImage, width: 1200, height: 630 }], type: "article" as const };
+
   try {
     const { getHelpPostBySlug } = await import("@/lib/firebase/help");
     const post = await getHelpPostBySlug(slug);
-    if (post) return { title: `${post.title} — AIbyggare.se`, description: post.body };
+    if (post) {
+      const title = post.title;
+      const description = post.body?.slice(0, 155);
+      return {
+        title,
+        description,
+        alternates: { canonical },
+        openGraph: { ...ogBase, title, description },
+        twitter: { card: "summary_large_image" as const, title, description, images: [ogImage] },
+      };
+    }
   } catch {}
   const seed = SEED_HELP_QUESTIONS.find((q) => q.slug === slug);
+  const title = seed?.title ?? "Problem";
+  const description = seed?.body?.slice(0, 155);
   return {
-    title: seed ? `${seed.title} — AIbyggare.se` : "Problem — AIbyggare.se",
-    description: seed?.body,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { ...ogBase, title, description },
+    twitter: { card: "summary_large_image" as const, title, description, images: [ogImage] },
   };
 }
 

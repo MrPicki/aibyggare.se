@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background: green in light mode, dark ink in dark mode -->
+  <style>
+    .bg { fill: #64B26A; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #2a3020; }
+    }
+  </style>
+  <rect class="bg" width="32" height="32" rx="7"/>
+  <!-- Hammer head -->
+  <rect x="4" y="5" width="15" height="8" rx="1.5" fill="white"/>
+  <!-- Hammer head extension (claw side) -->
+  <rect x="16" y="7" width="9" height="4" rx="1" fill="white"/>
+  <!-- Handle/shaft -->
+  <rect x="9" y="12" width="4" height="14" rx="1.5" fill="white"/>
+  <!-- Decorative dot (code bracket feel) -->
+  <rect x="21" y="19" width="3" height="3" rx="0.8" fill="white" opacity="0.5"/>
+</svg>

@@ -11,6 +11,8 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
+
 export async function generateMetadata({
   params,
 }: {
@@ -19,9 +21,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const seed = SEED_PROMPTS.find((p) => p.slug === slug);
   const title = seed?.title ?? "Prompt";
+  const description = seed?.prompt?.slice(0, 155) ?? "En prompt från AIbyggare-communityn.";
+  const canonical = `${SITE_URL}/prompts/${slug}`;
+  const ogImage = `${SITE_URL}/prompts/${slug}/opengraph-image`;
   return {
-    title: `${title} — AIbyggare.se`,
-    description: seed?.prompt ?? "En prompt från AIbyggare-communityn.",
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title, description, url: canonical, type: "article" as const,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image" as const, title, description, images: [ogImage] },
   };
 }
 

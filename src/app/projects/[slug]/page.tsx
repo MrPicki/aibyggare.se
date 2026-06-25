@@ -11,25 +11,41 @@ import { SEED_PROJECTS, SEED_PROJECT_DETAILS } from "@/lib/seed";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const canonical = `${SITE_URL}/projects/${slug}`;
+  const ogImage = `${SITE_URL}/projects/${slug}/opengraph-image`;
+  const ogBase = { url: canonical, images: [{ url: ogImage, width: 1200, height: 630 }], type: "article" as const };
+
   try {
     const { getProjectBySlug } = await import("@/lib/firebase/projects");
     const project = await getProjectBySlug(slug);
     if (project) {
       return {
-        title: `${project.title} — AIbyggare.se`,
+        title: project.title,
         description: project.tagline,
+        alternates: { canonical },
+        openGraph: { ...ogBase, title: project.title, description: project.tagline },
+        twitter: { card: "summary_large_image" as const, title: project.title, description: project.tagline, images: [ogImage] },
       };
     }
   } catch {}
   const seed = SEED_PROJECTS.find((p) => p.slug === slug);
-  if (seed) return { title: `${seed.title} — AIbyggare.se`, description: seed.tagline };
-  return { title: "Bygge — AIbyggare.se" };
+  const title = seed?.title ?? "Bygge";
+  const description = seed?.tagline;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { ...ogBase, title, description },
+    twitter: { card: "summary_large_image" as const, title, description, images: [ogImage] },
+  };
 }
 
 function fmtDate(ts: unknown): string {
