@@ -166,6 +166,139 @@ export interface HelpQuestion {
   tools?: string[];  // för filtrering (Firestore: tags; seed: derived from topic)
 }
 
+// ─── Project details (rich content + seed comments for fallback) ─────────────
+
+export interface SeedProjectComment {
+  author: string;
+  username: string;
+  avatarUrl: string;
+  body: string;
+  daysAgo: number;
+}
+
+export interface SeedProjectDetail {
+  description: string;
+  problem: string;
+  feedbackWanted?: string;
+  projectUrl?: string;
+  username: string;
+  daysAgo: number;
+  comments: SeedProjectComment[];
+}
+
+export const SEED_PROJECT_DETAILS: Record<string, SeedProjectDetail> = {
+  "smartbok-se": {
+    description: "Ladda upp ett foto på kvittot så kategoriserar AI:n kostnaden, matchar mot rätt konto och skapar en bokföringsrad. Målet är att göra bokföring nästan automatisk för soloföretagare — utan att man behöver förstå sig på kontoplan eller debet/kredit.",
+    problem: "Bokföring tar timmar i månaden för en enskild firma och det är lätt att glömma kvitton. Jag ville ha ett verktyg som sköter jobbet automatiskt medan jag fokuserar på det jag faktiskt kan.",
+    feedbackWanted: "Är flödet för kvittouppladdning enkelt nog? Och hur viktigt är export till Bokio/Fortnox — är det ett dealbreaker om det saknas i MVP?",
+    projectUrl: "https://smartbok.se",
+    username: "christoffer",
+    daysAgo: 14,
+    comments: [
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Snyggt upplägg! Hur löser du OCR-biten för kvittona — kör du något tredjepartsbibliotek eller ren Claude?", daysAgo: 12 },
+      { author: "Adam", username: "adamcodes", avatarUrl: N, body: "Sitter med liknande utmaning för kvittoskanningar. Vilket OCR-API valde du till slut?", daysAgo: 11 },
+      { author: "Jonas", username: "jonasbygger", avatarUrl: M, body: "Behövs verkligen i Sverige — Fortnox är en mardröm för enskilda firmor. Kör du Bokio-integration eller eget system?", daysAgo: 10 },
+      { author: "Nina", username: "nina", avatarUrl: F, body: "Kör du server-side rendering för kvittodatan? Undrar hur du hanterar GDPR när kvittofoton lagras — lagrar du dem permanent eller raderar du efter analys?", daysAgo: 8 },
+      { author: "Frida", username: "frida", avatarUrl: F, body: "Möjlighet att exportera till SIE-format (för Bokio/Fortnox) vore guld värt för mig.", daysAgo: 6 },
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Imponerande MVP! Fungerar det med kvitton som inte är på svenska, t.ex. från utländska restauranger?", daysAgo: 4 },
+    ],
+  },
+  "aikostnad-se": {
+    description: "En kalkylator som hjälper dig förstå och förutse kostnader för olika AI-modeller baserat på ditt faktiska användningsmönster. Jämför GPT-4o, Claude 3.5, Gemini Pro och flera andra sida vid sida — i kronor och ören, inte tokens.",
+    problem: "Tokens och priser är svårt att räkna på. Jag ville ha ett enkelt verktyg som visar vad det faktiskt kostar att driva en AI-app eller använda en modell intensivt — innan fakturan kommer.",
+    feedbackWanted: "Saknar ni några modeller i jämförelsen? Och hur viktigt är det att kunna spara och dela en beräkning med teamet?",
+    projectUrl: "https://aikostnad.se",
+    username: "oskar",
+    daysAgo: 8,
+    comments: [
+      { author: "Sara", username: "sarapromptar", avatarUrl: F, body: "Exakt verktyget jag saknat. Kom ihåg att räkna in context-window-priset — det skenar fort om man kör långa konversationer.", daysAgo: 7 },
+      { author: "Christoffer", username: "christoffer", avatarUrl: M, body: "Kanon! Kör du live-data från respektive modell-API eller hårdkodade priser som uppdateras manuellt?", daysAgo: 6 },
+      { author: "Nina", username: "nina", avatarUrl: F, body: "Lade till ditt verktyg i min bokmärkesmapp direkt. Sparade mig en halv timme med Excel.", daysAgo: 5 },
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Har du tänkt på att lägga till en 'dela kostnad'-funktion för team — typ räkna ut total API-kostnad för hela teamet?", daysAgo: 4 },
+      { author: "Jonas", username: "jonasbygger", avatarUrl: M, body: "Har du räknat in embeddings-kostnader? De glöms ofta bort men kan bli en stor del om man kör stora datamängder.", daysAgo: 3 },
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Claude 3.5 Haiku är faktiskt billigare via batch-API om man inte behöver realtidssvar. Kan vara värt att ha med som alternativ.", daysAgo: 2 },
+      { author: "Maja", username: "majawebb", avatarUrl: F, body: "Ändrade direkt hur mycket jag kör streaming-svar efter att ha sett kostnaderna. Bra verktyg!", daysAgo: 1 },
+    ],
+  },
+  "need-radar": {
+    description: "En pipeline som varje dag kör igenom Reddit, Flashback och Hacker News och identifierar återkommande problem som ännu inte har en bra lösning. Resultaten aggregeras och presenteras med en relevansscore.",
+    problem: "Jag vill hitta lönsamma SaaS-idéer men orkar inte manuellt läsa hundratals trådar varje dag. Ville automatisera prospekteringen och bara läsa igenom de bästa signalerna varje morgon.",
+    feedbackWanted: "Är scoring-modellen för naiv? Hur skulle ni ranka marknadsmöjligheter på ett sätt som faktiskt funkar?",
+    username: "jonasbygger",
+    daysAgo: 21,
+    comments: [
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Intressant idé. Reddit-API:et är ganska begränsat utan betald plan — har du kollat PushShift eller ett scrapers-baserat alternativ?", daysAgo: 20 },
+      { author: "Maja", username: "majawebb", avatarUrl: F, body: "Hur hanterar du duplicerade trådar och cross-postning? Det verkar vara den svåraste biten.", daysAgo: 19 },
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Har du testat Hacker News Algolia-API:et också? Mer teknisk crowd men riktigt bra signal på vad devs saknar.", daysAgo: 17 },
+      { author: "Oskar", username: "oskar", avatarUrl: M, body: "Kör du LLM för att ranka problemen eller rule-based? Gissar att LLM ger mer nyanserade träffar men kostar mer per körning.", daysAgo: 15 },
+    ],
+  },
+  "menupilot-se": {
+    description: "Skriv in vad du har i kylen och skafferiet — AI:n föreslår fem middagar som använder det du redan har, komplett med recept och inköpslista för det som saknas. Inga mer 'vad ska vi äta ikväll?'-diskussioner.",
+    problem: "Ständiga diskussioner om mat trots ett fullt kylskåp. Ville lösa det med AI och sluta kasta mat som hade kunnat bli bra middagar.",
+    feedbackWanted: "Onboarding-känslan och första intrycket — är det tydligt vad man ska göra? Och saknas något uppenbart i MVP?",
+    projectUrl: "https://menupilot.se",
+    username: "adamcodes",
+    daysAgo: 10,
+    comments: [
+      { author: "Frida", username: "frida", avatarUrl: F, body: "Precis det här min familj behöver! Kan man utesluta ingredienser man inte vill ha, t.ex. lök?", daysAgo: 9 },
+      { author: "Christoffer", username: "christoffer", avatarUrl: M, body: "Matrestor-idén är briljant. Hur mycket context skickar du med — hela kylen eller de 5 vanligaste ingredienserna?", daysAgo: 8 },
+      { author: "Nina", username: "nina", avatarUrl: F, body: "Har testat och det fungerar bra! Saknar bara möjlighet att spara favoritmenyer mellan sessioner.", daysAgo: 7 },
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Hur hanterar du portionsstorlekar och kalorier? Det verkar vara nästa naturliga steg om du vill nå en bredare publik.", daysAgo: 6 },
+      { author: "Sara", username: "sarapromptar", avatarUrl: F, body: "Imponerades av hur väl AI:n hanterade halvtomma kylskåp. Vilket prompt-upplägg kör du för ingrediens-till-meny-steget?", daysAgo: 5 },
+      { author: "Jonas", username: "jonasbygger", avatarUrl: M, body: "Har du sett om folk återvänder eller är det mest one-shot-användning? Undrar om problemet löser sig med lite gamification.", daysAgo: 4 },
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Smart! Önskelistan: kom ihåg vilka rätter vi gillat och föreslå dem oftare nästa vecka.", daysAgo: 3 },
+      { author: "Oskar", username: "oskar", avatarUrl: M, body: "Bra idé och clean execution. Funderar på att bygga något liknande för lunchförslag på jobbet.", daysAgo: 2 },
+    ],
+  },
+  "amazon-snipe": {
+    description: "Övervakar produktkategorier på Amazon och varnar via Telegram när priset sticker ut markant från normalintervallet — potentiellt felprissatt eller ovanlig kampanj. Byggt på Keepa API för historiska prisdata.",
+    problem: "Missade för många bra deals för att jag inte kollade Amazon tillräckligt ofta. Nu kollar boten åt mig och skickar Telegram-notis direkt.",
+    username: "sarapromptar",
+    daysAgo: 30,
+    comments: [
+      { author: "Oskar", username: "oskar", avatarUrl: M, body: "Keepa-API:et är bra val. Har du stött på rate-limiting eller blockering från Amazon?", daysAgo: 29 },
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Vilken Telegram-bot-lib kör du — python-telegram-bot eller aiogram? Aiogram är async och hanterar hög last bättre.", daysAgo: 28 },
+      { author: "Adam", username: "adamcodes", avatarUrl: N, body: "Snyggt projekt! Hur definierar du ett 'prisfel' — procent under historiskt snitt, eller något mer sofistikerat?", daysAgo: 27 },
+      { author: "Maja", username: "majawebb", avatarUrl: F, body: "Kul projekt! Har du funderat på att utvidga till andra marknadsplatser, typ Prisjakt eller PriceRunner?", daysAgo: 25 },
+      { author: "Nina", username: "nina", avatarUrl: F, body: "Hur lång är din historik-baseline för att avgöra om ett pris är 'avvikande'? En vecka? En månad?", daysAgo: 24 },
+      { author: "Frida", username: "frida", avatarUrl: F, body: "Telegram-notiserna är en bra idé — push utan app. Kör du bot eller channel för utskicken?", daysAgo: 23 },
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Hur filtrerar du bort sponsrade produkter och Amazon Basics-varor med konstgjorda 'ordinarie priser'?", daysAgo: 21 },
+      { author: "Christoffer", username: "christoffer", avatarUrl: M, body: "Keepa-datan är guld. Kör du historiska prisgraferna för att identifiera manufactured MSRP?", daysAgo: 20 },
+      { author: "Jonas", username: "jonasbygger", avatarUrl: M, body: "Solid idé. En naturlig expansion vore att mejla en daglig digest istället för individuella notiser per träff.", daysAgo: 18 },
+    ],
+  },
+  "btc-edge": {
+    description: "Systematisk tradingbot för Polymarket som sätter och följer strikta regler för när man går in och ut ur positioner — eliminerar emotionella beslut och ersätter dem med fördefinierad logik.",
+    problem: "Förlorade pengar på Polymarket för att jag inte höll mig till planen. Ville tvinga mig att vara disciplinerad genom att automatisera reglerna.",
+    username: "pelle",
+    daysAgo: 45,
+    comments: [
+      { author: "Johan", username: "johan", avatarUrl: N, body: "Go/no-go-regler låter rätt. Vilka signals triggar en 'go' — Kelly-kriteriet eller något eget?", daysAgo: 44 },
+      { author: "Oskar", username: "oskar", avatarUrl: M, body: "Polymarket-API är ganska nytt. Hur stabil har du upplevt den under hög trading-aktivitet?", daysAgo: 43 },
+      { author: "Sara", username: "sarapromptar", avatarUrl: F, body: "'Disciplin > hopp' är det bästa mottot för trading-botar. Imponerad av att du faktiskt byggt ett verktyg mot ditt eget beteende.", daysAgo: 42 },
+    ],
+  },
+  "runnr": {
+    description: "Genererar anpassade löpprogram baserade på din nuvarande kondition, tillgänglig tid och mål. Inga träningsjargonger — bara ett realistiskt schema du faktiskt kan hålla.",
+    problem: "Alla träningsappar är designade för folk som redan tränar regelbundet. Ville ha något för oss som bara vill kunna springa 5k utan att dö.",
+    feedbackWanted: "Letar testare — speciellt nybörjare som aldrig sprungit regelbundet. Vad saknas och vad klickar?",
+    username: "nina",
+    daysAgo: 7,
+    comments: [
+      { author: "Frida", username: "frida", avatarUrl: F, body: "Äntligen en löpapp som inte förutsätter att man redan springer 4 gånger i veckan! Finns det en iOS-build att testa?", daysAgo: 7 },
+      { author: "Maja", username: "majawebb", avatarUrl: F, body: "React Native + Firebase är en riktigt bra kombination för just detta. Bra teknologival.", daysAgo: 6 },
+      { author: "Lina", username: "linabygger", avatarUrl: F, body: "Testade via länken — träningsplanen kändes faktiskt realistisk för en nybörjare. Bra jobbat.", daysAgo: 5 },
+      { author: "Adam", username: "adamcodes", avatarUrl: N, body: "Hur hanterar du progression — ökar programmet automatiskt svårighetsgraden baserat på historik, eller kör du statiska scheman?", daysAgo: 5 },
+      { author: "Sara", username: "sarapromptar", avatarUrl: F, body: "Har en kompis som precis börjat träna och skickade länken till henne. Precis rätt nivå för nybörjare.", daysAgo: 4 },
+      { author: "Christoffer", username: "christoffer", avatarUrl: M, body: "React Native + Firebase är ett bra val för detta. Planerar du att köra server-side schema-generering eller allt client-side?", daysAgo: 3 },
+      { author: "Oskar", username: "oskar", avatarUrl: M, body: "Är AI-coachen proaktiv (påminner dig om du skippar ett pass) eller reaktiv (svarar bara på frågor)?", daysAgo: 2 },
+      { author: "Pelle", username: "pelle", avatarUrl: N, body: "Ren och enkel. Den enda träningsappen jag faktiskt känt lust att testa på länge.", daysAgo: 1 },
+    ],
+  },
+};
+
+// ─── Help questions ───────────────────────────────────────────────────────────
 export const SEED_HELP_QUESTIONS: HelpQuestion[] = [
   {
     slug: "vercel-vagrar-deploya",

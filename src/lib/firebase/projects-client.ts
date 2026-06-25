@@ -164,6 +164,8 @@ export function subscribeToComments(
     orderBy("createdAt", "asc")
   );
   return onSnapshot(q, (snap) => {
+    // Skip empty cache snapshots — they'd overwrite valid SSR initial data
+    if (snap.metadata.fromCache && snap.empty) return;
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment)));
   });
 }

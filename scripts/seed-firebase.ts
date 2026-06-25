@@ -220,6 +220,7 @@ interface ProjectSeed {
   tagline: string;
   description: string;
   problem: string;
+  feedbackWanted: string;
   stack: string[];
   status: string;
   projectUrl: string;
@@ -236,6 +237,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "AI-bokföring för enskild firma. Foton på kvitton in, ordning ut.",
     description: "Ladda upp ett foto på kvittot så kategoriserar AI:n kostnaden, matchar mot rätt konto och skapar en bokföringsrad. Syftar till att göra bokföring nästan automatisk för soloföretagare.",
     problem: "Bokföring tar timmar i månaden för enskild firma och det är lätt att glömma kvitton. Ville ha ett verktyg som gör jobbet åt mig.",
+    feedbackWanted: "Är flödet för kvittouppladdning enkelt nog? Och hur viktigt är export till Bokio/Fortnox — är det ett dealbreaker om det saknas i MVP?",
     stack: ["Supabase", "Claude", "Next.js", "Vercel", "TypeScript"],
     status: "mvp",
     projectUrl: "https://smartbok.se",
@@ -250,6 +252,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "Räkna ut vad AI faktiskt kostar dig per månad. Jämför modeller.",
     description: "Kalkylator som hjälper dig förstå och förutse kostnader för olika AI-modeller baserat på ditt faktiska användningsmönster. Jämför GPT-4o, Claude 3.5, Gemini och fler.",
     problem: "Tokens och priser är svårt att räkna på. Ville ha ett enkelt verktyg som visar vad det kostar i kronor och ören.",
+    feedbackWanted: "Saknar ni några modeller i jämförelsen? Och hur viktigt är det att kunna spara och dela en beräkning med teamet?",
     stack: ["Next.js", "API", "Vercel", "TypeScript"],
     status: "live",
     projectUrl: "https://aikostnad.se",
@@ -264,6 +267,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "AI som dagligen letar marknadsmöjligheter i forum och trådar.",
     description: "En pipeline som varje dag kör igenom Reddit, Flashback och Hacker News och identifierar återkommande problem som ännu inte har en bra lösning. Aggregeras och presenteras med en poäng.",
     problem: "Vill hitta SaaS-idéer men orkar inte manuellt läsa hundratals trådar. Ville automatisera prospekteringen.",
+    feedbackWanted: "Är scoring-modellen för naiv? Hur skulle ni ranka marknadsmöjligheter på ett sätt som faktiskt funkar?",
     stack: ["Reddit API", "Claude", "Supabase", "Python", "Vercel"],
     status: "idea",
     projectUrl: "",
@@ -278,6 +282,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "AI som gör veckomenyer från matresterna hemma.",
     description: "Skriv in vad du har i kylen och skafferiet — AI:n föreslår fem middagar som använder det du har, med recept och inköpslista för det som saknas.",
     problem: "Ständiga diskussioner om 'vad ska vi äta ikväll?' trots fullt kylskåp. Ville lösa det med AI.",
+    feedbackWanted: "Onboarding-känslan och första intrycket — är det tydligt vad man ska göra? Saknas något uppenbart i MVP?",
     stack: ["ChatGPT", "Next.js", "Firebase", "React", "Vercel"],
     status: "feedback",
     projectUrl: "https://menupilot.se",
@@ -292,6 +297,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "Prisfel-scanner för Amazon som tjuter när något är felprissatt.",
     description: "Övervakar produktkategorier på Amazon och varnar via Telegram när priset sticker ut från normalintervallet — potentiellt felprissatt eller kampanj.",
     problem: "Missade för många bra deals för att jag inte kollade Amazon tillräckligt ofta. Nu kollar boten åt mig.",
+    feedbackWanted: "",
     stack: ["Keepa API", "Telegram Bot", "Python", "Cron"],
     status: "mvp",
     projectUrl: "",
@@ -306,6 +312,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "Polymarket-bot med hårda go/no-go-regler. Disciplin över hopp.",
     description: "Systematisk tradingbot för Polymarket. Sätter och följer strikta regler för när man ska gå in och ut ur positioner — eliminerar emotionella beslut.",
     problem: "Förlorade pengar på Polymarket för att jag inte höll mig till planen. Ville tvinga mig att vara disciplinerad.",
+    feedbackWanted: "",
     stack: ["Polymarket API", "Python", "Backtest", "Telegram"],
     status: "idea",
     projectUrl: "",
@@ -320,6 +327,7 @@ const PROJECTS: ProjectSeed[] = [
     tagline: "AI-löpcoach för vanliga människor som inte vill ha en PT-app.",
     description: "Genererar anpassade löpprogram baserade på din nuvarande kondition, tillgänglig tid och mål. Inga träningsjargonger — bara ett schema du faktiskt kan följa.",
     problem: "Alla träningsappar är designade för seriösa atleter. Ville ha något för oss som bara vill kunna springa 5k utan att dö.",
+    feedbackWanted: "Letar testare — speciellt nybörjare som aldrig sprungit regelbundet. Vad saknas och vad klickar?",
     stack: ["Claude", "React Native", "Firebase", "Vercel"],
     status: "testers",
     projectUrl: "",
@@ -354,7 +362,7 @@ async function ensureProjects() {
       projectUrl: p.projectUrl,
       githubUrl: "",
       imageUrl: "",
-      feedbackWanted: "",
+      feedbackWanted: p.feedbackWanted,
       isFeatured: p.upvoteCount >= 20,
       upvoteCount: p.upvoteCount,
       commentCount: p.commentCount,
@@ -362,6 +370,37 @@ async function ensureProjects() {
       updatedAt: ts(p.daysAgo),
     });
     console.log(`  ✅ Projekt: ${p.title}`);
+  }
+}
+
+// ── Steg 3b: Uppdatera befintliga projekt med nya fält ────────────────────────
+
+async function updateProjectDetails() {
+  console.log("\n── Uppdaterar projektdetaljer (feedbackWanted, problem) ──");
+  for (const p of PROJECTS) {
+    const snap = await db.collection("projects").where("slug", "==", p.slug).limit(1).get();
+    if (snap.empty) {
+      console.log(`  ⚠️  Projekt inte hittat: ${p.slug}`);
+      continue;
+    }
+    const doc = snap.docs[0];
+    const data = doc.data();
+    const needsUpdate =
+      data.feedbackWanted !== p.feedbackWanted ||
+      data.problem !== p.problem ||
+      data.description !== p.description;
+
+    if (!needsUpdate) {
+      console.log(`  ⏭  Ingen uppdatering behövs: ${p.slug}`);
+      continue;
+    }
+    await doc.ref.update({
+      feedbackWanted: p.feedbackWanted,
+      problem: p.problem,
+      description: p.description,
+      updatedAt: new Date(),
+    });
+    console.log(`  ✅ Uppdaterade: ${p.slug}`);
   }
 }
 
@@ -1054,6 +1093,7 @@ async function main() {
   await ensureAuthUsers();
   await ensureProfiles();
   await ensureProjects();
+  await updateProjectDetails();
   await ensureProjectComments();
   await ensureExtraProjectComments();
   await ensureHelpPosts();

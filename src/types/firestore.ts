@@ -30,6 +30,7 @@ export interface Project {
   userId: string;
   userDisplayName: string;
   userAvatarUrl: string;
+  username?: string;
   title: string;
   slug: string;
   tagline: string;
