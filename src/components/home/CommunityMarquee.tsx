@@ -1,16 +1,18 @@
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 
-const WORDS = ["BYGGEN", "BUGGAR", "PROMPTS", "DEPLOYS", "KAFFE", "ENVISHET"];
+const ROW_A = ["BYGGEN", "BUGGAR", "PROMPTS", "DEPLOYS", "KAFFE", "ENVISHET", "GENVÄGAR", "VIBE"];
+const ROW_B = ["FIREBASE", "SUPABASE", "CLAUDE", "CURSOR", "LOVABLE", "MVP", "STACK", "GRUNDEN"];
 
-function Row() {
+function MarqueeRow({ words, reverse }: { words: string[]; reverse?: boolean }) {
   return (
-    <div className="marquee-track">
-      {WORDS.map((w, i) => (
-        <span key={i} className="flex items-center whitespace-nowrap font-display text-4xl font-bold uppercase tracking-tight text-paper sm:text-5xl">
+    <div className={`marquee-track${reverse ? " marquee-reverse" : ""}`}>
+      {words.map((w, i) => (
+        <span
+          key={i}
+          className="flex items-center whitespace-nowrap font-display text-4xl font-bold uppercase tracking-tight text-paper sm:text-5xl"
+        >
           {w}
-          <span aria-hidden className="mx-6 text-hammer-yellow">
-            ·
-          </span>
+          <span aria-hidden className="mx-6 text-hammer-yellow">·</span>
         </span>
       ))}
     </div>
@@ -20,10 +22,14 @@ function Row() {
 export function CommunityMarquee() {
   return (
     <section className="bg-ink py-14 sm:py-20">
-      <div className="overflow-hidden py-2 select-none" aria-hidden>
+      <div className="overflow-hidden select-none space-y-3 py-2" aria-hidden>
         <div className="flex">
-          <Row />
-          <Row />
+          <MarqueeRow words={ROW_A} />
+          <MarqueeRow words={ROW_A} />
+        </div>
+        <div className="flex opacity-40">
+          <MarqueeRow words={ROW_B} reverse />
+          <MarqueeRow words={ROW_B} reverse />
         </div>
       </div>
 

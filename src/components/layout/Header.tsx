@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/problemhornan", label: "Problemhörnan" },
   { href: "/prompts", label: "Prompts" },
   { href: "/guides", label: "Genvägar" },
+  { href: "/community", label: "Byggare" },
 ];
 
 function Wordmark() {

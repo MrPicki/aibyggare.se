@@ -74,6 +74,7 @@
   /* Animationer */
   --animate-ticker: ticker 35s linear infinite;
   --animate-marquee: marquee 38s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 42s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
 }
 
@@ -85,6 +86,11 @@
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
 }
 
 @keyframes float {
@@ -268,6 +274,9 @@
     display: flex;
     width: max-content;
     animation: var(--animate-marquee);
+  }
+  .marquee-reverse {
+    animation: var(--animate-marquee-reverse);
   }
   .marquee-paused:hover .marquee-track {
     animation-play-state: paused;
