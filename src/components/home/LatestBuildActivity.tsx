@@ -4,9 +4,9 @@ import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { DrillIcon } from "@/components/brand/DrillIcon";
 
-type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
+export type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
 
-interface BuildActivityItem {
+export interface BuildActivityItem {
   id: string;
   type: ActivityType;
   user: { name: string; handle: string; username: string; initials: string; avatarUrl?: string };
@@ -269,7 +269,8 @@ function ActivityCard({ item }: { item: BuildActivityItem }) {
   );
 }
 
-export function LatestBuildActivity() {
+export function LatestBuildActivity({ items }: { items?: BuildActivityItem[] }) {
+  const activity = items ?? SEED_ACTIVITY;
   return (
     <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
       {/* Header */}
@@ -290,7 +291,7 @@ export function LatestBuildActivity() {
 
       {/* Activity list */}
       <div className="space-y-4">
-        {SEED_ACTIVITY.map((item) => (
+        {activity.map((item) => (
           <ActivityCard key={item.id} item={item} />
         ))}
       </div>

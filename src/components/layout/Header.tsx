@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, LogOut, User, Settings, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, profile, loading, signOut } = useAuth();
+  const pathname = usePathname();
   const profileHref = profile?.username ? `/profile/${profile.username}` : "/onboarding";
   const isAdmin = profile?.role === "admin";
 
@@ -52,15 +54,24 @@ export function Header() {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Vänster: nav (desktop) */}
           <nav className="hidden md:flex items-center gap-1 flex-1" aria-label="Huvudnavigation">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-xl px-3 py-1.5 font-mono text-[13px] font-medium uppercase tracking-wide text-mud hover:bg-hammer-yellow hover:text-ink transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 font-mono text-[13px] font-medium uppercase tracking-wide transition-colors",
+                    isActive
+                      ? "bg-hammer-yellow text-ink shadow-[2px_2px_0_0_var(--ink)]"
+                      : "text-mud hover:bg-hammer-yellow hover:text-ink",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Center: wordmark */}
@@ -140,16 +151,25 @@ export function Header() {
         {mobileOpen && (
           <div className="md:hidden -mx-4 border-t-2 border-ink bg-paper sm:-mx-6">
             <nav className="flex flex-col gap-1 px-4 py-4 sm:px-6" aria-label="Mobilnavigation">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-xl px-3 py-3 font-mono text-base font-medium uppercase tracking-wide text-ink hover:bg-hammer-yellow transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "rounded-xl px-3 py-3 font-mono text-base font-medium uppercase tracking-wide transition-colors",
+                      isActive
+                        ? "bg-hammer-yellow text-ink font-bold"
+                        : "text-ink hover:bg-hammer-yellow",
+                    )}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <div className="mt-2 flex flex-col gap-2 border-t-2 border-dashed border-border pt-3">
                 {!loading && user ? (
                   <>
