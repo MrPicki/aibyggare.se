@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 
 const AVAILABLE_TOOLS = [
   "Claude Code", "Claude AI", "Cursor", "Lovable", "Bolt", "Replit",
@@ -420,6 +421,8 @@ function SettingsForm({ user }: { user: User }) {
           )}
         </div>
       </form>
+
+      <DeleteAccountSection />
     </div>
   );
 }
