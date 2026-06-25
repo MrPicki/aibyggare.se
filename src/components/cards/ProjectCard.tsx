@@ -16,6 +16,8 @@ export interface ProjectCardProps {
   authorName?: string;
   authorAvatarUrl?: string;
   isFeatured?: boolean;
+  /** Unix-sekunder från Firestore createdAt — används för nyast-sortering. */
+  createdAt?: number;
   className?: string;
 }
 

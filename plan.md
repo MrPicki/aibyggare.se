@@ -633,4 +633,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-24 (session 10)*
+*Senast uppdaterad: 2026-06-25 (session 11)*

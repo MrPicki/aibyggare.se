@@ -1,6 +1,7 @@
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
-import { ProjectCard, type ProjectCardProps } from "@/components/cards/ProjectCard";
+import { ProjectFilterList } from "@/components/projects/ProjectFilterList";
+import type { ProjectCardProps } from "@/components/cards/ProjectCard";
 import { SEED_PROJECTS } from "@/lib/seed";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import type { Project, ProjectStatus } from "@/types/firestore";
@@ -15,6 +16,7 @@ export const metadata = {
 
 function fromFirestore(p: Project): ProjectCardProps {
   const status = p.status as ProjectStatus;
+  const ts = p.createdAt as { seconds?: number } | null;
   return {
     title: p.title,
     tagline: p.tagline,
@@ -26,6 +28,7 @@ function fromFirestore(p: Project): ProjectCardProps {
     commentCount: p.commentCount ?? 0,
     authorName: p.userDisplayName || "Byggare",
     authorAvatarUrl: p.userAvatarUrl || undefined,
+    createdAt: ts?.seconds,
   };
 }
 
@@ -40,14 +43,10 @@ export default async function ProjectsPage() {
     console.error("[projects] Firestore fetch failed:", e);
   }
 
-  // Samma seed-källa som startsidan (ProjectShowcase) tills Firestore är inkopplat.
-  const projects: ProjectCardProps[] = (
+  const projects: ProjectCardProps[] =
     firestoreProjects.length > 0
       ? firestoreProjects.map(fromFirestore)
-      : SEED_PROJECTS
-  )
-    .slice()
-    .sort((a, b) => b.upvotes - a.upvotes);
+      : SEED_PROJECTS;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
@@ -59,8 +58,7 @@ export default async function ProjectsPage() {
             Just nu på bänken
           </h1>
           <p className="mt-2 max-w-md text-mud">
-            Halvfärdigt, trasigt eller nästan lanserat — allt räknas. Sorterat efter
-            flest borrar.
+            Halvfärdigt, trasigt eller nästan lanserat — allt räknas.
           </p>
         </div>
         <ChunkyLink href="/projects/new" variant="green">
@@ -68,13 +66,9 @@ export default async function ProjectsPage() {
         </ChunkyLink>
       </div>
 
-      {/* Grid */}
+      {/* Filter list or empty */}
       {projects.length > 0 ? (
-        <div className="grid gap-5 pt-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p) => (
-            <ProjectCard key={p.slug} {...p} />
-          ))}
-        </div>
+        <ProjectFilterList projects={projects} />
       ) : (
         <div className="chunky rounded-3xl bg-paper p-12 text-center sm:p-16">
           <p className="font-display text-xl font-bold text-ink">Tomt på bänken än så länge.</p>

@@ -1257,3 +1257,44 @@ Hjälpsektionen hette `/help` och "Fastnat?" i nav. Beslutades att byta identite
 **Avatarbilder:** Alla tre nedskalade från 2 MB → 35–43 KB (160×160 px, LANCZOS).
 
 **Verifierat:** Build ✅ — 29 routes, inga fel. Guidens alla 5 steg + slutprompt bekräftad via DOM-snapshot.
+
+---
+
+## 2026-06-25 — Rik projektdetaljsida — problem-fält, seed-kommentarer, bugfix (session 11)
+
+### Vad som gjordes
+
+**Problem:** Projektdetaljsidan var gles — inget `problem`-fält, inga kommentarer för inloggade användare, den statiska fallback-pathen hade nästan inget innehåll.
+
+**`src/types/firestore.ts`:**
+- Lade till `username?: string` på `Project`-interfacet (fältet skrevs av seed-scriptet men deklarerades aldrig i typen)
+
+**`src/lib/seed.ts`:**
+- Lade till `SeedProjectComment`- och `SeedProjectDetail`-interface
+- Lade till `SEED_PROJECT_DETAILS: Record<string, SeedProjectDetail>` — rik statisk innehållskarta för alla 7 projekt (smartbok-se, aikostnad-se, need-radar, menupilot-se, amazon-snipe, btc-edge, runnr). Varje post har `description`, `problem`, `feedbackWanted`, `projectUrl`, `username`, `daysAgo` och 3–9 `comments`
+
+**`src/app/projects/[slug]/page.tsx` (komplett omskrivning):**
+- Separerade project-fetch och comment-fetch till oberoende try/catch-block (ett misslyckat kommentarsfetch döljer inte projektet)
+- Lade till `fmtDate()` och `daysAgoLabel()` hjälpfunktioner för svenska datum/tidsetiketter
+- Nytt blått streckruta-block: "Varför det byggdes" (`problem`-fältet)
+- Nytt gult streckruta-block: "Söker feedback på" (`feedbackWanted`-fältet)
+- Författarlänk via `project.username` → `/profile/[handle]`
+- Skapandedatum synligt under titel
+- Seed-fallback-pathen komplett ombyggd: visar `SEED_PROJECT_DETAILS[slug]` med full beskrivning, problem, feedback-box, CTA till projektets URL, profilkort för kommentarerna och inloggningsprompt
+
+**`src/lib/firebase/projects-client.ts`:**
+- Bugfix i `subscribeToComments`: `onSnapshot` anropades omedelbart med en tom lokal cache-snapshot och skrev över SSR-fetched `initialComments` med `[]`. Fixat via guard: `if (snap.metadata.fromCache && snap.empty) return;`
+
+**`scripts/seed-firebase.ts`:**
+- Lade till `feedbackWanted: string` på `ProjectSeed`-interfacet
+- Populerade `feedbackWanted` för alla 7 projekt (5 med innehåll, 2 med tom sträng)
+- Ny funktion `updateProjectDetails()` — hittar befintliga Firestore-dokument via slug och patchar `description`, `problem`, `feedbackWanted` om de skiljer sig. Idempotent.
+- `main()` kallar nu `updateProjectDetails()` mellan `ensureProjects()` och `ensureProjectComments()`
+
+### Verifierat
+- `npm run build` ✅ — inga fel
+- `tsc --noEmit` ✅ — inga typfel
+- DOM-snapshot bekräftade problem-boxen och feedbackWanted-boxen i seed-fallback-pathen
+
+### Status
+✅ **Projektdetaljsidan klar.** Alla 7 seed-projekt visar nu rik information med problem-motivering, feedbackönskan och realistiska kommentarer.
