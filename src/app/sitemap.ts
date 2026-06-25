@@ -7,7 +7,7 @@ import {
   SEED_USERS,
 } from "@/lib/seed";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
 
 export const dynamic = "force-dynamic";
 
