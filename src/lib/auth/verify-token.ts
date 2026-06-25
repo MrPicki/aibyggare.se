@@ -30,8 +30,9 @@ export async function verifyFirebaseToken(token: string): Promise<VerifiedToken 
     if (!uid) return null;
 
     return { uid, email: typeof payload.email === "string" ? payload.email : undefined };
-  } catch {
+  } catch (e) {
     // Ogiltig signatur, utgången token, fel issuer/audience, etc.
+    console.error("[verify-token] Verifiering misslyckades:", (e as Error)?.message ?? e);
     return null;
   }
 }
