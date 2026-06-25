@@ -16,7 +16,10 @@ export async function getAdminUser(): Promise<AdminUser | null> {
     const token = cookieStore.get("__session")?.value;
     if (!token) return null;
 
-    const { adminAuth, adminDb } = await import("@/lib/firebase/admin");
+    const [{ adminAuth }, { adminDb }] = await Promise.all([
+      import("@/lib/firebase/admin-auth"),
+      import("@/lib/firebase/admin"),
+    ]);
     if (!adminAuth || !adminDb) return null;
 
     // Kryptografisk verifiering — en angripare kan inte förfalska en giltig
