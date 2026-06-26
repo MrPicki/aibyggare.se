@@ -6,10 +6,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const { user, profile, loading, signInWithGoogle, signInWithGitHub, error } = useAuth();
+  const {
+    user, profile, loading, error,
+    signInWithGoogle, signInWithGitHub, signUpWithEmail, signInWithEmail,
+  } = useAuth();
   const router = useRouter();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // Redan inloggad? Skicka vidare — onboarding om den inte är klar, annars in
   // i flödet. Annars fastnar man på login-sidan efter redirect-inloggning.
@@ -30,6 +37,23 @@ export default function LoginPage() {
     await signInWithGitHub();
   }
 
+  async function handleEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailLoading(true);
+    try {
+      if (mode === "signup") {
+        await signUpWithEmail(email.trim(), password);
+      } else {
+        await signInWithEmail(email.trim(), password);
+      }
+      // Vid lyckad inloggning navigerar metoden själv; lämna spinnern på.
+    } catch {
+      setEmailLoading(false); // felet visas via context-error
+    }
+  }
+
+  const busy = googleLoading || githubLoading || emailLoading;
+
   return (
     <div className="mx-auto max-w-sm px-4 py-20 sm:py-24">
       {/* Header */}
@@ -38,18 +62,74 @@ export default function LoginPage() {
           <HammerIcon />
         </div>
         <h1 className="font-display text-2xl font-bold text-ink mb-2">
-          Välkommen tillbaka
+          {mode === "signup" ? "Skapa ditt konto" : "Välkommen tillbaka"}
         </h1>
         <p className="text-mud text-sm">
-          Logga in för att visa upp ditt bygge, ställa frågor och hjälpa andra.
+          {mode === "signup"
+            ? "Skapa ett konto och börja bygga din AIbyggare-karaktär."
+            : "Logga in för att visa upp ditt bygge, ställa frågor och hjälpa andra."}
         </p>
+      </div>
+
+      {/* E-post / lösenord */}
+      <form onSubmit={handleEmail} className="space-y-3">
+        <input
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="din@email.se"
+          required
+          className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-3 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+        />
+        <input
+          type="password"
+          autoComplete={mode === "signup" ? "new-password" : "current-password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={mode === "signup" ? "Lösenord (minst 6 tecken)" : "Lösenord"}
+          required
+          minLength={6}
+          className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-3 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+        />
+        <button
+          type="submit"
+          disabled={busy}
+          className="chunky pressable w-full rounded-xl bg-build-green px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
+        >
+          {emailLoading
+            ? "Ett ögonblick..."
+            : mode === "signup"
+            ? "Skapa konto"
+            : "Logga in"}
+        </button>
+      </form>
+
+      {/* Växla läge */}
+      <p className="mt-3 text-center text-sm text-mud">
+        {mode === "signup" ? "Har du redan ett konto? " : "Inget konto än? "}
+        <button
+          type="button"
+          onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+          className="font-semibold text-ink underline underline-offset-2 hover:text-build-green"
+        >
+          {mode === "signup" ? "Logga in" : "Skapa ett"}
+        </button>
+      </p>
+
+      {/* Divider */}
+      <div className="my-6 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="font-mono text-[11px] uppercase tracking-widest text-mud">eller</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       {/* OAuth buttons */}
       <div className="space-y-3">
         <button
           onClick={handleGoogle}
-          disabled={googleLoading || githubLoading}
+          disabled={busy}
           className="chunky pressable flex w-full items-center justify-center gap-3 rounded-xl bg-paper px-4 py-3 font-mono text-sm font-semibold text-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
           <GoogleIcon />
@@ -58,7 +138,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleGitHub}
-          disabled={googleLoading || githubLoading}
+          disabled={busy}
           className="chunky pressable flex w-full items-center justify-center gap-3 rounded-xl bg-ink px-4 py-3 font-mono text-sm font-semibold text-paper disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
         >
           <GithubIcon />
@@ -72,15 +152,10 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className="mt-8 space-y-3">
-        <p className="text-center text-sm text-mud">
-          Inget konto? Du skapar ett automatiskt när du loggar in.
-        </p>
-        <p className="text-center text-xs text-mud/70">
-          Genom att logga in godkänner du att vi lagrar din profilinformation.{" "}
-          <Link href="/" className="underline underline-offset-2">Inga GDPR-popups</Link>, lovar.
-        </p>
-      </div>
+      <p className="mt-8 text-center text-xs text-mud/70">
+        Genom att fortsätta godkänner du att vi lagrar din profilinformation.{" "}
+        <Link href="/" className="underline underline-offset-2">Inga GDPR-popups</Link>, lovar.
+      </p>
     </div>
   );
 }

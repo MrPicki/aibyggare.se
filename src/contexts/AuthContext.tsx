@@ -9,6 +9,8 @@ import {
   getRedirectResult,
   signOut as firebaseSignOut,
   onIdTokenChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import {
   doc,
@@ -39,6 +41,8 @@ interface AuthContextValue {
   error: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -52,6 +56,15 @@ function firebaseErrorMessage(err: unknown): string {
   if (code === "auth/operation-not-allowed") return "Inloggningsmetoden är inte aktiverad i Firebase Console.";
   if (code === "auth/account-exists-with-different-credential")
     return "Du har redan ett konto med den e-postadressen via en annan inloggningsmetod.";
+  if (code === "auth/email-already-in-use")
+    return "Det finns redan ett konto med den e-postadressen. Logga in istället.";
+  if (code === "auth/invalid-email")     return "Ogiltig e-postadress.";
+  if (code === "auth/weak-password")     return "Lösenordet måste vara minst 6 tecken.";
+  if (code === "auth/missing-password")  return "Skriv in ett lösenord.";
+  if (code === "auth/wrong-password" || code === "auth/invalid-credential")
+    return "Fel e-post eller lösenord.";
+  if (code === "auth/user-not-found")    return "Hittade inget konto med den e-postadressen.";
+  if (code === "auth/too-many-requests") return "För många försök. Vänta en stund och prova igen.";
   return `Fel: ${code || msg}`;
 }
 
@@ -164,13 +177,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithRedirect(auth, new GithubAuthProvider());
   }
 
+  // E-post/lösenord. Till skillnad från OAuth-redirect navigerar dessa inte
+  // bort tabben, så vi dirigerar själva efter ensureProfile. Vid fel sätts
+  // context-felet (visas på login-sidan) och felet kastas vidare så sidan kan
+  // stoppa sin laddningsindikator.
+  async function signUpWithEmail(email: string, password: string) {
+    setError(null);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const needsOnboarding = await ensureProfile(cred.user);
+      await refreshProfile();
+      router.push(needsOnboarding ? "/onboarding" : "/projects");
+    } catch (err) {
+      setError(firebaseErrorMessage(err));
+      throw err;
+    }
+  }
+
+  async function signInWithEmail(email: string, password: string) {
+    setError(null);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const needsOnboarding = await ensureProfile(cred.user);
+      await refreshProfile();
+      router.push(needsOnboarding ? "/onboarding" : "/projects");
+    } catch (err) {
+      setError(firebaseErrorMessage(err));
+      throw err;
+    }
+  }
+
   async function signOut() {
     await firebaseSignOut(auth);
     router.push("/");
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, error, signInWithGoogle, signInWithGitHub, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, signInWithGoogle, signInWithGitHub, signUpWithEmail, signInWithEmail, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
