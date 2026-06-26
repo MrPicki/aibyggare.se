@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Fredoka, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -26,6 +26,16 @@ const fredoka = Fredoka({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
+
+// Lås sidan till telefonens bredd och stäng av auto-zoom (iOS zoomar annars in
+// när man fokuserar fält). maximumScale + userScalable håller layouten stabil.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#64B26A",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Search, X } from "lucide-react";
 import { ProjectCard, type ProjectCardProps } from "@/components/cards/ProjectCard";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 
@@ -29,7 +30,8 @@ interface ProjectFilterListProps {
 export function ProjectFilterList({ projects }: ProjectFilterListProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [stackFilter, setStackFilter] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortKey>("upvotes");
+  const [sort, setSort] = useState<SortKey>("newest");
+  const [search, setSearch] = useState("");
 
   const topTags = useMemo(() => {
     const freq: Record<string, number> = {};
@@ -45,9 +47,14 @@ export function ProjectFilterList({ projects }: ProjectFilterListProps) {
   }, [projects]);
 
   const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
     let list = projects.filter((p) => {
       if (statusFilter !== "all" && p.status !== statusFilter) return false;
       if (stackFilter && !p.tags.some((t) => t === stackFilter)) return false;
+      if (q) {
+        const haystack = `${p.title} ${p.tagline} ${p.tags.join(" ")} ${p.authorName ?? ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     });
 
@@ -60,12 +67,34 @@ export function ProjectFilterList({ projects }: ProjectFilterListProps) {
     }
 
     return list;
-  }, [projects, statusFilter, stackFilter, sort]);
+  }, [projects, statusFilter, stackFilter, sort, search]);
 
   return (
     <div>
       {/* Filter + sort bar */}
       <div className="mb-8 space-y-3">
+        {/* Sökruta */}
+        <div className="relative">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mud" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Sök byggen, verktyg eller byggare…"
+            className="w-full rounded-xl border-2 border-ink bg-paper py-2.5 pl-10 pr-10 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Rensa sökning"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-mud hover:bg-cream hover:text-ink"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+
         {/* Status tabs */}
         <div className="flex flex-wrap gap-1.5">
           <div className="flex flex-wrap gap-1 rounded-2xl border-2 border-ink bg-paper p-1">

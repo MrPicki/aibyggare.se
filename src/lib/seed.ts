@@ -342,6 +342,8 @@ export interface HelpQuestion {
   avatarUrl?: string;
   answers?: SeedAnswer[];
   tools?: string[];  // för filtrering (Firestore: tags; seed: derived from topic)
+  createdAt?: number; // unix-sekunder, för nyast-sortering
+  upvotes?: number;   // för populäraste-sortering
 }
 
 // ─── Project details (rich content + seed comments for fallback) ─────────────

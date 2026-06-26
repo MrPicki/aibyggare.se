@@ -27,6 +27,8 @@ function postToHelpQuestion(p: Post): HelpQuestion {
     answerCount: p.commentCount ?? 0,
     status: p.status === "solved" ? "Löst" : "Öppen",
     tools: p.tags ?? [],
+    createdAt: (p.createdAt as { seconds?: number } | null)?.seconds ?? 0,
+    upvotes: p.upvoteCount ?? 0,
   };
 }
 

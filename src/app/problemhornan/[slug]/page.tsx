@@ -5,6 +5,7 @@ import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { HelpCommentSection } from "@/components/help/HelpCommentSection";
 import { ReportButton } from "@/components/moderation/ReportButton";
+import { DeleteContentButton } from "@/components/content/DeleteContentButton";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import type { Post, Comment } from "@/types/firestore";
@@ -237,7 +238,14 @@ export default async function ProblemhornanDetailPage({
       </div>
 
       {post && (
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <DeleteContentButton
+            collectionName="posts"
+            docId={post.id}
+            ownerId={post.userId}
+            label="problemet"
+            redirectTo={post.username ? `/profile/${post.username}` : "/problemhornan"}
+          />
           <ReportButton
             targetType="post"
             targetId={post.id}

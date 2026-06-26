@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { DrillButton } from "@/components/projects/DrillButton";
 import { CommentSection } from "@/components/projects/CommentSection";
 import { ReportButton } from "@/components/moderation/ReportButton";
+import { DeleteContentButton } from "@/components/content/DeleteContentButton";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import type { ProjectStatus } from "@/types/firestore";
 import { SEED_PROJECTS, SEED_PROJECT_DETAILS } from "@/lib/seed";
@@ -433,8 +434,15 @@ export default async function ProjectDetailPage({
         <CommentSection projectId={project.id} initialComments={comments} />
       </div>
 
-      {/* Report */}
-      <div className="mt-6 flex justify-end">
+      {/* Ägar-åtgärder + Report */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <DeleteContentButton
+          collectionName="projects"
+          docId={project.id}
+          ownerId={project.userId}
+          label="bygget"
+          redirectTo={project.username ? `/profile/${project.username}` : "/projects"}
+        />
         <ReportButton
           targetType="project"
           targetId={project.id}

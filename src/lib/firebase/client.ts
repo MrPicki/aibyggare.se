@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Serve the OAuth handler first-party from our own origin (proxied via the
@@ -26,7 +26,19 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// experimentalAutoDetectLongPolling: vissa nätverk/proxyer bryter Firestores
+// WebChannel-streaming, vilket gjorde att första queryn (t.ex. username-koll i
+// onboarding) hängde ~10 s innan fallback. Auto-detekteringen växlar snabbt.
+// initializeFirestore får bara köras en gång per app → fall tillbaka på
+// getFirestore vid hot reload.
+function initDb() {
+  try {
+    return initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+  } catch {
+    return getFirestore(app);
+  }
+}
+export const db = initDb();
 export const storage = getStorage(app);
 
 export default app;
