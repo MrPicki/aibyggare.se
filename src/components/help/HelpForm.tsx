@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   slugify,
@@ -21,13 +21,15 @@ interface FormState {
 const INITIAL: FormState = { title: "", tool: "", body: "" };
 
 export function HelpForm() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromOnboarding = searchParams.get("from") === "onboarding";
   const [form, setForm] = useState<FormState>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
-  const pendingSlug = useRef<string | null>(null);
+  const pendingDest = useRef<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -68,11 +70,16 @@ export function HelpForm() {
       const xp = await grantXpClient("first_problem_created");
       await refreshProfile();
 
+      const dest =
+        fromOnboarding && profile?.username
+          ? `/profile/${profile.username}`
+          : `/problemhornan/${finalSlug}`;
+
       if (xp?.leveledUp) {
-        pendingSlug.current = finalSlug;
+        pendingDest.current = dest;
         setLevelUp(xp.level);
       } else {
-        router.push(`/problemhornan/${finalSlug}`);
+        router.push(dest);
       }
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
@@ -87,7 +94,7 @@ export function HelpForm() {
     {levelUp !== null && (
       <LevelUpBurst
         level={levelUp}
-        onDone={() => router.push(`/problemhornan/${pendingSlug.current ?? ""}`)}
+        onDone={() => router.push(pendingDest.current ?? "/problemhornan")}
       />
     )}
     <form onSubmit={handleSubmit} className="mt-10 space-y-7" noValidate>

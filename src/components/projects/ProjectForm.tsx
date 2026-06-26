@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -51,8 +51,10 @@ function urlOrEmpty(v: string): boolean {
 }
 
 export function ProjectForm() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromOnboarding = searchParams.get("from") === "onboarding";
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormState>(INITIAL);
@@ -61,7 +63,7 @@ export function ProjectForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
-  const pendingSlug = useRef<string | null>(null);
+  const pendingDest = useRef<string | null>(null);
 
   const slugPreview = slugify(form.title);
 
@@ -147,11 +149,18 @@ export function ProjectForm() {
       const xp = await grantXpClient("first_project_created");
       await refreshProfile();
 
+      // Från onboarding → landa på profilen (där bygget nu syns). Annars
+      // direkt till bygget.
+      const dest =
+        fromOnboarding && profile?.username
+          ? `/profile/${profile.username}`
+          : `/projects/${slug}`;
+
       if (xp?.leveledUp) {
-        pendingSlug.current = slug;
+        pendingDest.current = dest;
         setLevelUp(xp.level); // LevelUpBurst navigerar vidare när den stängs
       } else {
-        router.push(`/projects/${slug}`);
+        router.push(dest);
       }
     } catch {
       setErrors({ submit: "Något gick fel. Försök igen om en stund." });
@@ -164,7 +173,7 @@ export function ProjectForm() {
     {levelUp !== null && (
       <LevelUpBurst
         level={levelUp}
-        onDone={() => router.push(`/projects/${pendingSlug.current ?? ""}`)}
+        onDone={() => router.push(pendingDest.current ?? "/projects")}
       />
     )}
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>

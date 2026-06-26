@@ -468,8 +468,8 @@ export function OnboardingFlow({ user }: { user: User }) {
             {/* ── Sista kortet: Nästan Level 1 ── */}
             {step === 6 && (
               <FinalActionCard
-                onProject={() => router.push("/projects/new")}
-                onProblem={() => router.push("/problemhornan/new")}
+                onProject={() => router.push("/projects/new?from=onboarding")}
+                onProblem={() => router.push("/problemhornan/new?from=onboarding")}
               />
             )}
           </motion.div>
