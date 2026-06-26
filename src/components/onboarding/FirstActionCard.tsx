@@ -26,7 +26,8 @@ export function FirstActionCard() {
 
   const [type, setType] = useState<ActionType>(null);
   const [title, setTitle] = useState("");
-  const [text, setText] = useState(""); // tagline (bygge) ELLER body (problem)
+  const [text, setText] = useState(""); // beskrivning (bygge) ELLER body (problem)
+  const [link, setLink] = useState(""); // valfri länk till bygget
   const [tool, setTool] = useState("Claude Code");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +60,12 @@ export function FirstActionCard() {
           userAvatarUrl: avatarUrl,
           title: title.trim(),
           slug,
-          tagline: text.trim(),
+          tagline: text.trim().slice(0, 140),
           description: text.trim(),
           problem: "",
           stack: [],
           status: "mvp",
-          projectUrl: "",
+          projectUrl: link.trim(),
           githubUrl: "",
           imageUrl: "",
           feedbackWanted: "",
@@ -187,18 +188,41 @@ export function FirstActionCard() {
           className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
         />
 
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={
-            isProject
-              ? "En rad om vad det gör — t.ex. 'AI som gör veckomenyer från rester'."
-              : "Vad försökte du göra, vad hände och vad har du testat?"
-          }
-          rows={isProject ? 2 : 4}
-          maxLength={isProject ? 140 : 600}
-          className="w-full resize-none rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
-        />
+        <div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={
+              isProject
+                ? "Beskriv ditt bygge — vad gör det, vad är du stolt över, vad vill du ha feedback på?"
+                : "Vad försökte du göra, vad hände och vad har du testat?"
+            }
+            rows={isProject ? 5 : 4}
+            maxLength={isProject ? 1000 : 800}
+            className="w-full resize-none rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+          />
+          <p className="mt-1 text-right text-xs text-mud">
+            {text.length}/{isProject ? 1000 : 800}
+            {isProject && text.length < 100 && " · gärna minst 100 tecken"}
+          </p>
+        </div>
+
+        {/* Valfri länk till bygget */}
+        {isProject && (
+          <div>
+            <label className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-wide text-mud">
+              Länk till bygget <span className="text-mud/60">(valfritt)</span>
+            </label>
+            <input
+              type="url"
+              inputMode="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://dittbygge.se"
+              className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
+            />
+          </div>
+        )}
 
         {!isProject && (
           <div className="flex flex-wrap gap-1.5">

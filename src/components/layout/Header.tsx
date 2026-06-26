@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
 import { LevelBadge } from "@/components/levels/LevelBadge";
 import { FoundingBadge } from "@/components/founding/FoundingBadge";
+import { BETA_VERSION } from "@/lib/version";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
@@ -26,6 +27,9 @@ function Wordmark() {
       </span>
       <span className="font-display text-lg font-bold tracking-tight text-ink">
         AIbyggare<span className="text-build-green">.</span>se
+      </span>
+      <span className="hidden sm:inline-flex items-center rounded-md border border-border bg-cream px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-mud">
+        Beta v{BETA_VERSION}
       </span>
     </Link>
   );

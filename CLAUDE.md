@@ -192,6 +192,16 @@ Skriv copy som:
 
 ---
 
+## Beta-versionering — OBLIGATORISK
+
+Sidan visar `Beta v{x.y.z}` i topbaren från `src/lib/version.ts` (`BETA_VERSION`).
+
+**Vid VARJE ändring/uppdatering av sidan ska du bumpa `BETA_VERSION`:**
+- Bumpa **patch** (sista siffran) vid buggfix, småjusteringar, copy, polish
+- Bumpa **minor** (mittsiffran) vid ny funktion eller större förändring; nollställ patch
+- Gör det i samma commit som ändringen — aldrig en separat "bump"-commit
+- Detta är inte valfritt: versionen ska alltid spegla senaste deployade revisionen
+
 ## Arbetsmetod — varje fas
 
 Innan du bygger en fas:
