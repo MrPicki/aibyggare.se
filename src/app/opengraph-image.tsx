@@ -183,11 +183,11 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Right column — big hammer on green */}
+        {/* Right column — big hammer on green, clean premium look */}
         <div
           style={{
             position: "absolute",
-            right: 80,
+            right: 90,
             top: "50%",
             transform: "translateY(-50%)",
             display: "flex",
@@ -195,12 +195,13 @@ export default async function Image() {
             justifyContent: "center",
             width: 320,
             height: 320,
-            background: GREEN,
-            borderRadius: 56,
-            boxShadow: `8px 8px 0 0 ${YELLOW}`,
+            background: "linear-gradient(150deg, #72bd78 0%, #5aa861 100%)",
+            borderRadius: 60,
+            border: "1px solid rgba(255,255,255,0.18)",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
           }}
         >
-          <Hammer size={200} />
+          <Hammer size={196} />
         </div>
       </div>
     ),
