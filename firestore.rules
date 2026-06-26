@@ -16,6 +16,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // ── Feedback ──────────────────────────────────────────────────────────────
+    // Skrivs ENBART av Admin SDK (feedback-routen), läses server-side/Console.
+    // Default-deny för klienter — ingen kan läsa andras feedback.
+    match /feedback/{doc} {
+      allow read, write: if false;
+    }
+
     // ── Meta (räknare för Founding Members m.m.) ──────────────────────────────
     // Skrivs ENBART av Admin SDK (server-side). Klienten får varken läsa eller
     // skriva — annars kan någon manipulera founding-räknaren.

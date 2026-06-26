@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AnnouncementMarquee } from "@/components/home/AnnouncementMarquee";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -141,6 +142,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <FeedbackButton />
         </AuthProvider>
       </body>
     </html>

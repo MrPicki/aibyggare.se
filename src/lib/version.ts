@@ -2,4 +2,4 @@
 //
 // REGEL: Höj detta vid VARJE ändring/uppdatering av sidan (se CLAUDE.md).
 // Patch (sista siffran) bumpas normalt; minor vid större funktioner.
-export const BETA_VERSION = "0.10.2";
+export const BETA_VERSION = "0.11.0";
