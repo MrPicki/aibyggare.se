@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { User } from "firebase/auth";
 import {
   doc,
@@ -18,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { grantXpClient } from "@/lib/xp/grant-client";
 import { XP_AMOUNTS, type XpEventType } from "@/lib/xp/levels";
 import { OnboardingXpBar } from "./OnboardingXpBar";
+import { FirstActionCard } from "./FirstActionCard";
 
 const AVATAR_OPTIONS = [
   { key: "green",   url: "/seed/avatar-male.png",    label: "Grön hoodie" },
@@ -79,7 +79,6 @@ function xpForCompletedSteps(count: number): number {
 }
 
 export function OnboardingFlow({ user }: { user: User }) {
-  const router = useRouter();
   const { refreshProfile } = useAuth();
   const reduce = useReducedMotion();
 
@@ -465,13 +464,8 @@ export function OnboardingFlow({ user }: { user: User }) {
               </Card>
             )}
 
-            {/* ── Sista kortet: Nästan Level 1 ── */}
-            {step === 6 && (
-              <FinalActionCard
-                onProject={() => router.push("/projects/new?from=onboarding")}
-                onProblem={() => router.push("/problemhornan/new?from=onboarding")}
-              />
-            )}
+            {/* ── Sista kortet: skapa första bygget/problemet inline ── */}
+            {step === 6 && <FirstActionCard />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -562,57 +556,3 @@ function LinkInput({
   );
 }
 
-function FinalActionCard({
-  onProject,
-  onProblem,
-}: {
-  onProject: () => void;
-  onProblem: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <span className="sticker mb-3 inline-flex bg-build-green px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-paper">
-          Nästan Level 1
-        </span>
-        <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-          Du är nästan Level 1
-        </h1>
-        <p className="mt-2 text-sm text-mud">
-          Din byggare är skapad. Nu saknas bara ett riktigt första steg på byggbänken.
-        </p>
-        <p className="mt-3 font-display text-base font-bold text-build-green">
-          Lägg upp ditt bygge eller ställ en fråga — och levla upp.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        onClick={onProject}
-        className="chunky pressable rounded-2xl bg-build-green p-5 text-left text-paper"
-      >
-        <p className="font-display text-lg font-bold">Lägg upp ditt första bygge</p>
-        <p className="mt-1 text-sm text-paper/80">
-          Visa vad du bygger, även om det bara funkar lokalt.
-        </p>
-        <span className="mt-3 inline-block font-mono text-xs font-bold uppercase tracking-wide">
-          Lägg upp bygge →
-        </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={onProblem}
-        className="chunky pressable rounded-2xl bg-hammer-yellow p-5 text-left text-ink"
-      >
-        <p className="font-display text-lg font-bold">Lägg upp ett problem</p>
-        <p className="mt-1 text-sm text-ink/70">
-          Fastnat i något? Lägg det i Problemhörnan.
-        </p>
-        <span className="mt-3 inline-block font-mono text-xs font-bold uppercase tracking-wide">
-          Till Problemhörnan →
-        </span>
-      </button>
-    </div>
-  );
-}
