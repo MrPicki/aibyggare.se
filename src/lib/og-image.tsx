@@ -23,15 +23,16 @@ export const TYPE_CONFIG: Record<OgType, { label: string; color: string; bg: str
   guide:   { label: "Genväg",       color: BLUE,   bg: `${BLUE}22` },
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
+
+// Läser en buntad statisk TTF (Geist) från egna domänen. Google Fonts gav
+// woff2/EOT och variabel-TTF kraschar Satori ("reading '256'"); en statisk TTF
+// är robust och fungerar på alla runtimes.
 export async function loadFredoka(): Promise<ArrayBuffer | null> {
   try {
-    const css = await fetch(
-      "https://fonts.googleapis.com/css2?family=Fredoka:wght@700",
-      { headers: { "User-Agent": "Mozilla/4.0 (compatible; MSIE 5.1; Windows NT)" } },
-    ).then((r) => r.text());
-    const match = css.match(/url\(([^)]+)\)/);
-    if (!match) return null;
-    return fetch(match[1]).then((r) => r.arrayBuffer());
+    const res = await fetch(`${SITE_URL}/fonts/og-font.ttf`);
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
   } catch {
     return null;
   }
@@ -39,7 +40,12 @@ export async function loadFredoka(): Promise<ArrayBuffer | null> {
 
 export function makeFonts(fontData: ArrayBuffer | null) {
   if (!fontData) return [];
-  return [{ name: "Fredoka", data: fontData, weight: 700 as const, style: "normal" as const }];
+  // Samma data för 400 och 700 så att alla fontWeight i designen matchar
+  // (Satori faller annars tillbaka och kan rendera fel).
+  return [
+    { name: "Fredoka", data: fontData, weight: 400 as const, style: "normal" as const },
+    { name: "Fredoka", data: fontData, weight: 700 as const, style: "normal" as const },
+  ];
 }
 
 /** Truncate text to maxLen chars, adding ellipsis. */

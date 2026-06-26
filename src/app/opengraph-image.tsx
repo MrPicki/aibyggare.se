@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { loadFredoka, makeFonts } from "@/lib/og-image";
 
 export const alt = "AIbyggare.se — Sveriges community för AI-byggare";
 export const size = { width: 1200, height: 630 };
@@ -11,19 +12,7 @@ const YELLOW = "#F0D76A";
 const PAPER  = "#FFFAF2";
 const MUD    = "rgba(255,250,242,0.55)";
 
-async function loadFont(): Promise<ArrayBuffer | null> {
-  try {
-    const css = await fetch(
-      "https://fonts.googleapis.com/css2?family=Fredoka:wght@700",
-      { headers: { "User-Agent": "Mozilla/4.0 (compatible; MSIE 5.1; Windows NT)" } },
-    ).then((r) => r.text());
-    const match = css.match(/url\(([^)]+)\)/);
-    if (!match) return null;
-    return fetch(match[1]).then((r) => r.arrayBuffer());
-  } catch {
-    return null;
-  }
-}
+const loadFont = loadFredoka;
 
 function Hammer({ size: s = 200 }: { size?: number }) {
   const sc = s / 32;
@@ -43,9 +32,7 @@ function Hammer({ size: s = 200 }: { size?: number }) {
 
 export default async function Image() {
   const fontData = await loadFont();
-  const fonts = fontData
-    ? [{ name: "Fredoka", data: fontData, weight: 700 as const, style: "normal" as const }]
-    : [];
+  const fonts = makeFonts(fontData);
 
   return new ImageResponse(
     (
