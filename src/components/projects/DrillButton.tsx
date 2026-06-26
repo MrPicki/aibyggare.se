@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toggleUpvote, hasUpvoted } from "@/lib/firebase/projects-client";
+import { notify } from "@/lib/notifications/notify-client";
 import { DrillIcon } from "@/components/brand/DrillIcon";
 
 interface DrillButtonProps {
@@ -53,6 +54,10 @@ export function DrillButton({
       const result = await toggleUpvote(projectId, user.uid);
       setDrilled(result.upvoted);
       setCount(result.newCount);
+      // Notis till ägaren — bara när man LÄGGER en borr (inte tar bort).
+      if (result.upvoted) {
+        notify({ type: "upvote", targetType: "project", targetId: projectId });
+      }
     } catch {
       // Rollback on error
       setDrilled(wasD);

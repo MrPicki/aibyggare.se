@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle } from "lucide-react";
 import { addComment, subscribeToComments } from "@/lib/firebase/projects-client";
+import { notify } from "@/lib/notifications/notify-client";
 import type { Comment } from "@/types/firestore";
 
 interface CommentSectionProps {
@@ -32,13 +33,15 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
     setSaving(true);
     setError("");
     try {
+      const text = body.trim();
       await addComment({
         projectId,
         userId: user.uid,
         userDisplayName: user.displayName ?? user.email?.split("@")[0] ?? "Byggare",
         userAvatarUrl: user.photoURL ?? "",
-        body: body.trim(),
+        body: text,
       });
+      notify({ type: "comment", targetType: "project", targetId: projectId, preview: text });
       setBody("");
     } catch {
       setError("Kunde inte skicka kommentaren. Försök igen.");

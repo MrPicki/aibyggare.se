@@ -9,6 +9,7 @@ import {
   subscribeToAnswers,
   acceptAnswer,
 } from "@/lib/firebase/help-client";
+import { notify } from "@/lib/notifications/notify-client";
 import type { Comment } from "@/types/firestore";
 
 interface HelpCommentSectionProps {
@@ -62,13 +63,15 @@ export function HelpCommentSection({
     setSaving(true);
     setError("");
     try {
+      const text = body.trim();
       await addAnswer({
         postId,
         userId: user.uid,
         userDisplayName: user.displayName ?? user.email?.split("@")[0] ?? "Byggare",
         userAvatarUrl: user.photoURL ?? "",
-        body: body.trim(),
+        body: text,
       });
+      notify({ type: "answer", targetType: "post", targetId: postId, preview: text });
       setBody("");
     } catch {
       setError("Kunde inte skicka svaret. Försök igen.");

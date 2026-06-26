@@ -42,6 +42,16 @@ service cloud.firestore {
         allow read: if true;
         allow write: if false;
       }
+
+      // Notiser: bara mottagaren läser/markerar lästa/raderar. Skapas ENBART
+      // av Admin SDK (notify-routen) så ingen kan spamma andras notiser.
+      match /notifications/{notifId} {
+        allow read: if isOwner(userId);
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if isOwner(userId);
+        allow create: if false;
+      }
     }
 
     // ── Projects ─────────────────────────────────────────────────────────────

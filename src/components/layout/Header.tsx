@@ -10,6 +10,7 @@ import { PixelHammerLogo } from "@/components/brand/illustrations";
 import { LevelBadge } from "@/components/levels/LevelBadge";
 import { FoundingBadge } from "@/components/founding/FoundingBadge";
 import { BETA_VERSION } from "@/lib/version";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
@@ -105,6 +106,7 @@ export function Header() {
                     {profile && <LevelBadge level={profile.level} />}
                     <FoundingBadge show={!!profile?.foundingMember} />
                   </Link>
+                  <NotificationBell />
                   {isAdmin && (
                     <Link
                       href="/admin"
