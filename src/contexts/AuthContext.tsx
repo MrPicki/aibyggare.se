@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading || !user || !profile) return;
     if (profile.onboardingCompleted) return;
-    const exempt = ["/onboarding", "/login", "/register"];
+    const exempt = ["/onboarding"];
     if (exempt.some((p) => pathname === p || pathname.startsWith(p + "/"))) return;
     router.replace("/onboarding");
   }, [user, profile, loading, pathname, router]);

@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithGitHub, error } = useAuth();
+  const { user, profile, loading, signInWithGoogle, signInWithGitHub, error } = useAuth();
+  const router = useRouter();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
+
+  // Redan inloggad? Skicka vidare — onboarding om den inte är klar, annars in
+  // i flödet. Annars fastnar man på login-sidan efter redirect-inloggning.
+  useEffect(() => {
+    if (loading || !user || profile === null) return;
+    router.replace(profile.onboardingCompleted ? "/projects" : "/onboarding");
+  }, [user, profile, loading, router]);
 
   // Redirect-based sign-in navigates the whole tab away, so these handlers
   // only need to trigger the flow and show a brief "connecting" state.
