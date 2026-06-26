@@ -4,13 +4,14 @@ import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { DrillIcon } from "@/components/brand/DrillIcon";
 import { LevelBadge } from "@/components/levels/LevelBadge";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
 
 export type ActivityType = "project" | "problem" | "idea" | "prompt" | "feedback";
 
 export interface BuildActivityItem {
   id: string;
   type: ActivityType;
-  user: { name: string; handle: string; username: string; initials: string; avatarUrl?: string; level?: number };
+  user: { name: string; handle: string; username: string; initials: string; avatarUrl?: string; level?: number; foundingMember?: boolean };
   projectName: string;
   projectUrl?: string;
   title: string;
@@ -168,8 +169,9 @@ function ActivityCard({ item }: { item: BuildActivityItem }) {
       {/* ── Row 1: avatar + meta ── */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href={`/profile/${item.user.username}`} className="shrink-0 hover:opacity-80 transition-opacity">
+          <Link href={`/profile/${item.user.username}`} className="relative shrink-0 hover:opacity-80 transition-opacity">
             <Avatar initials={item.user.initials} accent={accent} avatarUrl={item.user.avatarUrl} />
+            <FoundingBadge show={!!item.user.foundingMember} className="absolute -left-1 -top-1" />
           </Link>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

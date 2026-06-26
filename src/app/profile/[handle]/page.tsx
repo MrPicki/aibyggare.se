@@ -8,6 +8,7 @@ import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard"
 import { ProfileBadges } from "@/components/profile/ProfileBadges";
 import { LevelBadge } from "@/components/levels/LevelBadge";
 import { LevelProgressBar } from "@/components/levels/LevelProgressBar";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import { toolAccent } from "@/lib/constants/tools";
 import type { BadgeStats } from "@/lib/constants/badges";
@@ -49,6 +50,7 @@ interface ProfileView {
   joinedLabel: string;
   level: number;
   totalXp: number;
+  foundingMember: boolean;
   tools: string[];
   websiteUrl?: string;
   githubUrl?: string;
@@ -138,6 +140,7 @@ async function fromFirestore(handle: string): Promise<ProfileView | null> {
       joinedLabel: profile.joinedYear ? String(profile.joinedYear) : "",
       level: profile.level,
       totalXp: profile.totalXp,
+      foundingMember: profile.foundingMember,
       tools: profile.tools,
       websiteUrl: profile.websiteUrl || undefined,
       githubUrl: profile.githubUrl || undefined,
@@ -183,6 +186,7 @@ function fromSeed(handle: string): ProfileView | null {
     // Seed-användare får en rimlig demo-level utifrån aktivitet.
     level: Math.min(5, 1 + projects.length + helpCards.length),
     totalXp: 0,
+    foundingMember: false,
     tools: user.tools,
     projects,
     helpCards: helpCards as unknown as HelpCardProps[],
@@ -258,23 +262,39 @@ export default async function PublicProfilePage({
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
-            {/* Avatar med level-badge */}
+            {/* Avatar med level-badge + ev. founding-ring */}
             <div className="relative shrink-0">
-              <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-ink bg-cream">
-                {view.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={view.avatarUrl}
-                    alt={view.displayName}
-                    className="h-full w-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center font-display text-3xl font-bold text-mud">
-                    {(view.displayName || "?")[0].toUpperCase()}
-                  </span>
-                )}
+              <div
+                className={
+                  view.foundingMember
+                    ? "rounded-full p-1 shadow-[0_0_0_2px_var(--ink)]"
+                    : ""
+                }
+                style={
+                  view.foundingMember
+                    ? { background: "linear-gradient(135deg, var(--hammer-yellow), var(--warning-orange))" }
+                    : undefined
+                }
+              >
+                <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-ink bg-cream">
+                  {view.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={view.avatarUrl}
+                      alt={view.displayName}
+                      className="h-full w-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center font-display text-3xl font-bold text-mud">
+                      {(view.displayName || "?")[0].toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
+              {view.foundingMember && (
+                <FoundingBadge show className="absolute -left-2 -top-2 !h-7 !w-7" />
+              )}
               <div className="absolute -bottom-1 -right-1">
                 <LevelBadge level={view.level} size="md" />
               </div>
@@ -282,9 +302,12 @@ export default async function PublicProfilePage({
 
             {/* Info */}
             <div className="min-w-0 text-center sm:text-left">
-              <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-                {view.displayName}
-              </h1>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+                  {view.displayName}
+                </h1>
+                <FoundingBadge show={view.foundingMember} size="md" />
+              </div>
               <p className="mt-0.5 font-mono text-sm text-mud">@{view.username}</p>
 
               {view.bio && (

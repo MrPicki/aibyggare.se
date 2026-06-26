@@ -20,6 +20,9 @@ export interface Profile {
   level?: number;
   onboardingCompleted?: boolean;
   onboardingCompletedAt?: Timestamp;
+  /** En av de N första registrerade — sätts bara server-side. */
+  foundingMember?: boolean;
+  foundingNumber?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

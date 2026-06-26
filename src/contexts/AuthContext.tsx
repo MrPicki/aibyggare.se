@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   User,
   GoogleAuthProvider,
@@ -32,6 +32,8 @@ export interface ProfileLite {
   totalXp: number;
   level: number;
   onboardingCompleted: boolean;
+  foundingMember: boolean;
+  foundingNumber: number | null;
 }
 
 interface AuthContextValue {
@@ -108,6 +110,8 @@ async function readProfileLite(uid: string): Promise<ProfileLite | null> {
       totalXp: typeof data.totalXp === "number" ? data.totalXp : 0,
       level: typeof data.level === "number" ? data.level : 0,
       onboardingCompleted: !!(data.onboardingCompleted || data.username),
+      foundingMember: data.foundingMember === true,
+      foundingNumber: typeof data.foundingNumber === "number" ? data.foundingNumber : null,
     };
   } catch {
     return null;
@@ -121,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const claimedFoundingRef = useRef(false);
 
   async function refreshProfile() {
     if (!auth.currentUser) return;
@@ -159,9 +164,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const token = await u.getIdToken();
         document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
         setProfile(await readProfileLite(u.uid));
+
+        // Founding Member: avgörs server-side (idempotent) en gång per session,
+        // efter att cookien satts. Uppdaterar profilen om status precis tilldelats.
+        if (!claimedFoundingRef.current) {
+          claimedFoundingRef.current = true;
+          fetch("/api/founding/claim", { method: "POST" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then(async (res) => {
+              if (res?.foundingMember) setProfile(await readProfileLite(u.uid));
+            })
+            .catch(() => {});
+        }
       } else {
         document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
         setProfile(null);
+        claimedFoundingRef.current = false;
       }
     });
     return unsubscribe;

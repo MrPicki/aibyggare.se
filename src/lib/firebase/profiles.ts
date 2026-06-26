@@ -29,6 +29,7 @@ export interface PublicProfile {
   joinedYear: number | null;
   totalXp: number;
   level: number;
+  foundingMember: boolean;
 }
 
 function secondsOf(v: unknown): number | null {
@@ -60,25 +61,34 @@ export async function getProfileByUsername(username: string): Promise<PublicProf
     joinedYear: joinedSeconds ? new Date(joinedSeconds * 1000).getFullYear() : null,
     totalXp: typeof data.totalXp === "number" ? data.totalXp : 0,
     level: typeof data.level === "number" ? data.level : 0,
+    foundingMember: data.foundingMember === true,
   };
 }
 
-// Batch-hämtar levels för en uppsättning användar-ID:n. Används för att visa
-// level-siffran bredvid avatarer i flöden utan N separata anrop.
-export async function getLevelsForUsers(
+export interface UserBadges {
+  level: number;
+  foundingMember: boolean;
+}
+
+// Batch-hämtar level + founding-status för en uppsättning användar-ID:n. Visas
+// bredvid avatarer i flöden utan N separata anrop.
+export async function getUserBadges(
   userIds: string[],
-): Promise<Record<string, number>> {
+): Promise<Record<string, UserBadges>> {
   const unique = [...new Set(userIds.filter(Boolean))];
   if (unique.length === 0) return {};
   try {
     const db = requireDb();
     const refs = unique.map((id) => db.collection("profiles").doc(id));
     const snaps = await withTimeout(db.getAll(...refs));
-    const out: Record<string, number> = {};
+    const out: Record<string, UserBadges> = {};
     for (const snap of snaps) {
       if (snap.exists) {
         const data = snap.data();
-        out[snap.id] = typeof data?.level === "number" ? data.level : 0;
+        out[snap.id] = {
+          level: typeof data?.level === "number" ? data.level : 0,
+          foundingMember: data?.foundingMember === true,
+        };
       }
     }
     return out;

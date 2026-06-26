@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
 import { LevelBadge } from "@/components/levels/LevelBadge";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
 
 const navLinks = [
   { href: "/projects", label: "Byggen" },
@@ -98,6 +99,7 @@ export function Header() {
                     )}
                     <span className="max-w-24 truncate">{profile?.displayName ?? user.displayName ?? "Profil"}</span>
                     {profile && <LevelBadge level={profile.level} />}
+                    <FoundingBadge show={!!profile?.foundingMember} />
                   </Link>
                   {isAdmin && (
                     <Link

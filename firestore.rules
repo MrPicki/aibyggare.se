@@ -16,6 +16,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // ── Meta (räknare för Founding Members m.m.) ──────────────────────────────
+    // Skrivs ENBART av Admin SDK (server-side). Klienten får varken läsa eller
+    // skriva — annars kan någon manipulera founding-räknaren.
+    match /meta/{doc} {
+      allow read, write: if false;
+    }
+
     // ── Profiles ─────────────────────────────────────────────────────────────
     match /profiles/{userId} {
       allow read: if true;
@@ -26,7 +33,7 @@ service cloud.firestore {
       allow update: if isAdmin()
         || (isOwner(userId)
             && !request.resource.data.diff(resource.data).affectedKeys()
-                 .hasAny(['role', 'totalXp', 'level']));
+                 .hasAny(['role', 'totalXp', 'level', 'foundingMember', 'foundingNumber']));
       allow delete: if isAdmin();
 
       // XP-händelser skrivs ENBART av Admin SDK (bypassar regler). Läsbara
