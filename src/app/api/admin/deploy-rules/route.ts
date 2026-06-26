@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const patchRes = await fetch(`${base}/releases/cloud.firestore`, {
       method: "PATCH",
       headers: auth,
-      body: JSON.stringify({ name: relName, rulesetName }),
+      body: JSON.stringify({ release: { name: relName, rulesetName }, updateMask: "rulesetName" }),
     });
     const patchJson = await patchRes.json();
     if (!patchRes.ok) {
