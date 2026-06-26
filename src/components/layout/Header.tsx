@@ -147,15 +147,18 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Mobil toggle */}
+          {/* Mobil: notiser + toggle */}
+          <div className="md:hidden flex items-center gap-1">
+          {!loading && user && <NotificationBell />}
           <button
-            className="md:hidden rounded-xl p-2 text-ink hover:bg-hammer-yellow transition-colors"
+            className="rounded-xl p-2 text-ink hover:bg-hammer-yellow transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Stäng meny" : "Öppna meny"}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
+          </div>
         </div>
 
         {/* Mobilmeny */}
