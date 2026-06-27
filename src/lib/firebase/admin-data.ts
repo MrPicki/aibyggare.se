@@ -168,23 +168,44 @@ export interface FeedbackEntry {
   message: string;
   pageUrl: string;
   imageUrl: string;
+  status: "open" | "done";
   createdAtSeconds: number | null;
 }
 
-export async function getFeedbackEntries(limit = 30): Promise<FeedbackEntry[]> {
+function mapFeedback(d: FirebaseFirestore.QueryDocumentSnapshot): FeedbackEntry {
+  const data = d.data();
+  const ts = data.createdAt as { seconds?: number } | undefined;
+  return {
+    id: d.id,
+    userName: data.userName ?? "Okänd",
+    username: data.username ?? "",
+    message: data.message ?? "",
+    pageUrl: data.pageUrl ?? "",
+    imageUrl: data.imageUrl ?? "",
+    status: data.status === "done" ? "done" : "open",
+    createdAtSeconds: ts?.seconds ?? null,
+  };
+}
+
+export async function getFeedbackEntries(limit = 60): Promise<FeedbackEntry[]> {
   const db = requireDb();
+  // Fetch enough to get open ones after filtering (legacy docs lack status field)
   const snap = await db.collection("feedback").orderBy("createdAt", "desc").limit(limit).get();
-  return snap.docs.map((d) => {
-    const data = d.data();
-    const ts = data.createdAt as { seconds?: number } | undefined;
-    return {
-      id: d.id,
-      userName: data.userName ?? "Okänd",
-      username: data.username ?? "",
-      message: data.message ?? "",
-      pageUrl: data.pageUrl ?? "",
-      imageUrl: data.imageUrl ?? "",
-      createdAtSeconds: ts?.seconds ?? null,
-    };
-  });
+  return snap.docs.map(mapFeedback).filter((f) => f.status === "open");
+}
+
+export async function getFeedbackDone(limit = 50): Promise<FeedbackEntry[]> {
+  const db = requireDb();
+  const snap = await db
+    .collection("feedback")
+    .where("status", "==", "done")
+    .orderBy("createdAt", "desc")
+    .limit(limit)
+    .get();
+  return snap.docs.map(mapFeedback);
+}
+
+export async function markFeedbackDone(id: string): Promise<void> {
+  const db = requireDb();
+  await db.collection("feedback").doc(id).update({ status: "done" });
 }

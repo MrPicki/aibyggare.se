@@ -2,12 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ArrowLeft, Users, FolderGit2, HelpCircle, Sparkles,
-  MessageSquare, Flag, ExternalLink, MessageCircle, TrendingUp,
+  MessageSquare, Flag, ExternalLink, MessageCircle,
 } from "lucide-react";
 import { getAdminUser } from "@/lib/auth/admin-guard";
 import { ModerationButtons, ResolveReportButton } from "@/components/admin/AdminActions";
 import { AdminManagement } from "@/components/admin/AdminManagement";
 import { ContentSection } from "@/components/admin/ContentSection";
+import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import type {
   AdminStats, AdminReport, AdminUserRecord, FeedbackEntry,
   RecentContentSplit,
@@ -49,16 +50,6 @@ function StatCard({
       )}
     </div>
   );
-}
-
-function formatDate(seconds: number | null): string {
-  if (!seconds) return "";
-  return new Date(seconds * 1000).toLocaleString("sv-SE", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export default async function AdminPage() {
@@ -179,47 +170,7 @@ export default async function AdminPage() {
           )}
         </div>
         <p className="mt-1 text-sm text-mud">Inlämnad feedback från inloggade användare.</p>
-        {feedback.length === 0 ? (
-          <p className="mt-3 text-sm text-mud">Ingen feedback ännu.</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {feedback.map((f) => (
-              <li key={f.id} className="chunky-sm rounded-2xl bg-paper p-4">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[11px] font-bold text-ink">
-                        {f.userName}
-                        {f.username ? ` (@${f.username})` : ""}
-                      </span>
-                      {f.pageUrl && (
-                        <span className="truncate font-mono text-[10px] text-mud">
-                          {f.pageUrl}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-ink">{f.message}</p>
-                    {f.imageUrl && (
-                      <a
-                        href={f.imageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-mud underline hover:text-ink"
-                      >
-                        <TrendingUp size={11} /> Se skärmdump
-                      </a>
-                    )}
-                  </div>
-                  {f.createdAtSeconds && (
-                    <span className="shrink-0 font-mono text-[10px] text-mud">
-                      {formatDate(f.createdAtSeconds)}
-                    </span>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <FeedbackSection initialOpen={feedback} />
       </section>
 
       {/* ── Admin-hantering ── */}

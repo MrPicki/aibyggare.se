@@ -65,7 +65,12 @@ export async function POST(req: NextRequest) {
     const actor = actorSnap.data() ?? {};
 
     const slug = target.slug as string;
-    const url = targetType === "project" ? `/projects/${slug}` : `/problemhornan/${slug}`;
+    const postType = target.type as string | undefined;
+    const postBase =
+      postType === "prompt" ? "prompts"
+      : postType === "guide" ? "guides"
+      : "problemhornan";
+    const url = targetType === "project" ? `/projects/${slug}` : `/${postBase}/${slug}`;
 
     await adminDb.collection("profiles").doc(ownerId).collection("notifications").add({
       type,

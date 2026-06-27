@@ -18,7 +18,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const seed = SEED_PROMPTS.find((p) => p.slug === slug);
   const title = seed?.title ?? "Prompt";
   const description = seed?.prompt?.slice(0, 155) ?? "En prompt från AIbyggare-communityn.";
@@ -41,7 +42,8 @@ export default async function PromptDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
 
   // Kontrollera inloggning via __session-cookie (sätts av AuthContext)
   const cookieStore = await cookies();

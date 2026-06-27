@@ -87,6 +87,40 @@ export async function createProject(
   return { id: docRef.id, slug: data.slug };
 }
 
+// ── Fetch by slug (client) ───────────────────────────────────────────────────
+
+import type { Project } from "@/types/firestore";
+
+export async function getProjectBySlugClient(slug: string): Promise<Project | null> {
+  const q = query(collection(db, "projects"), where("slug", "==", slug));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() } as Project;
+}
+
+// ── Update project ────────────────────────────────────────────────────────────
+
+export interface UpdateProjectInput {
+  title: string;
+  tagline: string;
+  description: string;
+  problem: string;
+  stack: string[];
+  status: ProjectStatus;
+  projectUrl: string;
+  githubUrl: string;
+  feedbackWanted: string;
+  imageUrl?: string;
+}
+
+export async function updateProject(docId: string, data: UpdateProjectInput): Promise<void> {
+  const { imageUrl, ...rest } = data;
+  const payload: Record<string, unknown> = { ...rest, updatedAt: serverTimestamp() };
+  if (imageUrl !== undefined) payload.imageUrl = imageUrl;
+  await updateDoc(doc(db, "projects", docId), payload);
+}
+
 // ── Upvotes ───────────────────────────────────────────────────────────────────
 
 export async function toggleUpvote(
