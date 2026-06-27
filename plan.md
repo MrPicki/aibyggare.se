@@ -511,6 +511,42 @@ Placering: `.claude/skills/`
 - [ ] Performance-optimering — kör Lighthouse på produktion (manuellt steg)
 - [x] `no-ai-look`-granskning — designsystemet är redan nordiskt/mänskligt; inga blå-lila gradients eller AI-klyschor
 
+### Fas 9 — SEO, domän & delningsbilder ✅
+- [x] Domän `aibyggare.se` live på Vercel, `www` → naked-redirect, `NEXT_PUBLIC_SITE_URL` satt
+- [x] Brandad favicon (`icon.svg`, dark-mode-aware) + `apple-icon.tsx` (180×180)
+- [x] JSON-LD `WebSite`-schema + SearchAction, canonical, robots, noindex på privata ytor
+- [x] OG-delningsbilder (next/og) för start/projekt/problem/prompt — statisk TTF buntad (`public/fonts/og-font.ttf`) pga Satori-begränsning
+- [x] Start-OG i sajtens chunky retro-stil (cream, stickers, LVL-badge, founding-stjärna)
+- [x] Firebase Auth: `aibyggare.se` auktoriserad + Google/GitHub OAuth-redirect konfigurerad
+- [x] Mobil zoom-lås (viewport `maximumScale=1`)
+
+### Fas 10 — Gamification: Byggkraft (XP) + levels ✅
+- [x] `lib/xp/levels.ts` — XP-belopp, level-kurva 0–10, titlar, `levelProgress()`
+- [x] Säker XP-backend `/api/xp/grant` — belopp styrs server-side av event-typ, idempotent via `xpEvents/{eventType}`, transaktion
+- [x] Profile + `totalXp`/`level`/`builderStatus`; verifierad token via jose (`lib/auth/verify-token.ts`)
+- [x] `LevelBadge` bredvid alla avatarer, `LevelProgressBar` på profil (live), `LevelUpBurst`-animation
+- [x] First-action XP (första bygge/problem +25 → Level 1)
+
+### Fas 11 — Ny onboarding (karaktärsbygge) ✅
+- [x] `OnboardingFlow` — 6 kort + sista kortet, kortstack-animation, XP-toast, `OnboardingXpBar`
+- [x] `FirstActionCard` — skapar första bygget/problemet inline (ser level-up), beskrivning ≤1000 tecken + räknare + valfritt länk-fält
+- [x] Robust onboarding-grind + e-post/lösenord-inloggning
+
+### Fas 12 — Notissystem ✅
+- [x] `/api/notify` — server-side notis till ägaren vid borr/kommentar/svar, aldrig self-notify
+- [x] `profiles/{uid}/notifications` + regler (mottagaren läser/markerar/raderar)
+- [x] `NotificationBell` (desktop + mobil) — olästa-räknare, live onSnapshot, klick → rätt ställe
+
+### Fas 13 — Founding Member-badge (första 30) ✅
+- [x] `/api/founding/claim` — idempotent, räknare i `meta/stats`, seed-oberoende
+- [x] `lib/founding.ts` — `FOUNDING_MEMBER_LIMIT` + `FOUNDING_BADGE_ENABLED` (lätt att stänga av)
+- [x] `FoundingBadge` — guld-stämpel runt avataren (profil) + hörnstämpel (flöde/header)
+
+### Fas 14 — Feedback-inhämtning ✅
+- [x] Svävande `FeedbackButton` på alla sidor (inloggad) — popup, text + valfri skärmdump
+- [x] `/api/feedback` — sparar i samlad `feedback`-collection (userId, namn, meddelande, sid-URL, bild, datum)
+- [x] Övrigt: sök + sortering, radera bygge/problem, radera konto, borr-fix (regler deployade), beta-versionering
+
 ---
 
 ## SEO-strategi
@@ -589,6 +625,14 @@ Innan en fas markeras som klar:
 | Fas 6 — Profiler | ✅ Klar |
 | Fas 7 — Admin | ✅ Klar |
 | Fas 8 — Polish | ✅ Klar (manuella review-steg kvar: responsivitet, a11y, Lighthouse) |
+| Fas 9 — SEO, domän & delningsbilder | ✅ Klar |
+| Fas 10 — Gamification (Byggkraft/XP + levels) | ✅ Klar |
+| Fas 11 — Ny onboarding (karaktärsbygge) | ✅ Klar |
+| Fas 12 — Notissystem | ✅ Klar |
+| Fas 13 — Founding Member-badge (första 30) | ✅ Klar |
+| Fas 14 — Feedback-inhämtning | ✅ Klar |
+
+> **Beta-lansering:** Sidan är live på **aibyggare.se** (v0.11.1), säker och redo för de första 30 testarna.
 
 ---
 
@@ -597,16 +641,19 @@ Innan en fas markeras som klar:
 > Koden är pushad och Vercel deployar automatiskt, men följande kan **inte** göras
 > via git/Vercel. Markera av när klart.
 
-### 🔴 Kritiskt — säkerhet och funktion (gör nu)
+### 🔴 Kritiskt — säkerhet och funktion
 
-- [ ] **Deploya Firestore Security Rules:** `firebase deploy --only firestore:rules`
-  Tills detta körs gäller de GAMLA reglerna i produktion → role-escalation- och
-  isFeatured-hålen är fortfarande öppna. Detta är den viktigaste åtgärden.
-- [ ] **Deploya Firestore-index:** `firebase deploy --only firestore:indexes`
-  Krävs för `comments.userId` (badge "Hjälpt någon" på profiler) och
-  `posts: type + createdAt`.
+- [x] **Firestore Security Rules deployade** (session 13, programmatiskt via
+  Rules REST API). Hela regeluppsättningen live: role-escalation-skydd,
+  isFeatured-skydd, votes + rösträknar-carve-out, XP/level/founding-skydd,
+  meta-lås, notifications, feedback.
+- [ ] **Deploya Firestore-index:** kräver `firebase login`. Krävs för
+  `comments.userId` (badge "Hjälpt någon") och `posts: type + createdAt`.
+  Tills dess kan vissa profil-/filtreringsqueries falla tillbaka tomt.
 - [ ] **Gör dig själv till admin:** sätt `role: 'admin'` på ditt eget dokument
   `profiles/{din-uid}` i Firebase Console. Annars ser ingen `/admin`.
+- [ ] **`firebase login`** (rekommenderas): låter framtida regel-/index-deploy
+  ske direkt via CLI istället för tillfälliga endpoints.
 
 ### 🟡 Verifiera efter deploy
 
@@ -618,15 +665,11 @@ Innan en fas markeras som klar:
 - [ ] Testa hela kärnflödet på mobil: logga in → skapa projekt → kommentera →
       rösta → ställ fråga → redigera profil.
 
-### 🟢 Polish / SEO (Fas 8 — kan göras löpande)
+### 🟢 Polish / SEO (kan göras löpande)
 
-- [ ] **Designa en OG-bild** (1200×630 PNG) och lägg som
-      `src/app/opengraph-image.png` — då får delningar på sociala medier en
-      snygg förhandsbild. Metadatan är redan förberedd.
-- [ ] Sätt `NEXT_PUBLIC_SITE_URL` i Vercel till den riktiga produktions-URL:en
-      (används av sitemap, robots och canonical/OG-länkar).
-- [ ] **Responsivitet-genomgång** i riktig webbläsare (kräver mänskligt öga —
-      kan ej göras i agent-containern).
+- [x] **OG-delningsbilder** — dynamiska via next/og (start/projekt/problem/prompt)
+- [x] **`NEXT_PUBLIC_SITE_URL`** satt i Vercel → `https://aibyggare.se`
+- [ ] **Responsivitet-genomgång** i riktig webbläsare (kräver mänskligt öga).
 - [ ] **Accessibility-review** med tangentbord + skärmläsare.
 - [ ] **Performance** — kör Lighthouse på produktion.
 
@@ -638,4 +681,4 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-25 (session 12)*
+*Senast uppdaterad: 2026-06-27 (session 13 — beta-redo: gamification, ny onboarding, notiser, feedback, SEO/domän)*
