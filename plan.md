@@ -496,6 +496,12 @@ Placering: `.claude/skills/`
 - [x] Ta bort innehåll — admin raderar projekt/inlägg via säker API-route
 - [x] Markera featured project / featured guide — admin togglar `isFeatured`
 - [x] **Säkerhet:** server-side admin-verifiering (verifyIdToken + role), tätade privilege-escalation (role + isFeatured) i Firestore Rules
+- [x] **Admin-management UI** — `/admin`-sidan har avsnitt för att lägga till/ta bort admins via e-post; alla admins har identiska befogenheter
+- [x] `/api/admin/manage-admins` — GET (lista admins) + POST (grant/revoke via Admin SDK), kräver befintlig admin-token
+- [x] `scripts/set-admin.ts` — bootstrap-script för första admin (kör lokalt med service account)
+- [x] `scripts/deploy-rules.ts` — programmatisk Firestore-rules-deploy via REST API (firebase CLI ej inloggat)
+- [x] **Hårdare Firestore-regler** — `role`-fältet skrivskyddat för ALLA klienter (även autentiserade admins via Firestore SDK); bara Admin SDK kan ändra det
+- [x] **Verifierat med riktigt autentiserat testkonto:** inloggad icke-admin nekas på alla tre vektorer: (a) READ reports → 403, (b) WRITE role=admin på egen profil → 403 + Admin SDK-kontroll bekräftar role="user", (c) POST /api/admin/manage-admins → 403
 
 ### Fas 8 — Polish ✅
 - [x] Empty states, loading states, error states, skeletons — `loading.tsx` (skeletons) för projects/help/prompts/profile, `error.tsx`, `not-found.tsx` (branded)

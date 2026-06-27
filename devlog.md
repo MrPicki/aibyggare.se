@@ -1515,6 +1515,11 @@ Den gamla regeln (`allow update: if isAdmin() || ...`) tillät att en admin-klie
 - `npm run build` ✅
 - `scripts/set-admin.ts` kördes: `christoffer.nolet@gmail.com` är admin ✅
 - Firestore-regler deployades via `scripts/deploy-rules.ts` ✅
+- **Autentiserad icke-admin eskaleringstest** (`scripts/test-auth-security.ts`) kördes mot prod med riktigt Firebase ID-token:
+  - (a) READ `reports`-collection → **HTTP 403 "Missing or insufficient permissions."** ✅
+  - (b) PATCH `role=admin` på egen profil → **HTTP 403** + Admin SDK-kontroll bekräftar `role="user"` (oförändrad) ✅
+  - (c) POST `/api/admin/manage-admins` → **HTTP 403 "Otillåten åtkomst."** ✅
+  - Testkonto (`sectest-*@aibyggare-test.invalid`) skapades och raderades i samma körning — inget skräp i prod
 
 ### Status
-✅ Admin-management live. Picki kan nu gå till `/admin` och lägga till fler admins via e-post.
+✅ Admin-management live och verifierat. Picki kan nu gå till `/admin` och lägga till fler admins via e-post.
