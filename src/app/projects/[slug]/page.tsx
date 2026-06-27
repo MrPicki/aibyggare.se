@@ -7,6 +7,7 @@ import { CommentSection } from "@/components/projects/CommentSection";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
 import { EditProjectButton } from "@/components/content/EditProjectButton";
+import { LinkifiedText } from "@/components/ui/LinkifiedText";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import type { ProjectStatus } from "@/types/firestore";
 import { SEED_PROJECTS, SEED_PROJECT_DETAILS } from "@/lib/seed";
@@ -366,14 +367,14 @@ export default async function ProjectDetailPage({
               <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-code-blue mb-1.5">
                 Varför det byggdes
               </p>
-              <p className="text-sm leading-relaxed text-ink">{project.problem}</p>
+              <p className="text-sm leading-relaxed text-ink"><LinkifiedText text={project.problem} /></p>
             </div>
           )}
 
           {/* Description */}
           {project.description && (
             <p className="mt-6 text-sm leading-relaxed text-ink whitespace-pre-line">
-              {project.description}
+              <LinkifiedText text={project.description} />
             </p>
           )}
 
@@ -383,7 +384,7 @@ export default async function ProjectDetailPage({
               <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-hammer-yellow/80 mb-1.5">
                 Söker feedback på
               </p>
-              <p className="text-sm leading-relaxed text-ink">{project.feedbackWanted}</p>
+              <p className="text-sm leading-relaxed text-ink"><LinkifiedText text={project.feedbackWanted} /></p>
             </div>
           )}
 

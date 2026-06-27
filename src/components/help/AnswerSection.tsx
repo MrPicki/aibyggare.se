@@ -10,6 +10,7 @@ import {
   acceptAnswer,
 } from "@/lib/firebase/help-client";
 import type { Comment } from "@/types/firestore";
+import { LinkifiedText } from "@/components/ui/LinkifiedText";
 
 interface AnswerSectionProps {
   postId: string;
@@ -160,7 +161,7 @@ export function AnswerSection({
                   )}
                 </div>
                 <p className="text-base leading-relaxed text-ink whitespace-pre-wrap">
-                  {answer.body}
+                  <LinkifiedText text={answer.body} />
                 </p>
               </div>
             </article>

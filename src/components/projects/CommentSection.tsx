@@ -7,6 +7,7 @@ import { UserCircle, Reply } from "lucide-react";
 import { addComment, subscribeToComments } from "@/lib/firebase/projects-client";
 import { notify } from "@/lib/notifications/notify-client";
 import type { Comment } from "@/types/firestore";
+import { LinkifiedText } from "@/components/ui/LinkifiedText";
 
 interface CommentSectionProps {
   projectId: string;
@@ -115,7 +116,7 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
         {c.replyToName && (
           <p className="mb-0.5 font-mono text-[11px] text-mud">svarar @{c.replyToName}</p>
         )}
-        <p className="text-sm leading-relaxed text-ink">{c.body}</p>
+        <p className="text-sm leading-relaxed text-ink"><LinkifiedText text={c.body} /></p>
         {canComment && (
           <button
             onClick={() => startReply(c)}

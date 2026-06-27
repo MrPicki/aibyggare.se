@@ -9,6 +9,7 @@ import { DeleteContentButton } from "@/components/content/DeleteContentButton";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import type { Post, Comment } from "@/types/firestore";
+import { LinkifiedText } from "@/components/ui/LinkifiedText";
 
 export const dynamic = "force-dynamic";
 
@@ -166,7 +167,7 @@ export default async function ProblemhornanDetailPage({
           </h1>
 
           <p className="mt-5 text-base leading-relaxed text-ink whitespace-pre-wrap">
-            {body}
+            <LinkifiedText text={body} />
           </p>
 
           <div className="mt-6 flex items-center justify-between border-t-2 border-dashed border-border pt-4">
