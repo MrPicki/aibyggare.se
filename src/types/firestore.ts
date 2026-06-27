@@ -97,6 +97,8 @@ export interface Comment {
   projectId: string | null;
   postId: string | null;
   parentId: string | null;
+  /** Namn på den man svarar (för "svarar X"-kontext utan att skriva handle). */
+  replyToName?: string | null;
   body: string;
   isAccepted: boolean;
   createdAt: Timestamp | null;

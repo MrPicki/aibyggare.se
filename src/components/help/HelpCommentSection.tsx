@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Check, UserCircle } from "lucide-react";
+import { Check, UserCircle, Reply } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   addAnswer,
@@ -32,6 +32,9 @@ export function HelpCommentSection({
   const [saving, setSaving] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [replyTo, setReplyTo] = useState<{ id: string; rootId: string; name: string } | null>(null);
+  const [replyBody, setReplyBody] = useState("");
+  const [replySaving, setReplySaving] = useState(false);
 
   useEffect(() => {
     if (!user) return; // övriga ser SSR-data
@@ -40,6 +43,69 @@ export function HelpCommentSection({
   }, [postId, user]);
 
   const isOwner = user?.uid === postOwnerId;
+  const canReply = !!user && !!profile?.username;
+  const topLevel = comments.filter((c) => !c.parentId);
+  const repliesOf = (rootId: string) => comments.filter((c) => c.parentId === rootId);
+
+  async function handleReply() {
+    if (!user || !replyTo || !replyBody.trim()) return;
+    setReplySaving(true);
+    try {
+      const text = replyBody.trim();
+      await addAnswer({
+        postId,
+        userId: user.uid,
+        userDisplayName: profile?.displayName || user.displayName || "Byggare",
+        userAvatarUrl: profile?.avatarUrl || user.photoURL || "",
+        body: text,
+        parentId: replyTo.rootId,
+        replyToName: replyTo.name,
+      });
+      notify({ type: "reply", targetType: "post", targetId: postId, parentCommentId: replyTo.id, preview: text });
+      setReplyBody("");
+      setReplyTo(null);
+    } catch {
+      setError("Kunde inte skicka svaret. Försök igen.");
+    } finally {
+      setReplySaving(false);
+    }
+  }
+
+  function startReply(c: Comment) {
+    setReplyTo({ id: c.id, rootId: c.parentId || c.id, name: c.userDisplayName || "Anonym" });
+    setReplyBody("");
+  }
+
+  function ReplyForm() {
+    return (
+      <div className="mt-3 flex flex-col gap-2">
+        <textarea
+          value={replyBody}
+          onChange={(e) => setReplyBody(e.target.value)}
+          placeholder={`Svara ${replyTo?.name}…`}
+          rows={2}
+          maxLength={1000}
+          autoFocus
+          className="w-full resize-none rounded-xl border-2 border-ink bg-paper px-3 py-2 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-hammer-yellow"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={handleReply}
+            disabled={replySaving || !replyBody.trim()}
+            className="chunky-sm pressable rounded-xl bg-hammer-yellow px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wide text-ink disabled:opacity-50"
+          >
+            {replySaving ? "Skickar…" : "Svara"}
+          </button>
+          <button
+            onClick={() => setReplyTo(null)}
+            className="rounded-xl border-2 border-ink px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wide text-ink hover:bg-cream"
+          >
+            Avbryt
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   async function handleAccept(commentId: string) {
     if (!isOwner || accepting) return;
@@ -97,7 +163,7 @@ export function HelpCommentSection({
         </p>
       ) : (
         <ul className="space-y-4 mb-8">
-          {comments.map((c) => {
+          {topLevel.map((c) => {
             const isAccepted = c.id === acceptedId || c.isAccepted;
             return (
               <li
@@ -145,16 +211,52 @@ export function HelpCommentSection({
                       </div>
                       <p className="text-sm leading-relaxed text-ink">{c.body}</p>
 
-                      {/* Acceptera-knapp — bara synlig för frågeägaren på ej accepterade svar */}
-                      {isOwner && !isAccepted && acceptedId === null && (
-                        <button
-                          onClick={() => handleAccept(c.id)}
-                          disabled={!!accepting}
-                          className="mt-3 inline-flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wide text-build-green border border-build-green/40 rounded-lg px-2 py-1 hover:bg-build-green/10 transition-colors disabled:opacity-50"
-                        >
-                          <Check size={11} />
-                          {accepting === c.id ? "Markerar…" : "Markera som löst"}
-                        </button>
+                      <div className="mt-3 flex items-center gap-3">
+                        {/* Acceptera-knapp — bara frågeägaren, på ej accepterade svar */}
+                        {isOwner && !isAccepted && acceptedId === null && (
+                          <button
+                            onClick={() => handleAccept(c.id)}
+                            disabled={!!accepting}
+                            className="inline-flex items-center gap-1 rounded-lg border border-build-green/40 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-build-green transition-colors hover:bg-build-green/10 disabled:opacity-50"
+                          >
+                            <Check size={11} />
+                            {accepting === c.id ? "Markerar…" : "Markera som löst"}
+                          </button>
+                        )}
+                        {canReply && (
+                          <button
+                            onClick={() => startReply(c)}
+                            className="inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wide text-mud hover:text-ink"
+                          >
+                            <Reply size={12} /> Svara
+                          </button>
+                        )}
+                      </div>
+
+                      {replyTo?.id === c.id && <ReplyForm />}
+
+                      {/* Svar (en nivå) */}
+                      {repliesOf(c.id).length > 0 && (
+                        <ul className="mt-3 space-y-3 border-l-2 border-dashed border-border pl-4">
+                          {repliesOf(c.id).map((r) => (
+                            <li key={r.id}>
+                              <div className="flex items-baseline gap-2">
+                                <span className="font-mono text-xs font-bold text-ink">{r.userDisplayName || "Anonym"}</span>
+                                {r.replyToName && <span className="font-mono text-[11px] text-mud">svarar @{r.replyToName}</span>}
+                              </div>
+                              <p className="mt-0.5 text-sm leading-relaxed text-ink">{r.body}</p>
+                              {canReply && (
+                                <button
+                                  onClick={() => startReply(r)}
+                                  className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wide text-mud hover:text-ink"
+                                >
+                                  <Reply size={12} /> Svara
+                                </button>
+                              )}
+                              {replyTo?.id === r.id && <ReplyForm />}
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
                   </div>

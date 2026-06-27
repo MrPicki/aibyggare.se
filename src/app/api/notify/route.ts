@@ -7,7 +7,7 @@ import { adminDb } from "@/lib/firebase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type NotifType = "upvote" | "comment" | "answer";
+type NotifType = "upvote" | "comment" | "answer" | "reply";
 
 // Skapar en notis för ägaren av ett bygge/inlägg när någon borrar, kommenterar
 // eller svarar. Server-side (Admin SDK) så ingen kan spamma andras notiser:
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (!verified) return NextResponse.json({ error: "Ogiltig token" }, { status: 401 });
   if (!adminDb) return NextResponse.json({ error: "DB ej tillgänglig" }, { status: 503 });
 
-  let body: { type?: string; targetType?: string; targetId?: string; preview?: string };
+  let body: { type?: string; targetType?: string; targetId?: string; preview?: string; parentCommentId?: string };
   try {
     body = await req.json();
   } catch {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const type = body.type as NotifType;
   const targetType = body.targetType as "project" | "post";
   const targetId = body.targetId;
-  if (!["upvote", "comment", "answer"].includes(type) || !targetId || !["project", "post"].includes(targetType)) {
+  if (!["upvote", "comment", "answer", "reply"].includes(type) || !targetId || !["project", "post"].includes(targetType)) {
     return NextResponse.json({ error: "Ogiltiga fält" }, { status: 400 });
   }
 
@@ -43,7 +43,19 @@ export async function POST(req: NextRequest) {
     const targetSnap = await adminDb.collection(collectionName).doc(targetId).get();
     if (!targetSnap.exists) return NextResponse.json({ ok: false, reason: "no-target" });
     const target = targetSnap.data() ?? {};
-    const ownerId = target.userId as string;
+
+    // Mottagare: för svar = förälder-kommentarens författare (slås upp
+    // server-side så ingen kan välja godtycklig mottagare). Annars = ägaren.
+    let recipientId = target.userId as string;
+    if (type === "reply") {
+      if (!body.parentCommentId) return NextResponse.json({ error: "Saknar parentCommentId" }, { status: 400 });
+      const parentSnap = await adminDb
+        .collection(collectionName).doc(targetId)
+        .collection("comments").doc(body.parentCommentId).get();
+      if (!parentSnap.exists) return NextResponse.json({ ok: false, reason: "no-parent" });
+      recipientId = parentSnap.data()?.userId as string;
+    }
+    const ownerId = recipientId;
 
     // Ingen notis till sig själv.
     if (!ownerId || ownerId === actorId) return NextResponse.json({ ok: true, skipped: true });

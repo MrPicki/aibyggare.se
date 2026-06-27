@@ -13,7 +13,7 @@ import { db } from "@/lib/firebase/client";
 
 export interface AppNotification {
   id: string;
-  type: "upvote" | "comment" | "answer";
+  type: "upvote" | "comment" | "answer" | "reply";
   actorName: string;
   actorAvatarUrl: string;
   actorUsername: string;

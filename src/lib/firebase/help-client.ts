@@ -73,16 +73,19 @@ export interface AddAnswerInput {
   userDisplayName: string;
   userAvatarUrl: string;
   body: string;
+  parentId?: string | null;
+  replyToName?: string | null;
 }
 
 export async function addAnswer(input: AddAnswerInput): Promise<string> {
-  const { postId, ...fields } = input;
+  const { postId, parentId = null, replyToName = null, ...fields } = input;
   const answersRef = collection(db, "posts", postId, "comments");
   const postRef = doc(db, "posts", postId);
 
   const docRef = await addDoc(answersRef, {
     ...fields,
-    parentId: null,
+    parentId,
+    replyToName,
     isAccepted: false,
     projectId: null,
     postId,

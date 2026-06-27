@@ -1,10 +1,11 @@
 // Tunn klient-helper som ber servern skapa en notis. Fire-and-forget — ska
 // aldrig blockera eller fela själva handlingen (borr/kommentar/svar).
 export function notify(input: {
-  type: "upvote" | "comment" | "answer";
+  type: "upvote" | "comment" | "answer" | "reply";
   targetType: "project" | "post";
   targetId: string;
   preview?: string;
+  parentCommentId?: string;
 }): void {
   try {
     void fetch("/api/notify", {

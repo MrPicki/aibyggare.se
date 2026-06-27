@@ -134,16 +134,19 @@ export interface AddCommentInput {
   userDisplayName: string;
   userAvatarUrl: string;
   body: string;
+  parentId?: string | null;
+  replyToName?: string | null;
 }
 
 export async function addComment(input: AddCommentInput): Promise<string> {
-  const { projectId, ...fields } = input;
+  const { projectId, parentId = null, replyToName = null, ...fields } = input;
   const commentsRef = collection(db, "projects", projectId, "comments");
   const projectRef = doc(db, "projects", projectId);
 
   const docRef = await addDoc(commentsRef, {
     ...fields,
-    parentId: null,
+    parentId,
+    replyToName,
     isAccepted: false,
     projectId: null,
     postId: null,

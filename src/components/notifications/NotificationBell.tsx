@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Check } from "lucide-react";
 import { DrillIcon } from "@/components/brand/DrillIcon";
-import { MessageSquare, LifeBuoy } from "lucide-react";
+import { MessageSquare, LifeBuoy, Reply } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   subscribeToNotifications,
@@ -26,12 +26,14 @@ function notifText(n: AppNotification): string {
   const t = n.targetTitle ? `"${n.targetTitle}"` : (n.targetType === "project" ? "ditt bygge" : "din fråga");
   if (n.type === "upvote") return `${n.actorName} gav ${t} en borr`;
   if (n.type === "comment") return `${n.actorName} kommenterade ${t}`;
+  if (n.type === "reply") return `${n.actorName} svarade på din kommentar`;
   return `${n.actorName} svarade på ${t}`;
 }
 
 function NotifIcon({ type }: { type: AppNotification["type"] }) {
   if (type === "upvote") return <DrillIcon className="h-4 w-4 text-build-green" />;
   if (type === "answer") return <LifeBuoy size={15} className="text-warning-orange" />;
+  if (type === "reply") return <Reply size={15} className="text-prompt-purple" />;
   return <MessageSquare size={15} className="text-code-blue" />;
 }
 
