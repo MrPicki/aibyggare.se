@@ -29,7 +29,7 @@ function Wordmark() {
       <span className="font-display text-lg font-bold tracking-tight text-ink">
         AIbyggare<span className="text-build-green">.</span>se
       </span>
-      <span className="hidden sm:inline-flex items-center rounded-md border border-border bg-cream px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-mud">
+      <span className="inline-flex items-center rounded-md border-2 border-ink bg-hammer-yellow px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink shadow-[1.5px_1.5px_0_0_var(--ink)]">
         Beta v{BETA_VERSION}
       </span>
     </Link>
