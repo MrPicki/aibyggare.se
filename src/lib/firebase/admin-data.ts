@@ -1,5 +1,11 @@
+import { Timestamp } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import type { Report } from "@/types/firestore";
+
+function requireDb() {
+  if (!adminDb) throw new Error("Firebase Admin ej tillgänglig");
+  return adminDb;
+}
 
 // ─── Admin-användare ──────────────────────────────────────────────────────────
 export interface AdminUserRecord {
@@ -23,24 +29,21 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
   });
 }
 
-function requireDb() {
-  if (!adminDb) throw new Error("Firebase Admin ej tillgänglig");
-  return adminDb;
-}
-
-// ─── Dashboard-statistik ─────────────────────────────────────────────────────
+// ─── Dashboard-statistik med 24h-delta ───────────────────────────────────────
 export interface AdminStats {
-  users: number;
-  projects: number;
-  help: number;
-  prompts: number;
-  comments: number;
-  openReports: number;
+  users: number;     usersNew: number;
+  projects: number;  projectsNew: number;
+  help: number;      helpNew: number;
+  prompts: number;   promptsNew: number;
+  comments: number;  commentsNew: number;
+  openReports: number; reportsNew: number;
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
   const db = requireDb();
-  // count()-aggregering läser inte hela dokumenten — billigt och snabbt.
+  const cutoff = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+  // Totaler
   const [users, projects, help, prompts, comments, openReports] = await Promise.all([
     db.collection("profiles").count().get(),
     db.collection("projects").count().get(),
@@ -50,13 +53,27 @@ export async function getAdminStats(): Promise<AdminStats> {
     db.collection("reports").where("status", "==", "open").count().get(),
   ]);
 
+  // 24h-deltas — enkla fältfilter kräver inga composite-index.
+  // För posts hämtas alla nyligen skapade och räknas per typ i minnet
+  // (billigt: max ett fåtal per dag i nuläget).
+  const [usersNew, projectsNew, newPostDocs, commentsNew, reportsNew] = await Promise.all([
+    db.collection("profiles").where("createdAt", ">", cutoff).count().get(),
+    db.collection("projects").where("createdAt", ">", cutoff).count().get(),
+    db.collection("posts").where("createdAt", ">", cutoff).select("type").get(),
+    db.collectionGroup("comments").where("createdAt", ">", cutoff).count().get().catch(() => null),
+    db.collection("reports").where("createdAt", ">", cutoff).count().get().catch(() => null),
+  ]);
+
+  const helpNew = newPostDocs.docs.filter((d) => d.data().type === "help").length;
+  const promptsNew = newPostDocs.docs.filter((d) => d.data().type === "prompt").length;
+
   return {
-    users: users.data().count,
-    projects: projects.data().count,
-    help: help.data().count,
-    prompts: prompts.data().count,
-    comments: comments.data().count,
-    openReports: openReports.data().count,
+    users: users.data().count,       usersNew: usersNew.data().count,
+    projects: projects.data().count,  projectsNew: projectsNew.data().count,
+    help: help.data().count,          helpNew,
+    prompts: prompts.data().count,    promptsNew,
+    comments: comments.data().count,  commentsNew: commentsNew?.data().count ?? 0,
+    openReports: openReports.data().count, reportsNew: reportsNew?.data().count ?? 0,
   };
 }
 
@@ -73,7 +90,6 @@ export interface AdminReport {
 
 export async function getOpenReports(): Promise<AdminReport[]> {
   const db = requireDb();
-  // Filtrera på status (enkelt index), sortera i minnet → inget composite-index.
   const snap = await db.collection("reports").where("status", "==", "open").limit(100).get();
   return snap.docs
     .map((d) => {
@@ -92,29 +108,27 @@ export async function getOpenReports(): Promise<AdminReport[]> {
     .sort((a, b) => (b.createdAtSeconds ?? 0) - (a.createdAtSeconds ?? 0));
 }
 
-// ─── Senaste innehåll (modereringslista) ─────────────────────────────────────
+// ─── Senaste innehåll, uppdelat i Byggen / Problemhörnan ─────────────────────
 export interface ModItem {
   kind: "project" | "post";
   id: string;
-  label: string; // "Projekt" | "Hjälpfråga" | "Prompt" | "Inlägg"
+  label: string;
   title: string;
   url: string;
   author: string;
   isFeatured: boolean;
 }
 
-function postLabel(type: string): string {
-  if (type === "help") return "Hjälpfråga";
-  if (type === "prompt") return "Prompt";
-  if (type === "guide") return "Guide";
-  return "Inlägg";
+export interface RecentContentSplit {
+  projects: ModItem[];
+  helpPosts: ModItem[];
 }
 
-export async function getRecentContent(): Promise<ModItem[]> {
+export async function getRecentContentSplit(): Promise<RecentContentSplit> {
   const db = requireDb();
-  const [projSnap, postSnap] = await Promise.all([
-    db.collection("projects").orderBy("createdAt", "desc").limit(15).get(),
-    db.collection("posts").orderBy("createdAt", "desc").limit(15).get(),
+  const [projSnap, helpSnap] = await Promise.all([
+    db.collection("projects").orderBy("createdAt", "desc").limit(20).get(),
+    db.collection("posts").where("type", "==", "help").orderBy("createdAt", "desc").limit(20).get(),
   ]);
 
   const projects: ModItem[] = projSnap.docs.map((d) => {
@@ -130,20 +144,47 @@ export async function getRecentContent(): Promise<ModItem[]> {
     };
   });
 
-  const posts: ModItem[] = postSnap.docs.map((d) => {
+  const helpPosts: ModItem[] = helpSnap.docs.map((d) => {
     const data = d.data();
-    const type = data.type ?? "discussion";
-    const base = type === "help" ? "help" : type === "prompt" ? "prompts" : "help";
     return {
       kind: "post",
       id: d.id,
-      label: postLabel(type),
+      label: "Hjälpfråga",
       title: data.title ?? "(namnlöst)",
-      url: `/${base}/${data.slug ?? ""}`,
+      url: `/help/${data.slug ?? ""}`,
       author: data.userDisplayName ?? "Okänd",
       isFeatured: Boolean(data.isFeatured),
     };
   });
 
-  return [...projects, ...posts];
+  return { projects, helpPosts };
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+export interface FeedbackEntry {
+  id: string;
+  userName: string;
+  username: string;
+  message: string;
+  pageUrl: string;
+  imageUrl: string;
+  createdAtSeconds: number | null;
+}
+
+export async function getFeedbackEntries(limit = 30): Promise<FeedbackEntry[]> {
+  const db = requireDb();
+  const snap = await db.collection("feedback").orderBy("createdAt", "desc").limit(limit).get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    const ts = data.createdAt as { seconds?: number } | undefined;
+    return {
+      id: d.id,
+      userName: data.userName ?? "Okänd",
+      username: data.username ?? "",
+      message: data.message ?? "",
+      pageUrl: data.pageUrl ?? "",
+      imageUrl: data.imageUrl ?? "",
+      createdAtSeconds: ts?.seconds ?? null,
+    };
+  });
 }

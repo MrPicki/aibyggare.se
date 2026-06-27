@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Users, FolderGit2, HelpCircle, Sparkles, MessageSquare, Flag, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft, Users, FolderGit2, HelpCircle, Sparkles,
+  MessageSquare, Flag, ExternalLink, MessageCircle, TrendingUp,
+} from "lucide-react";
 import { getAdminUser } from "@/lib/auth/admin-guard";
 import { ModerationButtons, ResolveReportButton } from "@/components/admin/AdminActions";
 import { AdminManagement } from "@/components/admin/AdminManagement";
-import type { AdminStats, AdminReport, ModItem, AdminUserRecord } from "@/lib/firebase/admin-data";
+import { ContentSection } from "@/components/admin/ContentSection";
+import type {
+  AdminStats, AdminReport, AdminUserRecord, FeedbackEntry,
+  RecentContentSplit,
+} from "@/lib/firebase/admin-data";
 
 export const dynamic = "force-dynamic";
 
@@ -13,35 +20,66 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  delta,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  delta: number;
+}) {
   return (
     <div className="chunky rounded-2xl bg-paper p-4">
       <div className="mb-2 inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wide text-mud">
         {icon} {label}
       </div>
       <p className="font-display text-3xl font-bold text-ink">{value}</p>
+      {delta !== 0 && (
+        <p
+          className={`mt-0.5 font-mono text-[11px] font-bold ${delta > 0 ? "text-build-green" : "text-bug-red"}`}
+        >
+          {delta > 0 ? `+${delta}` : delta} senaste 24h
+        </p>
+      )}
+      {delta === 0 && (
+        <p className="mt-0.5 font-mono text-[11px] text-mud">±0 senaste 24h</p>
+      )}
     </div>
   );
 }
 
+function formatDate(seconds: number | null): string {
+  if (!seconds) return "";
+  return new Date(seconds * 1000).toLocaleString("sv-SE", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default async function AdminPage() {
   const admin = await getAdminUser();
-  // Riktig säkerhetsgrind: ingen admin → bort. (proxy.ts hindrar bara utloggade.)
   if (!admin) redirect("/");
 
   let stats: AdminStats | null = null;
   let reports: AdminReport[] = [];
-  let content: ModItem[] = [];
+  let content: RecentContentSplit = { projects: [], helpPosts: [] };
   let adminUsers: AdminUserRecord[] = [];
+  let feedback: FeedbackEntry[] = [];
   let loadError = false;
 
   try {
     const data = await import("@/lib/firebase/admin-data");
-    [stats, reports, content, adminUsers] = await Promise.all([
+    [stats, reports, content, adminUsers, feedback] = await Promise.all([
       data.getAdminStats(),
       data.getOpenReports(),
-      data.getRecentContent(),
+      data.getRecentContentSplit(),
       data.getAdminUsers(),
+      data.getFeedbackEntries(),
     ]);
   } catch (e) {
     console.error("[admin] kunde inte ladda data:", e);
@@ -73,15 +111,15 @@ export default async function AdminPage() {
         </div>
       )}
 
-      {/* ── Statistik ── */}
+      {/* ── Statistik med 24h-delta ── */}
       {stats && (
         <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <StatCard icon={<Users size={12} />} label="Användare" value={stats.users} />
-          <StatCard icon={<FolderGit2 size={12} />} label="Projekt" value={stats.projects} />
-          <StatCard icon={<HelpCircle size={12} />} label="Frågor" value={stats.help} />
-          <StatCard icon={<Sparkles size={12} />} label="Prompts" value={stats.prompts} />
-          <StatCard icon={<MessageSquare size={12} />} label="Kommentarer" value={stats.comments} />
-          <StatCard icon={<Flag size={12} />} label="Öppna rapporter" value={stats.openReports} />
+          <StatCard icon={<Users size={12} />}         label="Användare"       value={stats.users}       delta={stats.usersNew} />
+          <StatCard icon={<FolderGit2 size={12} />}    label="Byggen"          value={stats.projects}    delta={stats.projectsNew} />
+          <StatCard icon={<HelpCircle size={12} />}    label="Frågor"          value={stats.help}        delta={stats.helpNew} />
+          <StatCard icon={<Sparkles size={12} />}      label="Prompts"         value={stats.prompts}     delta={stats.promptsNew} />
+          <StatCard icon={<MessageSquare size={12} />} label="Kommentarer"     value={stats.comments}    delta={stats.commentsNew} />
+          <StatCard icon={<Flag size={12} />}          label="Öppna rapporter" value={stats.openReports} delta={stats.reportsNew} />
         </section>
       )}
 
@@ -119,31 +157,65 @@ export default async function AdminPage() {
         )}
       </section>
 
-      {/* ── Senaste innehåll ── */}
+      {/* ── Senaste innehåll — två kolumner ── */}
       <section className="mt-12">
         <h2 className="font-display text-xl font-bold text-ink">Senaste innehåll</h2>
         <p className="mt-1 text-sm text-mud">Utse veckans bygge eller ta bort olämpligt innehåll.</p>
-        {content.length === 0 ? (
-          <p className="mt-3 text-mud text-sm">Inget innehåll än.</p>
+        <div className="mt-4 grid gap-8 sm:grid-cols-2">
+          <ContentSection title="Byggen" items={content.projects} />
+          <ContentSection title="Problemhörnan" items={content.helpPosts} />
+        </div>
+      </section>
+
+      {/* ── Feedback ── */}
+      <section className="mt-12">
+        <div className="flex items-center gap-2">
+          <MessageCircle size={18} className="text-mud" />
+          <h2 className="font-display text-xl font-bold text-ink">Feedback</h2>
+          {feedback.length > 0 && (
+            <span className="sticker bg-hammer-yellow px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink">
+              {feedback.length}
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-mud">Inlämnad feedback från inloggade användare.</p>
+        {feedback.length === 0 ? (
+          <p className="mt-3 text-sm text-mud">Ingen feedback ännu.</p>
         ) : (
-          <ul className="mt-4 space-y-2">
-            {content.map((item) => (
-              <li
-                key={`${item.kind}-${item.id}`}
-                className="chunky-sm flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-paper p-3.5"
-              >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="sticker shrink-0 bg-cream px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-mud">
-                    {item.label}
-                  </span>
-                  <Link href={item.url} className="truncate font-semibold text-ink hover:text-build-green">
-                    {item.title}
-                  </Link>
-                  <span className="hidden shrink-0 font-mono text-[11px] text-mud sm:inline">
-                    av {item.author}
-                  </span>
+          <ul className="mt-4 space-y-3">
+            {feedback.map((f) => (
+              <li key={f.id} className="chunky-sm rounded-2xl bg-paper p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold text-ink">
+                        {f.userName}
+                        {f.username ? ` (@${f.username})` : ""}
+                      </span>
+                      {f.pageUrl && (
+                        <span className="truncate font-mono text-[10px] text-mud">
+                          {f.pageUrl}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-ink">{f.message}</p>
+                    {f.imageUrl && (
+                      <a
+                        href={f.imageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] text-mud underline hover:text-ink"
+                      >
+                        <TrendingUp size={11} /> Se skärmdump
+                      </a>
+                    )}
+                  </div>
+                  {f.createdAtSeconds && (
+                    <span className="shrink-0 font-mono text-[10px] text-mud">
+                      {formatDate(f.createdAtSeconds)}
+                    </span>
+                  )}
                 </div>
-                <ModerationButtons kind={item.kind} id={item.id} isFeatured={item.isFeatured} />
               </li>
             ))}
           </ul>

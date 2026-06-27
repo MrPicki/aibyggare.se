@@ -9,6 +9,7 @@ import { ProfileBadges } from "@/components/profile/ProfileBadges";
 import { LevelBadge } from "@/components/levels/LevelBadge";
 import { LevelProgressBar } from "@/components/levels/LevelProgressBar";
 import { FoundingBadge } from "@/components/founding/FoundingBadge";
+import { AdminBadge } from "@/components/admin/AdminBadge";
 import { STATUS_LABEL, STATUS_ACCENT } from "@/lib/constants/project-status";
 import { toolAccent } from "@/lib/constants/tools";
 import type { BadgeStats } from "@/lib/constants/badges";
@@ -51,6 +52,7 @@ interface ProfileView {
   level: number;
   totalXp: number;
   foundingMember: boolean;
+  isAdmin: boolean;
   tools: string[];
   websiteUrl?: string;
   githubUrl?: string;
@@ -141,6 +143,7 @@ async function fromFirestore(handle: string): Promise<ProfileView | null> {
       level: profile.level,
       totalXp: profile.totalXp,
       foundingMember: profile.foundingMember,
+      isAdmin: profile.role === "admin",
       tools: profile.tools,
       websiteUrl: profile.websiteUrl || undefined,
       githubUrl: profile.githubUrl || undefined,
@@ -187,6 +190,7 @@ function fromSeed(handle: string): ProfileView | null {
     level: Math.min(5, 1 + projects.length + helpCards.length),
     totalXp: 0,
     foundingMember: false,
+    isAdmin: false,
     tools: user.tools,
     projects,
     helpCards: helpCards as unknown as HelpCardProps[],
@@ -262,16 +266,18 @@ export default async function PublicProfilePage({
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
-            {/* Avatar med level-badge + ev. founding-ring */}
+            {/* Avatar med level-badge + ev. admin/founding-ring */}
             <div className="relative shrink-0">
               <div
                 className={
-                  view.foundingMember
+                  view.isAdmin || view.foundingMember
                     ? "rounded-full p-1 shadow-[0_0_0_2px_var(--ink)]"
                     : ""
                 }
                 style={
-                  view.foundingMember
+                  view.isAdmin
+                    ? { background: "linear-gradient(135deg, var(--build-green), #00a878)" }
+                    : view.foundingMember
                     ? { background: "linear-gradient(135deg, var(--hammer-yellow), var(--warning-orange))" }
                     : undefined
                 }
@@ -292,9 +298,12 @@ export default async function PublicProfilePage({
                   )}
                 </div>
               </div>
-              {view.foundingMember && (
+              {/* Hörnikon: admin-sköld prioriteras över founding-stjärna */}
+              {view.isAdmin ? (
+                <AdminBadge size="sm" className="absolute -left-2 -top-2 !h-7 !w-7" />
+              ) : view.foundingMember ? (
                 <FoundingBadge show className="absolute -left-2 -top-2 !h-7 !w-7" />
-              )}
+              ) : null}
               <div className="absolute -bottom-1 -right-1">
                 <LevelBadge level={view.level} size="md" />
               </div>
@@ -306,6 +315,7 @@ export default async function PublicProfilePage({
                 <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
                   {view.displayName}
                 </h1>
+                {view.isAdmin && <AdminBadge size="md" />}
                 <FoundingBadge show={view.foundingMember} size="md" />
               </div>
               <p className="mt-0.5 font-mono text-sm text-mud">@{view.username}</p>

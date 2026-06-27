@@ -30,6 +30,7 @@ export interface PublicProfile {
   totalXp: number;
   level: number;
   foundingMember: boolean;
+  role: "user" | "admin";
 }
 
 function secondsOf(v: unknown): number | null {
@@ -62,6 +63,7 @@ export async function getProfileByUsername(username: string): Promise<PublicProf
     totalXp: typeof data.totalXp === "number" ? data.totalXp : 0,
     level: typeof data.level === "number" ? data.level : 0,
     foundingMember: data.foundingMember === true,
+    role: data.role === "admin" ? "admin" : "user",
   };
 }
 
