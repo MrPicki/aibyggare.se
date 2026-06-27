@@ -1424,3 +1424,97 @@ Firestore-reglerna deployades programmatiskt via en **tillfällig, hemlighetssky
 
 ### Status
 ✅ **Beta-redo.** Sidan är live, säker och redo för de första 30 testarna.
+
+---
+
+## Session 15 — Admin-hantering (2026-06-27)
+
+**Beta-version:** 0.14.0
+
+### Mål
+Bygg fullständig admin-hantering: sätt första admin, lägg till fler smidigt, blockera alla eskaleringsvägar hårdkodat i Firestore-regler.
+
+---
+
+### Vad som byggdes
+
+#### 1. `scripts/set-admin.ts` — First-admin bootstrap
+- Kör med `npx dotenv-cli -e .env.local -- npx tsx scripts/set-admin.ts`
+- Använder Firebase Admin SDK (bypasses Firestore rules — det är poängen)
+- Slår upp användaren via email i Firebase Auth → hämtar UID → sätter `role: "admin"` på `profiles/{uid}`
+- Idempotent (kör gärna igen — händer inget om redan admin)
+- **Kördes:** `christoffer.nolet@gmail.com` (uid `pakBTosUODatvrxthicy6JKus8F3`) är nu admin ✅
+
+#### 2. `/api/admin/manage-admins` — Admin-management API
+- **GET:** Listar alla profiler med `role == "admin"` (kräver admin-token)
+- **POST `{ action: "grant", email }`:** Söker upp Firebase Auth-konto via email → sätter `role: "admin"` via Admin SDK
+- **POST `{ action: "revoke", uid }`:** Sätter `role: "user"` via Admin SDK
+- Självskydd: en admin kan inte ta bort sin egen roll (förhindrar lockout)
+- Säkerhetsgrind: `getAdminUser()` verifierar token kryptografiskt + kollar `role == "admin"` i Firestore innan varje operation
+
+#### 3. `AdminManagement.tsx` — Klientkomponent i `/admin`
+- Visar lista av nuvarande admins med avatar + namn + @username
+- "Du"-badge på den inloggade admins rad, ingen revoke-knapp på sig själv
+- E-postfält + Lägg till-knapp: lägger till ny admin → listar om direkt
+- Revoke-knapp med confirm-dialog per admin
+- Felmeddelandevisning (t.ex. "användaren har inte slutfört onboarding")
+
+#### 4. `scripts/deploy-rules.ts` — Programmatisk rules-deploy
+- Ersätter `firebase deploy --only firestore:rules` (CLI inte inloggat)
+- Skapar ny ruleset via Firebase Rules REST API → releasear den för cloud.firestore
+- Kör med `npx dotenv-cli -e .env.local -- npx tsx scripts/deploy-rules.ts`
+
+---
+
+### Säkerhetsmodellen — varför den ser ut som den gör
+
+**Frågan:** vem kan ge admin-roll till vem?
+
+**Svaret:** Bara Firebase Admin SDK (som kör server-side med service account) kan skriva `role`-fältet. Det finns ingen väg för en klient att göra det — inte ens en befintlig admin-klient.
+
+**Konkret säkerhetsmodell i lager:**
+
+**Lager 1 — Firestore Security Rules (hårdkodat, kan inte kringgås av klienter):**
+```
+allow update: if (isAdmin()
+    && !request.resource.data.diff(resource.data).affectedKeys()
+         .hasAny(['role', 'totalXp', 'level', 'foundingMember', 'foundingNumber']))
+  || (isOwner(userId)
+      && !request.resource.data.diff(resource.data).affectedKeys()
+           .hasAny(['role', 'totalXp', 'level', 'foundingMember', 'foundingNumber']));
+```
+
+**Vad regeln innebär:**
+- `role`-fältet är **helt skrivskyddat** för alla Firestore-klienter — oavsett om de är inloggade som admin eller inte
+- Varken ägaren, en admin-klient, eller en angripare kan ändra `role` via Firestore SDK
+- **Enda vägen att ändra `role`:** Firebase Admin SDK (som kör server-side och bypasses rules)
+
+**Tidigare sårbarhet som åtgärdades:**
+Den gamla regeln (`allow update: if isAdmin() || ...`) tillät att en admin-klient ändrade valfritt fält inklusive `role`. Om en admin-session komprometterats kunde angriparen eskalera privilegier via Firestore SDK direkt utan att gå via API-routen. Nu blockeras detta.
+
+**Lager 2 — API-routen `/api/admin/manage-admins`:**
+- Kräver att anroparen är befintlig admin (kryptografisk token-verifiering via Admin Auth SDK)
+- Använder Admin SDK (inte Firestore-klientbiblioteket) för att skriva role-fältet
+- Förhindrar self-revoke (admin kan inte ta bort sin egen roll → ingen lockout-risk)
+
+**Lager 3 — Bootstrap-scriptet `scripts/set-admin.ts`:**
+- Körs en gång lokalt med service account-credentials (aldrig via HTTP)
+- Sätter den allra första admin — därefter hanteras allt via API-routen
+
+**Privilege escalation-skyddet sammanfattat:**
+- Non-admin → admin via klient-Firestore: ❌ blockeras av rules
+- Non-admin → admin via API: ❌ blockeras av admin-grinden (måste redan vara admin)
+- Admin-klient → ändra role via Firestore SDK direkt: ❌ blockeras av rules
+- Admin → grant via API → Admin SDK: ✅ enda tillåtna vägen
+- Admin SDK lokalt (script): ✅ enda bootstrapvägen
+
+---
+
+### Verifierat
+- `tsc --noEmit` ✅
+- `npm run build` ✅
+- `scripts/set-admin.ts` kördes: `christoffer.nolet@gmail.com` är admin ✅
+- Firestore-regler deployades via `scripts/deploy-rules.ts` ✅
+
+### Status
+✅ Admin-management live. Picki kan nu gå till `/admin` och lägga till fler admins via e-post.

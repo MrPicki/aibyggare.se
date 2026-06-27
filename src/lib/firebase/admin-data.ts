@@ -1,6 +1,28 @@
 import { adminDb } from "@/lib/firebase/admin";
 import type { Report } from "@/types/firestore";
 
+// ─── Admin-användare ──────────────────────────────────────────────────────────
+export interface AdminUserRecord {
+  uid: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string;
+}
+
+export async function getAdminUsers(): Promise<AdminUserRecord[]> {
+  const db = requireDb();
+  const snap = await db.collection("profiles").where("role", "==", "admin").get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      uid: d.id,
+      displayName: data.displayName ?? "",
+      username: data.username ?? "",
+      avatarUrl: data.avatarUrl ?? "",
+    };
+  });
+}
+
 function requireDb() {
   if (!adminDb) throw new Error("Firebase Admin ej tillgänglig");
   return adminDb;

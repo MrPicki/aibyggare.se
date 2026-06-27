@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, Users, FolderGit2, HelpCircle, Sparkles, MessageSquare, Flag, ExternalLink } from "lucide-react";
 import { getAdminUser } from "@/lib/auth/admin-guard";
 import { ModerationButtons, ResolveReportButton } from "@/components/admin/AdminActions";
-import type { AdminStats, AdminReport, ModItem } from "@/lib/firebase/admin-data";
+import { AdminManagement } from "@/components/admin/AdminManagement";
+import type { AdminStats, AdminReport, ModItem, AdminUserRecord } from "@/lib/firebase/admin-data";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +32,16 @@ export default async function AdminPage() {
   let stats: AdminStats | null = null;
   let reports: AdminReport[] = [];
   let content: ModItem[] = [];
+  let adminUsers: AdminUserRecord[] = [];
   let loadError = false;
 
   try {
     const data = await import("@/lib/firebase/admin-data");
-    [stats, reports, content] = await Promise.all([
+    [stats, reports, content, adminUsers] = await Promise.all([
       data.getAdminStats(),
       data.getOpenReports(),
       data.getRecentContent(),
+      data.getAdminUsers(),
     ]);
   } catch (e) {
     console.error("[admin] kunde inte ladda data:", e);
@@ -146,6 +149,9 @@ export default async function AdminPage() {
           </ul>
         )}
       </section>
+
+      {/* ── Admin-hantering ── */}
+      <AdminManagement initialAdmins={adminUsers} currentUid={admin.uid} />
     </div>
   );
 }
