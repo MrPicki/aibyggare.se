@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, Check } from "lucide-react";
 import { DrillIcon } from "@/components/brand/DrillIcon";
@@ -42,21 +43,23 @@ export function NotificationBell() {
   const { user } = useAuth();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropPos, setDropPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+  const bellRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) {
-      setItems([]);
-      return;
-    }
+    if (!user) { setItems([]); return; }
     return subscribeToNotifications(user.uid, setItems);
   }, [user]);
 
-  // Stäng vid klick utanför.
+  // Stäng vid klick utanför bell + dropdown.
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      const inBell = bellRef.current?.contains(target);
+      const inDrop = dropRef.current?.contains(target);
+      if (!inBell && !inDrop) setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -65,6 +68,14 @@ export function NotificationBell() {
   if (!user) return null;
 
   const unread = items.filter((n) => !n.read).length;
+
+  function handleBellClick() {
+    if (!open && bellRef.current) {
+      const rect = bellRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    }
+    setOpen((o) => !o);
+  }
 
   function handleClick(n: AppNotification) {
     if (user && !n.read) void markNotificationRead(user.uid, n.id);
@@ -77,10 +88,63 @@ export function NotificationBell() {
     void markAllNotificationsRead(user.uid, items.filter((n) => !n.read).map((n) => n.id));
   }
 
+  const dropdown = (
+    <div
+      ref={dropRef}
+      style={{ position: "fixed", top: dropPos.top, right: dropPos.right, zIndex: 9999 }}
+      className="w-80 overflow-hidden rounded-2xl border-2 border-ink bg-paper shadow-[5px_5px_0_0_var(--ink)]"
+    >
+      <div className="flex items-center justify-between border-b-2 border-ink bg-cream px-4 py-2.5">
+        <span className="font-mono text-xs font-bold uppercase tracking-wide text-ink">Notiser</span>
+        {unread > 0 && (
+          <button
+            onClick={handleMarkAll}
+            className="inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wide text-mud hover:text-ink"
+          >
+            <Check size={12} /> Markera lästa
+          </button>
+        )}
+      </div>
+
+      <div className="max-h-96 overflow-y-auto">
+        {items.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <p className="font-mono text-xs text-mud">Inga notiser än.</p>
+            <p className="mt-1 text-xs text-mud/70">När någon borrar, kommenterar eller svarar dyker det upp här.</p>
+          </div>
+        ) : (
+          <ul>
+            {items.map((n) => (
+              <li key={n.id}>
+                <button
+                  onClick={() => handleClick(n)}
+                  className={`flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition-colors hover:bg-cream ${n.read ? "" : "bg-hammer-yellow/15"}`}
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-paper">
+                    <NotifIcon type={n.type} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm leading-snug text-ink">{notifText(n)}</span>
+                    {n.preview && (
+                      <span className="mt-0.5 block truncate font-mono text-[11px] text-mud">{n.preview}</span>
+                    )}
+                    <span className="mt-0.5 block font-mono text-[10px] text-mud/70">{relTime(n.createdAtSeconds)} sedan</span>
+                  </span>
+                  {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-bug-red" />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={bellRef}
+        onClick={handleBellClick}
         aria-label={`Notiser${unread ? ` (${unread} olästa)` : ""}`}
         className="relative rounded-xl p-2 text-mud hover:bg-hammer-yellow hover:text-ink transition-colors"
       >
@@ -92,53 +156,7 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border-2 border-ink bg-paper shadow-[5px_5px_0_0_var(--ink)]">
-          <div className="flex items-center justify-between border-b-2 border-ink bg-cream px-4 py-2.5">
-            <span className="font-mono text-xs font-bold uppercase tracking-wide text-ink">Notiser</span>
-            {unread > 0 && (
-              <button
-                onClick={handleMarkAll}
-                className="inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wide text-mud hover:text-ink"
-              >
-                <Check size={12} /> Markera lästa
-              </button>
-            )}
-          </div>
-
-          <div className="max-h-96 overflow-y-auto">
-            {items.length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <p className="font-mono text-xs text-mud">Inga notiser än.</p>
-                <p className="mt-1 text-xs text-mud/70">När någon borrar, kommenterar eller svarar dyker det upp här.</p>
-              </div>
-            ) : (
-              <ul>
-                {items.map((n) => (
-                  <li key={n.id}>
-                    <button
-                      onClick={() => handleClick(n)}
-                      className={`flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition-colors hover:bg-cream ${n.read ? "" : "bg-hammer-yellow/15"}`}
-                    >
-                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-paper">
-                        <NotifIcon type={n.type} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm leading-snug text-ink">{notifText(n)}</span>
-                        {n.preview && (
-                          <span className="mt-0.5 block truncate font-mono text-[11px] text-mud">{n.preview}</span>
-                        )}
-                        <span className="mt-0.5 block font-mono text-[10px] text-mud/70">{relTime(n.createdAtSeconds)} sedan</span>
-                      </span>
-                      {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-bug-red" />}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
+      {open && typeof window !== "undefined" && createPortal(dropdown, document.body)}
     </div>
   );
 }
