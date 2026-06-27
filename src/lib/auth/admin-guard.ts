@@ -1,9 +1,12 @@
 import { cookies } from "next/headers";
+import { verifyFirebaseToken } from "@/lib/auth/verify-token";
 
 // Server-side admin-verifiering. Detta är det RIKTIGA säkerhetsskiktet —
 // proxy.ts är bara ett UX-skydd (avkodar JWT utan kryptoverifiering).
-// Här verifieras token kryptografiskt med Admin SDK och rollen läses från
-// Firestore. Används av både /admin-sidan och alla admin-API-routes.
+//
+// Använder verifyFirebaseToken (jose via dynamisk import, ESM-säker) istället
+// för adminAuth.verifyIdToken — admin-auth.ts drar in firebase-admin/auth som
+// kan krascha med ERR_REQUIRE_ESM i Vercels serverless-runtime.
 export interface AdminUser {
   uid: string;
   displayName: string;
@@ -16,29 +19,24 @@ export async function getAdminUser(): Promise<AdminUser | null> {
     const token = cookieStore.get("__session")?.value;
     if (!token) return null;
 
-    const [{ adminAuth }, { adminDb }] = await Promise.all([
-      import("@/lib/firebase/admin-auth"),
-      import("@/lib/firebase/admin"),
-    ]);
-    if (!adminAuth || !adminDb) return null;
+    // Kryptografisk verifiering mot Googles JWKS — ESM-säker, ingen firebase-admin/auth.
+    const verified = await verifyFirebaseToken(token);
+    if (!verified) return null;
 
-    // Kryptografisk verifiering — en angripare kan inte förfalska en giltig
-    // Firebase ID-token. (Cookien är inte httpOnly, men det spelar ingen roll
-    // när vi verifierar signaturen server-side.)
-    const decoded = await adminAuth.verifyIdToken(token);
+    const { adminDb } = await import("@/lib/firebase/admin");
+    if (!adminDb) return null;
 
-    const snap = await adminDb.collection("profiles").doc(decoded.uid).get();
+    const snap = await adminDb.collection("profiles").doc(verified.uid).get();
     if (!snap.exists) return null;
     const data = snap.data();
     if (!data || data.role !== "admin") return null;
 
     return {
-      uid: decoded.uid,
+      uid: verified.uid,
       displayName: data.displayName ?? "",
       username: data.username ?? "",
     };
   } catch {
-    // Ogiltig/utgången token, admin ej initialiserad, etc. → inte admin.
     return null;
   }
 }
