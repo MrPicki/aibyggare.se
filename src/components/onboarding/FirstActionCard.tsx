@@ -58,6 +58,7 @@ export function FirstActionCard() {
           userId: user.uid,
           userDisplayName: displayName,
           userAvatarUrl: avatarUrl,
+          username: profile?.username ?? "",
           title: title.trim(),
           slug,
           tagline: text.trim().slice(0, 140),

@@ -67,8 +67,8 @@ export function HelpCommentSection({
       await addAnswer({
         postId,
         userId: user.uid,
-        userDisplayName: user.displayName ?? user.email?.split("@")[0] ?? "Byggare",
-        userAvatarUrl: user.photoURL ?? "",
+        userDisplayName: profile?.displayName || user.displayName || user.email?.split("@")[0] || "Byggare",
+        userAvatarUrl: profile?.avatarUrl || user.photoURL || "",
         body: text,
       });
       notify({ type: "answer", targetType: "post", targetId: postId, preview: text });

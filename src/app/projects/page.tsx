@@ -14,7 +14,7 @@ export const metadata = {
     "Projekt från folk som bygger med AI. Halvfärdigt, trasigt eller nästan lanserat — allt räknas.",
 };
 
-function fromFirestore(p: Project): ProjectCardProps {
+function fromFirestore(p: Project, badge?: { level: number; foundingMember: boolean }): ProjectCardProps {
   const status = p.status as ProjectStatus;
   const ts = p.createdAt as { seconds?: number } | null;
   return {
@@ -28,6 +28,8 @@ function fromFirestore(p: Project): ProjectCardProps {
     commentCount: p.commentCount ?? 0,
     authorName: p.userDisplayName || "Byggare",
     authorAvatarUrl: p.userAvatarUrl || undefined,
+    authorLevel: badge?.level,
+    authorFounding: badge?.foundingMember,
     createdAt: ts?.seconds,
   };
 }
@@ -43,9 +45,17 @@ export default async function ProjectsPage() {
     console.error("[projects] Firestore fetch failed:", e);
   }
 
+  let badges: Record<string, { level: number; foundingMember: boolean }> = {};
+  if (firestoreProjects.length > 0) {
+    try {
+      const { getUserBadges } = await import("@/lib/firebase/profiles");
+      badges = await getUserBadges(firestoreProjects.map((p) => p.userId).filter(Boolean) as string[]);
+    } catch { /* badges är icke-kritiska */ }
+  }
+
   const projects: ProjectCardProps[] =
     firestoreProjects.length > 0
-      ? firestoreProjects.map(fromFirestore)
+      ? firestoreProjects.map((p) => fromFirestore(p, badges[p.userId]))
       : SEED_PROJECTS;
 
   return (

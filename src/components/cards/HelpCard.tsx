@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LevelBadge } from "@/components/levels/LevelBadge";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
 
 export interface HelpCardProps {
   slug: string;
@@ -11,6 +13,8 @@ export interface HelpCardProps {
   author: string;
   username?: string;
   avatarUrl?: string;
+  authorLevel?: number;
+  authorFounding?: boolean;
   answerCount: number;
   status: "Löst" | "Öppen";
   className?: string;
@@ -25,6 +29,8 @@ export function HelpCard({
   author,
   username,
   avatarUrl,
+  authorLevel,
+  authorFounding,
   answerCount,
   status,
   className,
@@ -46,7 +52,7 @@ export function HelpCard({
         </div>
       )}
     <article
-      className="chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1"
+      className="chunky pressable group relative flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1"
     >
       {/* Header-bar — matchar ProjectCard */}
       <div
@@ -54,17 +60,23 @@ export function HelpCard({
         style={{ backgroundColor: accent }}
       >
         <div className="flex min-w-0 items-center gap-1.5">
-          {avatarUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="h-5 w-5 shrink-0 rounded-full border border-ink/40 object-cover"
-            />
-          )}
+          <span className="relative shrink-0">
+            {avatarUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-5 w-5 rounded-full border border-ink/40 object-cover"
+              />
+            )}
+            {authorFounding && (
+              <FoundingBadge show className="absolute -left-1.5 -top-1.5 !h-3.5 !w-3.5" />
+            )}
+          </span>
           <span className="truncate font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
             {author}
           </span>
+          {typeof authorLevel === "number" && <LevelBadge level={authorLevel} />}
         </div>
         <span
           className={cn(
@@ -94,9 +106,11 @@ export function HelpCard({
 
         {/* Footer */}
         <div className="mt-5 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
+          {/* Stretched link — hela kortet klickbart (utom @username nedan) */}
           <Link
             href={`/problemhornan/${slug}`}
-            className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink transition-colors group-hover:text-hammer-yellow"
+            aria-label={`Öppna problemet ${title}`}
+            className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink transition-colors group-hover:text-hammer-yellow after:absolute after:inset-0 after:content-['']"
           >
             Se problem <ArrowUpRight size={13} />
           </Link>
@@ -104,7 +118,7 @@ export function HelpCard({
             {username ? (
               <Link
                 href={`/profile/${username}`}
-                className="hover:text-ink transition-colors"
+                className="relative z-10 hover:text-ink transition-colors"
               >
                 @{username}
               </Link>

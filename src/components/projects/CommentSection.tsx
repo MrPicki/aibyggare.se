@@ -37,8 +37,8 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
       await addComment({
         projectId,
         userId: user.uid,
-        userDisplayName: user.displayName ?? user.email?.split("@")[0] ?? "Byggare",
-        userAvatarUrl: user.photoURL ?? "",
+        userDisplayName: profile?.displayName || user.displayName || user.email?.split("@")[0] || "Byggare",
+        userAvatarUrl: profile?.avatarUrl || user.photoURL || "",
         body: text,
       });
       notify({ type: "comment", targetType: "project", targetId: projectId, preview: text });

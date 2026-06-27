@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrillIcon } from "@/components/brand/DrillIcon";
+import { LevelBadge } from "@/components/levels/LevelBadge";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
 
 export interface ProjectCardProps {
   title: string;
@@ -15,6 +17,8 @@ export interface ProjectCardProps {
   commentCount: number;
   authorName?: string;
   authorAvatarUrl?: string;
+  authorLevel?: number;
+  authorFounding?: boolean;
   isFeatured?: boolean;
   /** Unix-sekunder från Firestore createdAt — används för nyast-sortering. */
   createdAt?: number;
@@ -32,6 +36,8 @@ export function ProjectCard({
   commentCount,
   authorName,
   authorAvatarUrl,
+  authorLevel,
+  authorFounding,
   isFeatured,
   className,
 }: ProjectCardProps) {
@@ -50,24 +56,34 @@ export function ProjectCard({
         </div>
       )}
 
-      <article className="chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1">
+      <Link
+        href={`/projects/${slug}`}
+        aria-label={`Öppna bygget ${title}`}
+        className="chunky pressable group flex h-full flex-col overflow-hidden rounded-3xl bg-paper hover:-rotate-1"
+      >
         {/* Färgad header-bar (ritningslapp) */}
         <div
           className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5"
           style={{ backgroundColor: accent }}
         >
           <div className="flex min-w-0 items-center gap-1.5">
-            {authorAvatarUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={authorAvatarUrl}
-                alt=""
-                className="h-5 w-5 shrink-0 rounded-full border border-ink/40 object-cover"
-              />
-            )}
+            <span className="relative shrink-0">
+              {authorAvatarUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={authorAvatarUrl}
+                  alt=""
+                  className="h-5 w-5 rounded-full border border-ink/40 object-cover"
+                />
+              )}
+              {authorFounding && (
+                <FoundingBadge show className="absolute -left-1.5 -top-1.5 !h-3.5 !w-3.5" />
+              )}
+            </span>
             <span className="truncate font-mono text-[11px] font-bold uppercase tracking-widest text-ink/80">
               {authorName ?? "Bygge"}
             </span>
+            {typeof authorLevel === "number" && <LevelBadge level={authorLevel} />}
           </div>
           <span className="sticker shrink-0 bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink">
             {status}
@@ -90,12 +106,9 @@ export function ProjectCard({
           </div>
 
           <div className="mt-5 flex items-center justify-between border-t-2 border-dashed border-border pt-3">
-            <Link
-              href={`/projects/${slug}`}
-              className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink transition-colors group-hover:text-build-green"
-            >
+            <span className="inline-flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wide text-ink transition-colors group-hover:text-build-green">
               Visa bygget <ArrowUpRight size={13} />
-            </Link>
+            </span>
             <div className="flex items-center gap-3 font-mono text-xs font-semibold text-mud">
               <span className="inline-flex items-center gap-1">
                 <DrillIcon className="h-3.5 w-3.5 text-build-green" /> {upvotes}
@@ -106,7 +119,7 @@ export function ProjectCard({
             </div>
           </div>
         </div>
-      </article>
+      </Link>
     </div>
   );
 }

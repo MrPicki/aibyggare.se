@@ -124,14 +124,15 @@ export function ProjectForm() {
 
       const slug = await makeUniqueSlug(form.title);
 
-      // Try to get username from Firestore profile (denormalized displayName fallback)
+      // Denormalisera från den VALDA profilen (inte Google-bilden).
       const displayName =
-        ((user.displayName ?? "").trim() || user.email?.split("@")[0]) ?? "Byggare";
+        (profile?.displayName?.trim() || user.displayName?.trim() || user.email?.split("@")[0]) ?? "Byggare";
 
       await createProject({
         userId: user.uid,
         userDisplayName: displayName,
-        userAvatarUrl: user.photoURL ?? "",
+        userAvatarUrl: profile?.avatarUrl || user.photoURL || "",
+        username: profile?.username ?? "",
         title: form.title.trim(),
         slug,
         tagline: form.tagline.trim(),

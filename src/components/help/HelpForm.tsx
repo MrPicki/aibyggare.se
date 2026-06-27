@@ -55,12 +55,12 @@ export function HelpForm() {
     setErrors({});
     try {
       const slug = await makeUniqueHelpSlug(form.title);
-      const displayName = (user.displayName?.trim() || user.email?.split("@")[0]) ?? "Byggare";
+      const displayName = (profile?.displayName?.trim() || user.displayName?.trim() || user.email?.split("@")[0]) ?? "Byggare";
       const { slug: finalSlug } = await createHelpPost({
         userId: user.uid,
         userDisplayName: displayName,
-        userAvatarUrl: user.photoURL ?? "",
-        username: displayName.toLowerCase().replace(/\s+/g, ""),
+        userAvatarUrl: profile?.avatarUrl || user.photoURL || "",
+        username: profile?.username || displayName.toLowerCase().replace(/\s+/g, ""),
         title: form.title.trim(),
         slug,
         body: form.body.trim(),

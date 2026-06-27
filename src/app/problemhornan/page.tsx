@@ -14,7 +14,7 @@ export const metadata = {
     "Ställ frågor, få hjälp med buggar, Supabase, Vercel, Claude Code, Cursor, Lovable och andra problem när du bygger med AI.",
 };
 
-function postToHelpQuestion(p: Post): HelpQuestion {
+function postToHelpQuestion(p: Post, badge?: { level: number; foundingMember: boolean }): HelpQuestion {
   return {
     slug: p.slug,
     title: p.title,
@@ -29,6 +29,8 @@ function postToHelpQuestion(p: Post): HelpQuestion {
     tools: p.tags ?? [],
     createdAt: (p.createdAt as { seconds?: number } | null)?.seconds ?? 0,
     upvotes: p.upvoteCount ?? 0,
+    authorLevel: badge?.level,
+    authorFounding: badge?.foundingMember,
   };
 }
 
@@ -36,10 +38,16 @@ export default async function ProblemhornanPage() {
   let questions: HelpQuestion[] = [];
 
   try {
-    const { getHelpPosts } = await import("@/lib/firebase/help");
+    const [{ getHelpPosts }, { getUserBadges }] = await Promise.all([
+      import("@/lib/firebase/help"),
+      import("@/lib/firebase/profiles"),
+    ]);
     const firestorePosts = await getHelpPosts(50);
     if (firestorePosts.length > 0) {
-      questions = firestorePosts.map(postToHelpQuestion);
+      const badges = await getUserBadges(
+        firestorePosts.map((p) => p.userId).filter(Boolean) as string[],
+      );
+      questions = firestorePosts.map((p) => postToHelpQuestion(p, badges[p.userId]));
     }
   } catch (e) {
     console.error("[problemhornan] Firestore fetch failed:", e);
