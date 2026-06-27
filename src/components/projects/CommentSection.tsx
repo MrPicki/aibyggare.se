@@ -6,8 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle, Reply } from "lucide-react";
 import { addComment, subscribeToComments } from "@/lib/firebase/projects-client";
 import { notify } from "@/lib/notifications/notify-client";
+import { fetchUserBadgesClient, type UserBadgeData } from "@/lib/firebase/user-badges-client";
 import type { Comment } from "@/types/firestore";
 import { LinkifiedText } from "@/components/ui/LinkifiedText";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
+import { AdminBadge } from "@/components/admin/AdminBadge";
 
 interface CommentSectionProps {
   projectId: string;
@@ -22,6 +25,7 @@ function dateLabel(c: Comment): string {
 export function CommentSection({ projectId, initialComments }: CommentSectionProps) {
   const { user, profile } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [badges, setBadges] = useState<Record<string, UserBadgeData>>({});
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +39,12 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
     if (!user) return;
     return subscribeToComments(projectId, setComments);
   }, [projectId, user]);
+
+  useEffect(() => {
+    const uids = [...new Set(comments.map((c) => c.userId).filter(Boolean))];
+    if (uids.length === 0) return;
+    fetchUserBadgesClient(uids).then(setBadges).catch(() => {});
+  }, [comments]);
 
   const canComment = !!user && !!profile?.username;
   const topLevel = comments.filter((c) => !c.parentId);
@@ -95,13 +105,31 @@ export function CommentSection({ projectId, initialComments }: CommentSectionPro
   }
 
   function Avatar({ c, small = false }: { c: Comment; small?: boolean }) {
-    const cls = `${small ? "h-7 w-7" : "h-8 w-8"} shrink-0 rounded-full border-2 border-ink mt-0.5`;
-    return c.userAvatarUrl ? (
+    const size = small ? "h-7 w-7" : "h-8 w-8";
+    const cls = `${size} rounded-full border-2 border-ink object-cover`;
+    const badge = badges[c.userId];
+    const img = c.userAvatarUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={c.userAvatarUrl} alt="" className={`${cls} object-cover`} referrerPolicy="no-referrer" />
+      <img src={c.userAvatarUrl} alt="" className={cls} referrerPolicy="no-referrer" />
     ) : (
-      <div className={`${cls} bg-cream flex items-center justify-center font-mono text-xs font-bold text-mud`}>
+      <div className={`${size} rounded-full border-2 border-ink bg-cream flex items-center justify-center font-mono text-xs font-bold text-mud`}>
         {(c.userDisplayName || "?")[0].toUpperCase()}
+      </div>
+    );
+
+    return (
+      <div className="relative shrink-0 mt-0.5">
+        {img}
+        {badge?.isAdmin && (
+          <div className="absolute -bottom-1 -right-1">
+            <AdminBadge size="sm" className="!h-4 !w-4 !shadow-none" />
+          </div>
+        )}
+        {!badge?.isAdmin && badge?.foundingMember && (
+          <div className="absolute -bottom-1 -right-1">
+            <FoundingBadge show size="sm" className="!h-4 !w-4 !shadow-none" />
+          </div>
+        )}
       </div>
     );
   }

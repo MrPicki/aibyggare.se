@@ -11,6 +11,9 @@ import {
 } from "@/lib/firebase/help-client";
 import type { Comment } from "@/types/firestore";
 import { LinkifiedText } from "@/components/ui/LinkifiedText";
+import { fetchUserBadgesClient, type UserBadgeData } from "@/lib/firebase/user-badges-client";
+import { FoundingBadge } from "@/components/founding/FoundingBadge";
+import { AdminBadge } from "@/components/admin/AdminBadge";
 
 interface AnswerSectionProps {
   postId: string;
@@ -36,6 +39,7 @@ export function AnswerSection({
 }: AnswerSectionProps) {
   const { user } = useAuth();
   const [answers, setAnswers] = useState<Comment[]>(initialAnswers);
+  const [badges, setBadges] = useState<Record<string, UserBadgeData>>({});
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null);
@@ -48,6 +52,12 @@ export function AnswerSection({
     const unsub = subscribeToAnswers(postId, setAnswers);
     return unsub;
   }, [postId]);
+
+  useEffect(() => {
+    const uids = [...new Set(answers.map((a) => a.userId).filter(Boolean))];
+    if (uids.length === 0) return;
+    fetchUserBadgesClient(uids).then(setBadges).catch(() => {});
+  }, [answers]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,19 +132,32 @@ export function AnswerSection({
                     href={`/profile/${answer.userDisplayName}`}
                     className="inline-flex items-center gap-2.5 hover:opacity-80 transition-opacity"
                   >
-                    {answer.userAvatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={answer.userAvatarUrl}
-                        alt=""
-                        className="h-8 w-8 rounded-full border-2 border-ink object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full border-2 border-ink bg-cream flex items-center justify-center font-mono text-xs font-bold text-mud">
-                        {(answer.userDisplayName || "?")[0].toUpperCase()}
-                      </div>
-                    )}
+                    {(() => {
+                      const badge = badges[answer.userId];
+                      const img = answer.userAvatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={answer.userAvatarUrl} alt="" className="h-8 w-8 rounded-full border-2 border-ink object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full border-2 border-ink bg-cream flex items-center justify-center font-mono text-xs font-bold text-mud">
+                          {(answer.userDisplayName || "?")[0].toUpperCase()}
+                        </div>
+                      );
+                      return (
+                        <div className="relative shrink-0">
+                          {img}
+                          {badge?.isAdmin && (
+                            <div className="absolute -bottom-1 -right-1">
+                              <AdminBadge size="sm" className="!h-4 !w-4 !shadow-none" />
+                            </div>
+                          )}
+                          {!badge?.isAdmin && badge?.foundingMember && (
+                            <div className="absolute -bottom-1 -right-1">
+                              <FoundingBadge show size="sm" className="!h-4 !w-4 !shadow-none" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <div>
                       <p className="font-mono text-xs font-bold text-ink">
                         {answer.userDisplayName || "Anonym"}
