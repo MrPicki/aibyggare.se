@@ -1523,3 +1523,49 @@ Den gamla regeln (`allow update: if isAdmin() || ...`) tillät att en admin-klie
 
 ### Status
 ✅ Admin-management live och verifierat. Picki kan nu gå till `/admin` och lägga till fler admins via e-post.
+
+---
+
+## Session 15 — 2026-06-27
+
+### v0.16.0 — Redigera bygge, feedback-historik, bugfixar
+
+**Redigera bygge (bugrapport från Rasmus)**
+- Ny sida `/projects/[slug]/edit` (klient-komponent) — ägare kan redigera titel, tagline, beskrivning, problem, stack, status, URL:er, feedbackwanted och omslagsbild
+- `EditProjectButton` visas enbart för ägaren på projektdetaljsidan (klient-komponent, koll mot `user.uid`)
+- `getProjectBySlugClient` + `updateProject` + `UpdateProjectInput` interface tillagda i `projects-client.ts`
+- Ägarverifiering sker på klientsidan; slug ändras aldrig (befintliga länkar funkar)
+
+**Feedback-hantering i admin**
+- Varje feedback-post har nu en "Klar"-knapp → API `POST /api/admin/feedback` → sätter `status: "done"` i Firestore
+- Avklarade poster hamnar i kollapsbar "Historik"-sektion (lazy-loadad vid första öppning via `GET /api/admin/feedback`)
+- Skärmdumpar (imageUrl) visas nu som inline-förhandsgranskning (klickbar bild, max 180px hög)
+- `FeedbackSection` är en klientkomponent — admin-sidan förblir Server Component
+
+**Notis-URL-fix (bugrapport från Rasmus)**
+- Alla notiser för post-innehåll (hjälp/prompt/guide) fick fel URL (`/problemhornan/...`)
+- Fix: `/api/notify/route.ts` läser nu `target.type`-fältet och väljer rätt bas-URL
+
+**Prompt 404-fix (bugrapport från Rasmus)**
+- `/prompts/[slug]` med svenska tecken i sluggen (t.ex. `förklara-felet-nybörjare`) gav 404
+- Fix: `decodeURIComponent(rawSlug)` i både `generateMetadata` och `default`-funktionen
+
+### Verifierat
+- `tsc --noEmit` ✅
+- `npm run build` ✅ (11 filer, rent)
+- Commitad och pushad som `92af8a2`
+
+---
+
+## 2026-06-28
+
+### Fullständig UX-analys genomförd ✅
+
+Fullständig UX-granskning av alla 30 routes/funktioner inför betalansering. Metod: kodgranskning + live-skärmdumpar (Playwright, desktop + mobil) på https://aibyggare.se.
+
+**Resultat:** Helhetspoäng **6.8/10**. Rapporten finns i `docs/ux-analys-2026-06-28.md`.
+
+**Topp 3 kritiska problem att åtgärda:**
+1. 🔴 Community-sidan: Hårdkodade falska stats ("100+ projekt") — måste bli dynamiska
+2. 🔴 Prompts-lista: Ingen filtrering + auth-gate blockerar konvertering (4/10)
+3. 🟡 Projektdetalj: Tagline och description dupliceras synligt när identiska
