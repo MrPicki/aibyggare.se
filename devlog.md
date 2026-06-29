@@ -1639,6 +1639,18 @@ UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten 
 - `npm run build` ✅
 - BETA_VERSION: `0.20.0`
 
+### v0.20.2 — Fix: ContentSection titlar trunkeras korrekt
+
+**Rotorsak:** `<Link>` i ContentSection.tsx saknade `min-w-0`. Tailwind `truncate` kräver
+`min-width: 0` på flex-items — utan det expanderar flex-itemet till sin textbredd och driver
+ut hela raden utanför kolumnens bredd.
+
+**Fix:** En klass-tillägg: `min-w-0 truncate` på Link (var bara `truncate`).
+
+BETA_VERSION: `0.20.2`
+
+---
+
 ### v0.20.1 — Cirkulär text-animation justerad (Pickis feedback)
 
 - Text: "Problem eller förslag? Tryck här! •" (kortare, tydligare)

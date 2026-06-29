@@ -37,7 +37,7 @@ export function ContentSection({
                   </span>
                   <Link
                     href={item.url}
-                    className="truncate font-semibold text-ink hover:text-build-green"
+                    className="min-w-0 truncate font-semibold text-ink hover:text-build-green"
                   >
                     {item.title}
                   </Link>
