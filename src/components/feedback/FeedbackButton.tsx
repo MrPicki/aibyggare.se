@@ -138,7 +138,7 @@ export function FeedbackButton() {
               overflow="visible"
               style={{
                 animation: textState === "spinning" || textState === "fading"
-                  ? "fbtn-spin 8s linear infinite"
+                  ? "fbtn-spin 20s linear infinite"
                   : "none",
                 opacity: textState === "fading" ? 0 : 1,
                 transition: textState === "fading" ? "opacity 1s ease-out" : "none",
@@ -147,19 +147,19 @@ export function FeedbackButton() {
               <defs>
                 <path
                   id="fbtn-text-path"
-                  d="M 80,80 m -56,0 a 56,56 0 1,1 112,0 a 56,56 0 1,1 -112,0"
+                  d="M 80,80 m -42,0 a 42,42 0 1,1 84,0 a 42,42 0 1,1 -84,0"
                 />
               </defs>
               <text
                 fontFamily="monospace"
                 fontSize="9"
-                fontWeight="700"
+                fontWeight="900"
                 fill="var(--ink)"
                 opacity="0.75"
                 letterSpacing="1"
               >
                 <textPath href="#fbtn-text-path" startOffset="0%">
-                  Tryck här ifall du vill rapportera något eller en ändring •{" "}
+                  Problem eller förslag? Tryck här! •{" "}
                 </textPath>
               </text>
             </svg>

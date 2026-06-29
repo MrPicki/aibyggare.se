@@ -1638,3 +1638,11 @@ UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten 
 ### Verifierat
 - `npm run build` ✅
 - BETA_VERSION: `0.20.0`
+
+### v0.20.1 — Cirkulär text-animation justerad (Pickis feedback)
+
+- Text: "Problem eller förslag? Tryck här! •" (kortare, tydligare)
+- font-weight: 700 → 900 (maximal tjocklek för systemfonten)
+- Radie: r=56 → r=42 (text tightare mot knappen, ~8px gap till hörnen)
+- Rotation: 8s/varv → 20s/varv (lugnare, segare känsla)
+- BETA_VERSION: `0.20.1`
