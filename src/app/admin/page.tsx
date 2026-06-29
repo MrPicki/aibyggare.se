@@ -78,7 +78,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-14 pb-28 sm:pb-14">
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
@@ -152,7 +152,7 @@ export default async function AdminPage() {
       <section className="mt-12">
         <h2 className="font-display text-xl font-bold text-ink">Senaste innehåll</h2>
         <p className="mt-1 text-sm text-mud">Utse veckans bygge eller ta bort olämpligt innehåll.</p>
-        <div className="mt-4 grid gap-8 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-8 sm:grid-cols-2">
           <ContentSection title="Byggen" items={content.projects} />
           <ContentSection title="Problemhörnan" items={content.helpPosts} />
         </div>

@@ -1639,6 +1639,21 @@ UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten 
 - `npm run build` ✅
 - BETA_VERSION: `0.20.0`
 
+### v0.20.3 — Fix: Senaste innehåll overflow + feedback-knapp overlap på mobil
+
+**Rotorsak overflow:** CSS Grid utan explicit `grid-template-columns` på mobil använder
+implicit `auto`-kolumn (ej `minmax(0,1fr)`), som kan växa bortom containern. På sm+ fixade
+`sm:grid-cols-2` (repeat(2,minmax(0,1fr))) problemet, men inte mobile.
+**Fix:** `grid-cols-1` tillagt → kolumnen får `minmax(0,1fr)` även på mobil → constraint
+till container-bredden (358px istället för 543px).
+
+**Feedback-knapp overlap:** `py-14` (56px) räckte inte — fixed button på bottom=20px+56px
+täckte sista rader. Ändrat till `pt-14 pb-28 sm:pb-14` på admin-sidan.
+
+BETA_VERSION: `0.20.3`
+
+---
+
 ### v0.20.2 — Fix: ContentSection titlar trunkeras korrekt
 
 **Rotorsak:** `<Link>` i ContentSection.tsx saknade `min-w-0`. Tailwind `truncate` kräver
