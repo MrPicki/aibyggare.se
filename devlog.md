@@ -9,6 +9,29 @@
 
 ---
 
+### 2026-06-29 — Säkerhets- och juridikanalys ✅ Klar
+
+**Vad gjordes:** Fullständig säkerhets- och juridisk efterlevnadsanalys av aibyggare.se inför skalning till fler riktiga användare. Inkluderade granskning av alla Firestore/Storage Security Rules, 8 API-routes, auth-infrastruktur, HTTP-headers, beroenden (npm audit), XSS-ytor, samt juridisk kartläggning mot GDPR/LEK/e-handelsdirektivet.
+
+**Rapport:** `docs/sakerhetsanalys-2026-06-29.md`
+
+**Helhetsbetyg:**
+- Säkerhet: **6/10** (rules och auth-kod är starka; cookie-flaggor, rate limiting och headers saknas)
+- Juridik: **2/10** (integritetspolicy och användarvillkor saknas helt — kritisk prioritet)
+
+**Topp 5 akuta risker:**
+1. 🔴 Avsaknad av integritetspolicy (GDPR-sanktionsrisk)
+2. 🔴 Session-cookie utan HttpOnly/Secure (token-stöld vid XSS)
+3. 🔴 Inga användarvillkor (ingen juridisk grund för moderering)
+4. 🔴 Ingen rate limiting på API-routes (spam/kostnadsattack)
+5. 🟡 Counter-manipulation via Firestore-regler (upvoteCount sättbart till godtyckligt värde)
+
+**Positiva fynd:** Firestore Security Rules generellt välstrukturerade, all admin-verifiering kryptografisk (jose/JWKS), inga hemliga nycklar i klientbundle, Firebase Analytics ej aktiverat (trots measurementId i konfig), 0 kritiska/höga npm-sårbarheter.
+
+**Nästa steg:** Picki läser rapporten och beslutar implementationsordning. Föreslaget: juridik-sprint (integritetspolicy + TOS) + teknisk sprint (cookie-fix + rate limiting + security headers) som separata PR:er.
+
+---
+
 ## Hur loggen används
 
 - **Datum + tid** anges för varje entry (format: `YYYY-MM-DD HH:MM`)
