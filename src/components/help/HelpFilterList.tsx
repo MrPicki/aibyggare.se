@@ -17,7 +17,7 @@ const TOOL_FILTERS = [
   "Claude",
   "ChatGPT",
   "Cursor",
-  "v0",
+  "v0.dev",
   "Bolt",
   "Replit",
   "Lovable",
