@@ -1639,6 +1639,19 @@ UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten 
 - `npm run build` ✅
 - BETA_VERSION: `0.20.0`
 
+### v0.20.4 — Fix: Feedback historik alltid tom (saknat Firestore-index)
+
+**Rotorsak:** `getFeedbackDone()` körde `where("status","==","done") + orderBy("createdAt","desc")`
+— kräver ett sammansatt index i Firestore som aldrig skapades. API:et svarade 500, UI satte
+`doneItems=[]` tyst. Alla 4 done-ärenden fanns i Firestore men visades aldrig.
+
+**Fix:** `orderBy` borttagen ur Firestore-queryn, sorterar på `createdAtSeconds` i minnet.
+Ingen index behövs. Fungerar utan konfigurationsändringar i Firebase-konsolen.
+
+BETA_VERSION: `0.20.4`
+
+---
+
 ### v0.20.3 — Fix: Senaste innehåll overflow + feedback-knapp overlap på mobil
 
 **Rotorsak overflow:** CSS Grid utan explicit `grid-template-columns` på mobil använder

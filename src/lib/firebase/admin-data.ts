@@ -196,13 +196,15 @@ export async function getFeedbackEntries(limit = 60): Promise<FeedbackEntry[]> {
 
 export async function getFeedbackDone(limit = 50): Promise<FeedbackEntry[]> {
   const db = requireDb();
+  // Undviker sammansatt index (where+orderBy) — sorterar createdAt i minnet istället.
   const snap = await db
     .collection("feedback")
     .where("status", "==", "done")
-    .orderBy("createdAt", "desc")
     .limit(limit)
     .get();
-  return snap.docs.map(mapFeedback);
+  return snap.docs
+    .map(mapFeedback)
+    .sort((a, b) => (b.createdAtSeconds ?? 0) - (a.createdAtSeconds ?? 0));
 }
 
 export async function markFeedbackDone(id: string): Promise<void> {
