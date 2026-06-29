@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, ExternalLink, ImageIcon } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ExternalLink, ImageIcon, Trash2 } from "lucide-react";
 import type { FeedbackEntry } from "@/lib/firebase/admin-data";
 
 function formatDate(seconds: number | null): string {
@@ -17,10 +17,12 @@ function formatDate(seconds: number | null): string {
 function FeedbackCard({
   f,
   onDone,
+  onDelete,
   showDone,
 }: {
   f: FeedbackEntry;
   onDone?: (id: string) => void;
+  onDelete?: (id: string) => void;
   showDone?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
@@ -40,9 +42,25 @@ function FeedbackCard({
     }
   }
 
+  async function handleDelete() {
+    if (!onDelete) return;
+    if (!confirm("Radera detta feedback-ärende permanent?")) return;
+    setBusy(true);
+    try {
+      await fetch("/api/admin/feedback", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: f.id }),
+      });
+      onDelete(f.id);
+    } catch {
+      setBusy(false);
+    }
+  }
+
   return (
     <li className="chunky-sm rounded-2xl bg-paper p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[11px] font-bold text-ink">
@@ -91,22 +109,35 @@ function FeedbackCard({
             </div>
           )}
         </div>
-        {!showDone && onDone && (
-          <button
-            type="button"
-            onClick={handleDone}
-            disabled={busy}
-            title="Markera som klar"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border-2 border-build-green px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-build-green transition-colors hover:bg-build-green hover:text-paper disabled:opacity-50"
-          >
-            <Check size={12} /> Klar
-          </button>
-        )}
-        {showDone && (
-          <span className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-build-green/15 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-build-green">
-            <Check size={11} /> Klar
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {!showDone && onDone && (
+            <button
+              type="button"
+              onClick={handleDone}
+              disabled={busy}
+              title="Markera som klar"
+              className="inline-flex items-center gap-1.5 rounded-xl border-2 border-build-green px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-build-green transition-colors hover:bg-build-green hover:text-paper disabled:opacity-50"
+            >
+              <Check size={12} /> Klar
+            </button>
+          )}
+          {showDone && (
+            <span className="inline-flex items-center gap-1 rounded-xl bg-build-green/15 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-build-green">
+              <Check size={11} /> Klar
+            </span>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              title="Radera permanent"
+              className="inline-flex items-center justify-center rounded-xl border-2 border-border p-1.5 text-mud transition-colors hover:border-bug-red hover:text-bug-red disabled:opacity-50"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
       </div>
     </li>
   );
@@ -122,6 +153,14 @@ export function FeedbackSection({ initialOpen }: { initialOpen: FeedbackEntry[] 
     const item = openItems.find((f) => f.id === id);
     setOpenItems((prev) => prev.filter((f) => f.id !== id));
     if (item) setDoneItems((prev) => [{ ...item, status: "done" }, ...prev]);
+  }
+
+  function handleDeleteOpen(id: string) {
+    setOpenItems((prev) => prev.filter((f) => f.id !== id));
+  }
+
+  function handleDeleteDone(id: string) {
+    setDoneItems((prev) => prev.filter((f) => f.id !== id));
   }
 
   async function toggleHistory() {
@@ -144,7 +183,7 @@ export function FeedbackSection({ initialOpen }: { initialOpen: FeedbackEntry[] 
       ) : (
         <ul className="mt-4 space-y-3">
           {openItems.map((f) => (
-            <FeedbackCard key={f.id} f={f} onDone={handleDone} />
+            <FeedbackCard key={f.id} f={f} onDone={handleDone} onDelete={handleDeleteOpen} />
           ))}
         </ul>
       )}
@@ -166,7 +205,7 @@ export function FeedbackSection({ initialOpen }: { initialOpen: FeedbackEntry[] 
               <li className="text-sm text-mud">Ingen avklarad feedback ännu.</li>
             )}
             {doneItems.map((f) => (
-              <FeedbackCard key={f.id} f={f} showDone />
+              <FeedbackCard key={f.id} f={f} showDone onDelete={handleDeleteDone} />
             ))}
           </ul>
         )}

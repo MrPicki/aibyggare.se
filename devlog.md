@@ -1606,3 +1606,35 @@ UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten 
 ### Verifierat
 - `npm run build` ✅ (rent, inga TypeScript-fel)
 - BETA_VERSION: `0.19.0`
+
+---
+
+## 2026-06-29
+
+### v0.20.0 — Admin: delete-knapp på historik, layoutfix, animerad feedback-intro
+
+**A) Rotorsak feedback 0 cases (utredning)**
+- 4 dokument i `feedback`-collection, alla `status: "done"` (Rasmus markerade alla klara)
+- Systemet fungerar korrekt — öppen-filtret returnerar 0 eftersom ingen ny feedback kommit in
+- Historik-knappen visar alla 4 avklarade ärenden om man klickar på den
+
+**B) Delete i historik (ny feature)**
+- Ny funktion `deleteFeedback(id)` i `admin-data.ts` (Firestore `.delete()`)
+- `DELETE`-handler i `/api/admin/feedback/route.ts`
+- Papperskorgs-ikon på varje historik-item i `FeedbackSection.tsx` — kräver confirm-dialog
+- Öppna ärenden kan också raderas (utöver att markeras klara)
+
+**C) Admin layoutfix**
+- `ContentSection`: `p-3.5` → `p-4`, `flex-1` på innehållskolumnen
+- Reports i `admin/page.tsx`: `flex-1` på innehållskolumnen
+- Alla admin-list-items har nu konsekvent `p-4` och `flex-1`-innehåll
+
+**D) Animerad cirkulär text på feedback-knapp**
+- 10s efter sidladdning (för inloggade): cirkulär SVG-text dyker upp runt knappen
+- Texten: "Tryck här ifall du vill rapportera något eller en ändring •"
+- Roterar 8s/varv i 10 sekunder, sedan smooth fade-out (1s)
+- SVG textPath på r=56, 160×160px, centrerat på 56×56px-knapp
+
+### Verifierat
+- `npm run build` ✅
+- BETA_VERSION: `0.20.0`

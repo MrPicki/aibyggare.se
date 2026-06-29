@@ -209,3 +209,8 @@ export async function markFeedbackDone(id: string): Promise<void> {
   const db = requireDb();
   await db.collection("feedback").doc(id).update({ status: "done" });
 }
+
+export async function deleteFeedback(id: string): Promise<void> {
+  const db = requireDb();
+  await db.collection("feedback").doc(id).delete();
+}

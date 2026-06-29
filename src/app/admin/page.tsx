@@ -124,7 +124,7 @@ export default async function AdminPage() {
             {reports.map((r) => (
               <li key={r.id} className="chunky-sm rounded-2xl bg-paper p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="sticker bg-bug-red/15 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-bug-red">
                         {r.targetType}

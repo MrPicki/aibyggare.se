@@ -29,9 +29,9 @@ export function ContentSection({
             {visible.map((item) => (
               <li
                 key={item.id}
-                className="chunky-sm flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-paper p-3.5"
+                className="chunky-sm flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-paper p-4"
               >
-                <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
                   <span className="sticker shrink-0 bg-cream px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-mud">
                     {item.label}
                   </span>

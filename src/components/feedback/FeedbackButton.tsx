@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { MessageCircleWarning, X, ImagePlus, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,8 @@ function resizeImage(file: File): Promise<string> {
   });
 }
 
+type TextState = "hidden" | "spinning" | "fading";
+
 export function FeedbackButton() {
   const { user, loading } = useAuth();
   const pathname = usePathname();
@@ -46,6 +48,25 @@ export function FeedbackButton() {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [textState, setTextState] = useState<TextState>("hidden");
+
+  useEffect(() => {
+    if (loading || !user) return;
+    let t2: ReturnType<typeof setTimeout>;
+    let t3: ReturnType<typeof setTimeout>;
+    const t1 = setTimeout(() => {
+      setTextState("spinning");
+      t2 = setTimeout(() => {
+        setTextState("fading");
+        t3 = setTimeout(() => setTextState("hidden"), 1000);
+      }, 10000);
+    }, 10000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2!);
+      clearTimeout(t3!);
+    };
+  }, [loading, user]);
 
   if (loading || !user) return null;
 
@@ -91,14 +112,69 @@ export function FeedbackButton() {
 
   return (
     <>
-      {/* Svävande knapp */}
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Rapportera problem eller lämna feedback"
-        className="chunky pressable fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-bug-red text-paper sm:bottom-6 sm:right-6"
+      {/* CSS-animation för cirkulär text */}
+      <style>{`
+        @keyframes fbtn-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
+      {/* Svävande knapp-wrapper (samma position som knappen hade) */}
+      <div
+        className="fixed bottom-5 right-5 z-40 sm:bottom-6 sm:right-6"
+        style={{ width: 56, height: 56 }}
       >
-        <MessageCircleWarning size={24} />
-      </button>
+        {/* Cirkulär animerad text-ring */}
+        {textState !== "hidden" && (
+          <div
+            className="pointer-events-none absolute"
+            style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 160, height: 160 }}
+          >
+            <svg
+              width="160"
+              height="160"
+              viewBox="0 0 160 160"
+              overflow="visible"
+              style={{
+                animation: textState === "spinning" || textState === "fading"
+                  ? "fbtn-spin 8s linear infinite"
+                  : "none",
+                opacity: textState === "fading" ? 0 : 1,
+                transition: textState === "fading" ? "opacity 1s ease-out" : "none",
+              }}
+            >
+              <defs>
+                <path
+                  id="fbtn-text-path"
+                  d="M 80,80 m -56,0 a 56,56 0 1,1 112,0 a 56,56 0 1,1 -112,0"
+                />
+              </defs>
+              <text
+                fontFamily="monospace"
+                fontSize="9"
+                fontWeight="700"
+                fill="var(--ink)"
+                opacity="0.75"
+                letterSpacing="1"
+              >
+                <textPath href="#fbtn-text-path" startOffset="0%">
+                  Tryck här ifall du vill rapportera något eller en ändring •{" "}
+                </textPath>
+              </text>
+            </svg>
+          </div>
+        )}
+
+        {/* Knappen själv */}
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Rapportera problem eller lämna feedback"
+          className="chunky pressable absolute inset-0 flex items-center justify-center rounded-2xl bg-bug-red text-paper"
+        >
+          <MessageCircleWarning size={24} />
+        </button>
+      </div>
 
       {/* Popup */}
       {open && (
