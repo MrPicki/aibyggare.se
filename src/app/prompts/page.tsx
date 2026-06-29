@@ -1,5 +1,6 @@
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
-import { PromptCard, type PromptCardProps } from "@/components/cards/PromptCard";
+import { PromptFilterList } from "@/components/prompts/PromptFilterList";
+import { type PromptCardProps } from "@/components/cards/PromptCard";
 import { Sticker } from "@/components/ui/Sticker";
 import { SEED_PROMPTS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
@@ -59,11 +60,7 @@ export default async function PromptsPage() {
       </div>
 
       {prompts.length > 0 ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {prompts.map((p) => (
-            <PromptCard key={p.slug ?? p.title} {...p} />
-          ))}
-        </div>
+        <PromptFilterList prompts={prompts} />
       ) : (
         <div className="chunky rounded-3xl bg-paper p-12 text-center sm:p-16">
           <p className="font-display text-xl font-bold text-ink">Här saknas prompts.</p>

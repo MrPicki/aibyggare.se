@@ -1569,3 +1569,40 @@ Fullständig UX-granskning av alla 30 routes/funktioner inför betalansering. Me
 1. 🔴 Community-sidan: Hårdkodade falska stats ("100+ projekt") — måste bli dynamiska
 2. 🔴 Prompts-lista: Ingen filtrering + auth-gate blockerar konvertering (4/10)
 3. 🟡 Projektdetalj: Tagline och description dupliceras synligt när identiska
+
+---
+
+## 2026-06-29
+
+### v0.19.0 — UX-sprint: community real data, prompts filter, kommentarer, login-fix
+
+UX-analys från 2026-06-28 implementerad. Alla görliga brister från rapporten åtgärdade.
+
+**Community-sidan (kritisk fix)**
+- Hårdkodade `STATS` ("100+", "50+", "30+", "∞") ersatta med riktig Firestore-data
+- Ny modul `src/lib/firebase/community.ts`: `getCommunityStats()` och `getCommunityBuilders()`
+- Riktiga profiler från Firestore ersätter seed-byggarna (med fallback om < 1 profil)
+- Sidan är nu `force-dynamic` och hämtar data via Firebase Admin SDK
+
+**Prompts-sida (ny feature)**
+- `PromptFilterList` klientkomponent skapad (mönster från `HelpFilterList`)
+- Sökning + verktygsfilter (Claude, ChatGPT, Cursor, Bolt, Lovable m.fl.) + sortering (Nyast/Populärast)
+- `PromptCard` uppdaterad: logged-out-användare ser nu en preview med fade-overlay istället för lock-ikon
+
+**Kommentarer på prompts och guides (ny feature)**
+- Ny komponent `PostCommentSection` (src/components/shared/PostCommentSection.tsx)
+- Använder `posts/{postId}/comments` (samma Firestore-sökväg som HelpCommentSection)
+- Monteras på `/prompts/[slug]` och `/guides/[slug]` när postId finns (dvs. Firestore-backade poster)
+- SSR: initial kommentarer hämtas server-side via `getPostAnswers()`
+
+**Login/register**
+- `/register` startar nu i signup-läge (heading "Skapa ditt konto") via hash `#signup`
+- "Glömt lösenord?" länk tillagd på login-sidan → skickar Firebase-reset-mail till angiven e-post
+
+**Övriga fixar**
+- Settings: "← Startsidan" → "← Min profil" med korrekt profilURL
+- Projektdetalj: description visas inte om den är identisk med tagline
+
+### Verifierat
+- `npm run build` ✅ (rent, inga TypeScript-fel)
+- BETA_VERSION: `0.19.0`

@@ -199,10 +199,10 @@ function SettingsForm({ user }: { user: User }) {
     <div className="mx-auto max-w-lg px-4 py-14">
       <div className="flex items-center justify-between gap-3">
         <Link
-          href="/"
+          href={form.username ? `/profile/${form.username}` : "/"}
           className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
         >
-          <ArrowLeft size={14} /> Startsidan
+          <ArrowLeft size={14} /> Min profil
         </Link>
         {form.username && (
           <Link

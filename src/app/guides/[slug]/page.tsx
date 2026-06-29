@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
 import { Sticker } from "@/components/ui/Sticker";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
+import { PostCommentSection } from "@/components/shared/PostCommentSection";
 import { SEED_GUIDES } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import type { ReactNode } from "react";
@@ -111,6 +112,7 @@ export default async function GuideDetailPage({
   };
 
   let data: GuideData | null = null;
+  let initialComments: import("@/types/firestore").Comment[] = [];
 
   try {
     const mod = await import("@/lib/firebase/guides");
@@ -129,6 +131,12 @@ export default async function GuideDetailPage({
         authorHandle: post.username,
         authorAvatarUrl: post.userAvatarUrl,
       };
+      try {
+        const { getPostAnswers } = await import("@/lib/firebase/help");
+        initialComments = await getPostAnswers(post.id);
+      } catch {
+        // kommentarer ej tillgängliga
+      }
     }
   } catch {
     // Firestore otillgänglig
@@ -244,6 +252,11 @@ export default async function GuideDetailPage({
           </ChunkyLink>
         </div>
       </div>
+
+      {/* Comments — only for Firestore-backed guides */}
+      {data.postId && (
+        <PostCommentSection postId={data.postId} initialComments={initialComments} />
+      )}
     </div>
   );
 }

@@ -687,4 +687,30 @@ Innan en fas markeras som klar:
 
 ---
 
-*Senast uppdaterad: 2026-06-27 (session 13 — beta-redo: gamification, ny onboarding, notiser, feedback, SEO/domän)*
+---
+
+## UX-sprint (2026-06-29) — Två kärnresor
+
+Baserat på UX-analys (docs/ux-analys-2026-06-28.md) identifierades två kärnresor som behövde förbättras inför betalaunch.
+
+### Resa 1: Hjälpsökaren
+Har ett problem, kommer till Problemhörnan, vill snabbt hitta liknande frågor och få ett svar.
+- [x] Sökning + filter på prompts-sidan (PromptFilterList — mönster från HelpFilterList)
+- [x] Tydligare "Glömt lösenord?" på login-sidan
+
+### Resa 2: Visaren
+Har byggt något, vill visa upp det, få kommentarer och känna att communityn är levande.
+- [x] Community-sidan: hårdkodad fake-statistik ersatt med riktig Firestore-data
+- [x] Community-sidan: riktiga profiler istället för seed-karaktärer
+- [x] Kommentarsektion på prompt-detalj (PostCommentSection)
+- [x] Kommentarsektion på guide-detalj (PostCommentSection)
+
+### Övriga UX-fixes
+- [x] Settings: "← Startsidan" → "← Min profil" med korrekt profilURL
+- [x] Register: startar i signup-läge (rubrik "Skapa ditt konto" vid /register)
+- [x] Projekt-detalj: visar inte description om den är identisk med tagline
+- [x] PromptCard: logged-out-användare ser en preview-fade istället för lock-ikon
+
+---
+
+*Senast uppdaterad: 2026-06-29 (session 14 — UX-sprint: community real data, prompts filter, kommentarer på prompts/guides)*

@@ -371,8 +371,8 @@ export default async function ProjectDetailPage({
             </div>
           )}
 
-          {/* Description */}
-          {project.description && (
+          {/* Description — skip if identical to tagline */}
+          {project.description && project.description.trim() !== project.tagline?.trim() && (
             <p className="mt-6 text-sm leading-relaxed text-ink whitespace-pre-line">
               <LinkifiedText text={project.description} />
             </p>

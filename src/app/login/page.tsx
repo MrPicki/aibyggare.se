@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -17,6 +19,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailLoading, setEmailLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState("");
+
+  // /register redirects here with #signup — detect it on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#signup") {
+      setMode("signup");
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
 
   // Redan inloggad? Skicka vidare — onboarding om den inte är klar, annars in
   // i flödet. Annars fastnar man på login-sidan efter redirect-inloggning.
@@ -35,6 +47,20 @@ export default function LoginPage() {
   async function handleGitHub() {
     setGithubLoading(true);
     await signInWithGitHub();
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setResetError("Ange din e-postadress ovan och klicka igen.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetSent(true);
+      setResetError("");
+    } catch {
+      setResetError("Kunde inte skicka återställningsmail. Kontrollera e-postadressen.");
+    }
   }
 
   async function handleEmail(e: React.FormEvent) {
@@ -93,6 +119,22 @@ export default function LoginPage() {
           minLength={6}
           className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-3 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
         />
+        {mode === "signin" && (
+          <div className="flex items-center justify-end">
+            {resetSent ? (
+              <span className="font-mono text-xs text-build-green">Mail skickat! Kolla inkorgen.</span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="font-mono text-xs text-mud underline underline-offset-2 hover:text-ink"
+              >
+                Glömt lösenord?
+              </button>
+            )}
+          </div>
+        )}
+        {resetError && <p className="text-xs text-bug-red">{resetError}</p>}
         <button
           type="submit"
           disabled={busy}

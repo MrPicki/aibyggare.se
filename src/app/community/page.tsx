@@ -1,84 +1,29 @@
 import Link from "next/link";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
-import { ExternalLink } from "lucide-react";
+import {
+  getCommunityStats,
+  getCommunityBuilders,
+  type CommunityBuilder,
+} from "@/lib/firebase/community";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Möt byggarna — AIbyggare.se",
   description: "Svenska vibe coders, indie hackers och AI-byggare. Halvfärdiga projekt, riktiga problem, konkret hjälp.",
 };
 
-const FEATURED_BUILDERS = [
-  {
-    username: "christoffer",
-    name: "Christoffer",
-    role: "Byggare av Smartbok.se",
-    bio: "Bygger AI-bokföring för enskild firma. Foton på kvitton in — ordning ut. Kraschar ibland i produktion.",
-    avatarUrl: "/seed/avatar-male.png",
-    accent: "var(--build-green)",
-    projects: ["Smartbok.se"],
-    tools: ["Claude", "Supabase", "Vercel"],
-  },
-  {
-    username: "linabygger",
-    name: "Lina",
-    role: "Nybörjare på allvar",
-    bio: "Byggde sin första SaaS för tre månader sedan. Fastnar på Vercel-deploys. Löser det alltid till slut.",
-    avatarUrl: "/seed/avatar-female.png",
-    accent: "var(--bug-red)",
-    projects: ["Min första SaaS"],
-    tools: ["Next.js", "Supabase", "Vercel"],
-  },
-  {
-    username: "adamcodes",
-    name: "Adam",
-    role: "Fullstack-vibe-coder",
-    bio: "Bygger MenuPilot — AI som gör veckomenyer från rester. Alltid igång med minst tre projekt.",
-    avatarUrl: "/seed/avatar-neutral.png",
-    accent: "var(--hammer-yellow)",
-    projects: ["MenuPilot"],
-    tools: ["ChatGPT", "Next.js", "Firebase"],
-  },
-  {
-    username: "sarapromptar",
-    name: "Sara",
-    role: "Prompt-nörd",
-    bio: "Har testat alla sätt att promptea Claude på. Delar det som faktiskt funkar. Resten raderas tyst.",
-    avatarUrl: "/seed/avatar-female.png",
-    accent: "var(--prompt-purple)",
-    projects: ["Claude Code Workflow"],
-    tools: ["Claude Code", "Frontend"],
-  },
-  {
-    username: "jonasbygger",
-    name: "Jonas",
-    role: "Datadriven byggare",
-    bio: "Need Radar: AI som hittar ouppfyllda behov på Reddit. Bygger om scoringmodellen för tredje gången.",
-    avatarUrl: "/seed/avatar-male.png",
-    accent: "var(--code-blue)",
-    projects: ["Need Radar"],
-    tools: ["Reddit API", "Claude", "Supabase"],
-  },
-  {
-    username: "majawebb",
-    name: "Maja",
-    role: "Designer som kodar",
-    bio: "Håller på att lära sig. Claude förstör layouten var tredje dag. Fortsätter ändå.",
-    avatarUrl: "/seed/avatar-female.png",
-    accent: "var(--soft-teal)",
-    projects: ["Portfolio med Lovable"],
-    tools: ["Lovable", "Claude", "CSS"],
-  },
+const ACCENT_CYCLE = [
+  "var(--build-green)",
+  "var(--bug-red)",
+  "var(--hammer-yellow)",
+  "var(--prompt-purple)",
+  "var(--code-blue)",
+  "var(--soft-teal)",
 ];
 
-const STATS = [
-  { value: "100+", label: "Projekt upplagda" },
-  { value: "50+", label: "Hjälpfrågor besvarade" },
-  { value: "30+", label: "Prompts delade" },
-  { value: "∞", label: "Kaffe drucket" },
-];
-
-function BuilderCard({ builder }: { builder: (typeof FEATURED_BUILDERS)[0] }) {
+function BuilderCard({ builder, accent }: { builder: CommunityBuilder; accent: string }) {
   return (
     <Link
       href={`/profile/${builder.username}`}
@@ -87,33 +32,35 @@ function BuilderCard({ builder }: { builder: (typeof FEATURED_BUILDERS)[0] }) {
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={builder.avatarUrl} alt="" className="h-full w-full object-cover" />
+          <img src={builder.avatarUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
         </div>
         <div>
           <p className="font-mono text-sm font-bold text-ink group-hover:text-build-green transition-colors">
-            {builder.name}
+            {builder.displayName}
           </p>
-          <p className="font-mono text-[11px] text-mud">{builder.role}</p>
+          <p className="font-mono text-[11px] text-mud">@{builder.username}</p>
         </div>
       </div>
 
-      <p className="text-sm leading-relaxed text-mud">{builder.bio}</p>
+      {builder.bio && <p className="text-sm leading-relaxed text-mud">{builder.bio}</p>}
 
-      <div className="flex flex-wrap gap-1.5">
-        {builder.tools.map((tool) => (
-          <span
-            key={tool}
-            className="rounded-lg border border-border bg-cream px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-mud"
-          >
-            {tool}
-          </span>
-        ))}
-      </div>
+      {builder.tools.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {builder.tools.map((tool) => (
+            <span
+              key={tool}
+              className="rounded-lg border border-border bg-cream px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-mud"
+            >
+              {tool}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="border-t-2 border-dashed border-border pt-3">
         <span
           className="sticker px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide"
-          style={{ backgroundColor: builder.accent }}
+          style={{ backgroundColor: accent }}
         >
           Se profil →
         </span>
@@ -122,7 +69,38 @@ function BuilderCard({ builder }: { builder: (typeof FEATURED_BUILDERS)[0] }) {
   );
 }
 
-export default function CommunityPage() {
+function formatCount(n: number): string {
+  if (n === 0) return "0";
+  if (n < 10) return String(n);
+  const rounded = Math.floor(n / 5) * 5;
+  return `${rounded}+`;
+}
+
+export default async function CommunityPage() {
+  const [stats, builders] = await Promise.all([
+    getCommunityStats(),
+    getCommunityBuilders(6),
+  ]);
+
+  const statCards = [
+    {
+      value: stats ? formatCount(stats.projects) : "—",
+      label: "Projekt upplagda",
+    },
+    {
+      value: stats ? formatCount(stats.helpPosts) : "—",
+      label: "Hjälpfrågor",
+    },
+    {
+      value: stats ? formatCount(stats.prompts) : "—",
+      label: "Prompts delade",
+    },
+    {
+      value: stats ? formatCount(stats.members) : "—",
+      label: "Byggare",
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
       {/* Header */}
@@ -139,7 +117,7 @@ export default function CommunityPage() {
 
       {/* Stats */}
       <div className="mb-12 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {STATS.map((stat) => (
+        {statCards.map((stat) => (
           <div key={stat.label} className="chunky-sm rounded-2xl bg-paper p-5 text-center">
             <p className="font-display text-3xl font-bold text-ink">{stat.value}</p>
             <p className="mt-1 font-mono text-[11px] font-medium uppercase tracking-wide text-mud">
@@ -150,16 +128,18 @@ export default function CommunityPage() {
       </div>
 
       {/* Builder grid */}
-      <div className="mb-10">
-        <h2 className="mb-6 font-mono text-xs font-bold uppercase tracking-widest text-mud">
-          Några av byggarna
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURED_BUILDERS.map((builder) => (
-            <BuilderCard key={builder.username} builder={builder} />
-          ))}
+      {builders.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-6 font-mono text-xs font-bold uppercase tracking-widest text-mud">
+            Senaste byggarna
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {builders.map((builder, i) => (
+              <BuilderCard key={builder.username} builder={builder} accent={ACCENT_CYCLE[i % ACCENT_CYCLE.length]} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Philosophy block */}
       <div className="chunky mb-12 rounded-3xl border-2 border-ink bg-hammer-yellow/30 p-8">

@@ -5,6 +5,7 @@ import { Sticker } from "@/components/ui/Sticker";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { PromptDrillButton } from "@/components/prompts/PromptDrillButton";
+import { PostCommentSection } from "@/components/shared/PostCommentSection";
 import { SEED_PROMPTS } from "@/lib/seed";
 import { toolAccent } from "@/lib/constants/tools";
 import { cookies } from "next/headers";
@@ -63,6 +64,7 @@ export default async function PromptDetailPage({
   };
 
   let data: PromptData | null = null;
+  let initialComments: import("@/types/firestore").Comment[] = [];
 
   try {
     const mod = await import("@/lib/firebase/prompts");
@@ -80,6 +82,12 @@ export default async function PromptDetailPage({
         authorHandle: post.username,
         authorAvatarUrl: post.userAvatarUrl,
       };
+      try {
+        const { getPostAnswers } = await import("@/lib/firebase/help");
+        initialComments = await getPostAnswers(post.id);
+      } catch {
+        // kommentarer ej tillgängliga
+      }
     }
   } catch {
     // Firestore otillgänglig
@@ -212,6 +220,11 @@ export default async function PromptDetailPage({
           </ChunkyLink>
         </div>
       </div>
+
+      {/* Comments — only for Firestore-backed prompts */}
+      {data.postId && (
+        <PostCommentSection postId={data.postId} initialComments={initialComments} />
+      )}
     </div>
   );
 }

@@ -74,17 +74,20 @@ export function PromptCard({
           {prompt}
         </p>
       ) : (
-        <div className="mt-2 flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-cream/60 p-4 text-center">
-          <Lock size={16} className="text-mud/50" />
-          <p className="font-mono text-[11px] text-mud/70">
-            Logga in för att se prompten
+        <div className="relative mt-2 flex-1 overflow-hidden rounded-xl border-2 border-dashed border-border bg-cream p-3">
+          <p className="font-mono text-xs leading-relaxed text-mud line-clamp-3">
+            {prompt}
           </p>
-          <Link
-            href="/login"
-            className="font-mono text-[10px] font-bold uppercase tracking-wide text-prompt-purple hover:underline"
-          >
-            Logga in →
-          </Link>
+          {/* Fade + lock overlay */}
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end bg-gradient-to-t from-cream via-cream/90 to-transparent pt-6 pb-2">
+            <Lock size={12} className="text-mud/60 mb-0.5" />
+            <Link
+              href="/login"
+              className="font-mono text-[10px] font-bold uppercase tracking-wide text-prompt-purple hover:underline"
+            >
+              Logga in för att kopiera →
+            </Link>
+          </div>
         </div>
       )}
 
