@@ -5,14 +5,12 @@ import {
   collection,
   addDoc,
   doc,
-  updateDoc,
   getDocs,
   query,
   where,
   onSnapshot,
   orderBy,
   serverTimestamp,
-  increment,
   writeBatch,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -78,24 +76,15 @@ export interface AddAnswerInput {
 }
 
 export async function addAnswer(input: AddAnswerInput): Promise<string> {
-  const { postId, parentId = null, replyToName = null, ...fields } = input;
-  const answersRef = collection(db, "posts", postId, "comments");
-  const postRef = doc(db, "posts", postId);
-
-  const docRef = await addDoc(answersRef, {
-    ...fields,
-    parentId,
-    replyToName,
-    isAccepted: false,
-    projectId: null,
-    postId,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const { postId, parentId = null, replyToName = null, body } = input;
+  const res = await fetch("/api/comment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetType: "post", targetId: postId, body, parentId, replyToName }),
   });
-
-  await updateDoc(postRef, { commentCount: increment(1) });
-
-  return docRef.id;
+  if (!res.ok) throw new Error("Kunde inte spara svar");
+  const data = await res.json();
+  return data.id;
 }
 
 export function subscribeToAnswers(

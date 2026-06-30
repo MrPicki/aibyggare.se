@@ -5,7 +5,6 @@ import {
   collection,
   addDoc,
   doc,
-  runTransaction,
   getDoc,
   query,
   orderBy,
@@ -13,7 +12,6 @@ import {
   where,
   getDocs,
   updateDoc,
-  increment,
   serverTimestamp,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -125,34 +123,15 @@ export async function updateProject(docId: string, data: UpdateProjectInput): Pr
 
 export async function toggleUpvote(
   projectId: string,
-  userId: string
+  _userId: string
 ): Promise<{ upvoted: boolean; newCount: number }> {
-  const voteId = `${userId}_${projectId}`;
-  const voteRef = doc(db, "votes", voteId);
-  const projectRef = doc(db, "projects", projectId);
-
-  return runTransaction(db, async (tx) => {
-    const [voteSnap, projectSnap] = await Promise.all([
-      tx.get(voteRef),
-      tx.get(projectRef),
-    ]);
-    const currentCount = (projectSnap.data()?.upvoteCount as number) ?? 0;
-
-    if (voteSnap.exists()) {
-      tx.delete(voteRef);
-      tx.update(projectRef, { upvoteCount: Math.max(0, currentCount - 1) });
-      return { upvoted: false, newCount: Math.max(0, currentCount - 1) };
-    } else {
-      tx.set(voteRef, {
-        userId,
-        targetId: projectId,
-        targetType: "project",
-        createdAt: serverTimestamp(),
-      });
-      tx.update(projectRef, { upvoteCount: currentCount + 1 });
-      return { upvoted: true, newCount: currentCount + 1 };
-    }
+  const res = await fetch("/api/upvote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetType: "project", targetId: projectId }),
   });
+  if (!res.ok) throw new Error("Kunde inte upvota");
+  return res.json();
 }
 
 export async function hasUpvoted(projectId: string, userId: string): Promise<boolean> {
@@ -173,24 +152,15 @@ export interface AddCommentInput {
 }
 
 export async function addComment(input: AddCommentInput): Promise<string> {
-  const { projectId, parentId = null, replyToName = null, ...fields } = input;
-  const commentsRef = collection(db, "projects", projectId, "comments");
-  const projectRef = doc(db, "projects", projectId);
-
-  const docRef = await addDoc(commentsRef, {
-    ...fields,
-    parentId,
-    replyToName,
-    isAccepted: false,
-    projectId: null,
-    postId: null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const { projectId, parentId = null, replyToName = null, body } = input;
+  const res = await fetch("/api/comment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetType: "project", targetId: projectId, body, parentId, replyToName }),
   });
-
-  await updateDoc(projectRef, { commentCount: increment(1) });
-
-  return docRef.id;
+  if (!res.ok) throw new Error("Kunde inte spara kommentar");
+  const data = await res.json();
+  return data.id;
 }
 
 export function subscribeToComments(

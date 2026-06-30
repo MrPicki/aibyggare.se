@@ -9,7 +9,6 @@ import {
   getDocs,
   query,
   where,
-  runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
 import { slugify } from "@/lib/firebase/projects-client";
@@ -75,34 +74,15 @@ export async function getUsernameFromProfile(uid: string): Promise<string> {
 
 export async function togglePostUpvote(
   postId: string,
-  userId: string
+  _userId: string
 ): Promise<{ upvoted: boolean; newCount: number }> {
-  const voteId = `${userId}_${postId}`;
-  const voteRef = doc(db, "votes", voteId);
-  const postRef = doc(db, "posts", postId);
-
-  return runTransaction(db, async (tx) => {
-    const [voteSnap, postSnap] = await Promise.all([
-      tx.get(voteRef),
-      tx.get(postRef),
-    ]);
-    const currentCount = (postSnap.data()?.upvoteCount as number) ?? 0;
-
-    if (voteSnap.exists()) {
-      tx.delete(voteRef);
-      tx.update(postRef, { upvoteCount: Math.max(0, currentCount - 1) });
-      return { upvoted: false, newCount: Math.max(0, currentCount - 1) };
-    } else {
-      tx.set(voteRef, {
-        userId,
-        targetId: postId,
-        targetType: "post",
-        createdAt: serverTimestamp(),
-      });
-      tx.update(postRef, { upvoteCount: currentCount + 1 });
-      return { upvoted: true, newCount: currentCount + 1 };
-    }
+  const res = await fetch("/api/upvote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetType: "post", targetId: postId }),
   });
+  if (!res.ok) throw new Error("Kunde inte upvota");
+  return res.json();
 }
 
 export async function hasPostUpvoted(postId: string, userId: string): Promise<boolean> {
