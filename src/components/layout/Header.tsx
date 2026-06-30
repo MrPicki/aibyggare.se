@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, User, Settings, ShieldCheck } from "lucide-react";
+import { Menu, X, LogOut, User, Settings, ShieldCheck, ChevronDown, Hammer, HelpCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PixelHammerLogo } from "@/components/brand/illustrations";
@@ -36,9 +37,19 @@ function Wordmark() {
   );
 }
 
+const CTA_ITEMS = [
+  { href: "/projects/new",      label: "Bygge",       sub: "Visa upp vad du bygger",       Icon: Hammer,      color: "var(--build-green)" },
+  { href: "/problemhornan/new", label: "Hjälpfråga",  sub: "Fastnat? Fråga communityn",    Icon: HelpCircle,  color: "var(--warning-orange)" },
+  { href: "/prompts/new",       label: "Prompt",      sub: "Dela en prompt som funkade",   Icon: Sparkles,    color: "#c4b5fd" },
+] as const;
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [ctaOpen, setCtaOpen] = useState(false);
+  const [ctaPos, setCtaPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+  const ctaBtnRef = useRef<HTMLButtonElement>(null);
+  const ctaDropRef = useRef<HTMLDivElement>(null);
   const { user, profile, loading, signOut } = useAuth();
   const pathname = usePathname();
   const profileHref = profile?.username ? `/profile/${profile.username}` : "/onboarding";
@@ -50,6 +61,64 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!ctaOpen) return;
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (!ctaBtnRef.current?.contains(t) && !ctaDropRef.current?.contains(t)) {
+        setCtaOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCtaOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [ctaOpen]);
+
+  function handleCtaClick() {
+    if (!ctaOpen && ctaBtnRef.current) {
+      const rect = ctaBtnRef.current.getBoundingClientRect();
+      setCtaPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    }
+    setCtaOpen((o) => !o);
+  }
+
+  const ctaDropdown = ctaOpen && typeof window !== "undefined" && createPortal(
+    <div
+      ref={ctaDropRef}
+      role="menu"
+      style={{ position: "fixed", top: ctaPos.top, right: ctaPos.right, zIndex: 9999 }}
+      className="w-56 overflow-hidden rounded-2xl border-2 border-ink bg-paper shadow-[4px_4px_0_0_var(--ink)]"
+    >
+      {CTA_ITEMS.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          role="menuitem"
+          onClick={() => setCtaOpen(false)}
+          className="flex items-center gap-3 px-4 py-3 hover:bg-cream transition-colors first:pt-4 last:pb-4"
+        >
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-ink/20"
+            style={{ backgroundColor: item.color }}
+          >
+            <item.Icon size={14} className="text-ink" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-mono text-xs font-bold uppercase tracking-wide text-ink">{item.label}</p>
+            <p className="truncate text-[10px] text-mud">{item.sub}</p>
+          </div>
+        </Link>
+      ))}
+    </div>,
+    document.body
+  );
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
@@ -139,12 +208,17 @@ export function Header() {
                   Logga in
                 </Link>
               ))}
-            <Link
-              href="/projects/new"
-              className="chunky-sm pressable rounded-xl bg-build-green px-4 py-2 font-mono text-[13px] font-bold uppercase tracking-wide text-paper"
+            <button
+              ref={ctaBtnRef}
+              onClick={handleCtaClick}
+              aria-haspopup="menu"
+              aria-expanded={ctaOpen}
+              className="chunky-sm pressable inline-flex items-center gap-1.5 rounded-xl bg-build-green px-4 py-2 font-mono text-[13px] font-bold uppercase tracking-wide text-paper"
             >
               Lägg upp
-            </Link>
+              <ChevronDown size={12} className={cn("transition-transform duration-150", ctaOpen && "rotate-180")} />
+            </button>
+            {ctaDropdown}
           </div>
 
           {/* Mobil: notiser + toggle */}
@@ -229,13 +303,26 @@ export function Header() {
                     Logga in
                   </Link>
                 )}
-                <Link
-                  href="/projects/new"
-                  className="chunky-sm pressable rounded-xl bg-build-green px-4 py-3 text-center font-mono text-base font-bold uppercase tracking-wide text-paper"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Lägg upp ett bygge
-                </Link>
+                <p className="px-3 pt-1 font-mono text-[10px] font-bold uppercase tracking-widest text-mud">Lägg upp</p>
+                {CTA_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-cream"
+                  >
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-ink/20"
+                      style={{ backgroundColor: item.color }}
+                    >
+                      <item.Icon size={15} className="text-ink" />
+                    </span>
+                    <div>
+                      <p className="font-mono text-sm font-bold uppercase tracking-wide text-ink">{item.label}</p>
+                      <p className="text-[11px] text-mud">{item.sub}</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </nav>
           </div>
