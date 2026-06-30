@@ -143,5 +143,12 @@ service cloud.firestore {
     match /newsletter_subscribers/{doc} {
       allow read, write: if false;
     }
+
+    // ── Rate-limit räknare ────────────────────────────────────────────────────
+    // Hanteras ENBART av Admin SDK (server-side). Klienter får varken läsa
+    // eller skriva — annars kan en angripare nollställa sina egna räknare.
+    match /_ratelimits/{doc} {
+      allow read, write: if false;
+    }
   }
 }

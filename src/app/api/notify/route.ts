@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { FieldValue } from "firebase-admin/firestore";
 import { verifyFirebaseToken } from "@/lib/auth/verify-token";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { adminDb } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
@@ -21,6 +22,14 @@ export async function POST(req: NextRequest) {
   const verified = await verifyFirebaseToken(token);
   if (!verified) return NextResponse.json({ error: "Ogiltig token" }, { status: 401 });
   if (!adminDb) return NextResponse.json({ error: "DB ej tillgänglig" }, { status: 503 });
+
+  const rl = await checkRateLimit(`notify:${verified.uid}`, 100, 3600);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "För många notiser. Vänta en stund." },
+      { status: 429, headers: { "Retry-After": "3600" } }
+    );
+  }
 
   let body: { type?: string; targetType?: string; targetId?: string; preview?: string; parentCommentId?: string };
   try {
