@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 import { verifyFirebaseToken } from "@/lib/auth/verify-token";
+import { adminDb } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +17,16 @@ export async function POST(req: NextRequest) {
   const verified = await verifyFirebaseToken(token);
   if (!verified) {
     return NextResponse.json({ error: "Ogiltig token" }, { status: 401 });
+  }
+
+  // Uppdatera lastSeenAt i profilen för inaktivitetsuppföljning (GDPR, 150 dagar).
+  // Fire-and-forget — vi blockerar inte cookie-svar på ett Firestore-miss.
+  if (adminDb) {
+    adminDb
+      .collection("profiles")
+      .doc(verified.uid)
+      .update({ lastSeenAt: FieldValue.serverTimestamp() })
+      .catch(() => {});
   }
 
   const res = NextResponse.json({ ok: true });
