@@ -162,7 +162,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       if (u) {
         const token = await u.getIdToken();
-        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
         setProfile(await readProfileLite(u.uid));
 
         // Founding Member: avgörs server-side (idempotent) en gång per session,
@@ -177,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .catch(() => {});
         }
       } else {
-        document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+        await fetch("/api/auth/signout", { method: "POST" });
         setProfile(null);
         claimedFoundingRef.current = false;
       }
@@ -226,6 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
+    await fetch("/api/auth/signout", { method: "POST" });
     await firebaseSignOut(auth);
     router.push("/");
   }
