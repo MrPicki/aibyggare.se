@@ -21,7 +21,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const canonical = `${SITE_URL}/problemhornan/${slug}`;
   const ogImage = `${SITE_URL}/problemhornan/${slug}/opengraph-image`;
   const ogBase = { url: canonical, images: [{ url: ogImage, width: 1200, height: 630 }], type: "article" as const };
@@ -58,7 +59,8 @@ export default async function ProblemhornanDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
 
   let post: Post | null = null;
   let comments: Comment[] = [];

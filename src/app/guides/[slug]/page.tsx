@@ -81,7 +81,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const seed = SEED_GUIDES.find((g) => g.slug === slug);
   const title = seed?.title ?? "Genväg";
   return {
@@ -95,7 +96,8 @@ export default async function GuideDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
 
   type GuideData = {
     postId?: string;
