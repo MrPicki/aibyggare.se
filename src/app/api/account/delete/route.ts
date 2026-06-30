@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyFirebaseToken } from "@/lib/auth/verify-token";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb, adminStorage } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Raderar den inloggade användarens ALLA Firestore-data:
-//  - profilen (inkl. xpEvents-subcollection, via recursiveDelete)
-//  - alla byggen + deras kommentarer
-//  - alla hjälpfrågor/prompts + deras svar
+// Raderar den inloggade användarens ALLA data:
+//  - byggen + deras kommentarer (recursiveDelete)
+//  - hjälpfrågor/prompts + svar (recursiveDelete)
+//  - votes, bookmarks, reports skapade av användaren
+//  - Storage-filer under images/{uid}/
+//  - profilen (inkl. xpEvents + notifications, via recursiveDelete)
 // Auth-kontot raderas client-side (firebase/auth deleteUser) efter detta —
 // firebase-admin/auth används inte här (ESM-kraschar på Vercels runtime).
 export async function POST() {
@@ -29,19 +31,56 @@ export async function POST() {
   const uid = verified.uid;
 
   try {
-    // Användarens egna byggen (recursiveDelete tar med comments-subcollection).
+    // Byggen + deras comments-subcollection
     const projects = await adminDb.collection("projects").where("userId", "==", uid).get();
     for (const d of projects.docs) {
       await adminDb.recursiveDelete(d.ref);
     }
 
-    // Användarens egna inlägg (hjälpfrågor + prompts) med svar/kommentarer.
+    // Inlägg (hjälpfrågor + prompts) + svar
     const posts = await adminDb.collection("posts").where("userId", "==", uid).get();
     for (const d of posts.docs) {
       await adminDb.recursiveDelete(d.ref);
     }
 
-    // Profilen sist — recursiveDelete tar med xpEvents-subcollection.
+    // Votes
+    const votes = await adminDb.collection("votes").where("userId", "==", uid).get();
+    const voteBatch = adminDb.batch();
+    for (const d of votes.docs) voteBatch.delete(d.ref);
+    if (!votes.empty) await voteBatch.commit();
+
+    // Bookmarks
+    const bookmarks = await adminDb.collection("bookmarks").where("userId", "==", uid).get();
+    const bookmarkBatch = adminDb.batch();
+    for (const d of bookmarks.docs) bookmarkBatch.delete(d.ref);
+    if (!bookmarks.empty) await bookmarkBatch.commit();
+
+    // Reports filed by this user
+    const reports = await adminDb.collection("reports").where("reporterId", "==", uid).get();
+    const reportBatch = adminDb.batch();
+    for (const d of reports.docs) reportBatch.delete(d.ref);
+    if (!reports.empty) await reportBatch.commit();
+
+    // Rate-limit counters for this user (known prefixes)
+    const rlKeys = ["feedback", "notify"];
+    const rlBatch2 = adminDb.batch();
+    for (const prefix of rlKeys) {
+      rlBatch2.delete(adminDb.collection("_ratelimits").doc(`${prefix}:${uid}`));
+    }
+    await rlBatch2.commit();
+
+    // Storage: delete all files under images/{uid}/
+    if (adminStorage) {
+      try {
+        const [files] = await adminStorage.bucket().getFiles({ prefix: `images/${uid}/` });
+        await Promise.all(files.map((f) => f.delete().catch(() => {})));
+      } catch (e) {
+        console.error("[account/delete] Storage-radering misslyckades:", e);
+        // Continue — Firestore data is the priority
+      }
+    }
+
+    // Profilen sist — recursiveDelete tar med xpEvents + notifications
     await adminDb.recursiveDelete(adminDb.collection("profiles").doc(uid));
 
     return NextResponse.json({ ok: true });
