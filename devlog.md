@@ -1709,3 +1709,40 @@ BETA_VERSION: `0.20.2`
 - Radie: r=56 → r=42 (text tightare mot knappen, ~8px gap till hörnen)
 - Rotation: 8s/varv → 20s/varv (lugnare, segare känsla)
 - BETA_VERSION: `0.20.1`
+
+---
+
+### v0.22.0 — Juridik: integritetspolicy, användarvillkor, fungerande nyhetsbrev
+
+**Bakgrund:** Säkerhetsanalysen 2026-06-29 identifierade frånvaro av integritetspolicy
+och användarvillkor som kritisk juridisk risk (GDPR Art. 13/14, IMY-sanktionsrisk).
+Nyhetsbrev-formuläret var dead code som visade falsk bekräftelse utan att spara något.
+
+**Levererat:**
+- `/integritetspolicy` — fullständig GDPR-policy med korrekt rättslig uppdelning:
+  AVTAL (konto/profil/UGC), SAMTYCKE (nyhetsbrev), BERÄTTIGAT INTRESSE (säkerhetsloggar).
+  Personuppgiftsbiträden (Google/Firebase, Vercel, Resend) med SCC-skyddsåtgärder.
+  150 dagars inaktivitet → radering. Platshållare för org.nr + adress (väntar på Picki).
+- `/anvandarvillkor` — juridisk TOS: UGC-äganderätt (icke-exklusiv licens), moderering,
+  ansvarsbegränsning, svensk jurisdiktion/Stockholms tingsrätt, kontoåtgärder.
+- Footer uppdaterad: Integritetspolicy + Användarvillkor-länkar, "Ansvarigt företag: Ncom.se",
+  info@aibyggare.se.
+- Nyhetsbrev-formulär: ersatt dead code med riktigt API-anrop till `/api/newsletter/subscribe`.
+  Sparar prenumerant i Firestore `newsletter_subscribers/{base64url(email)}` via Admin SDK.
+  Resend-integration komplett men inaktiv tills `RESEND_API_KEY` sätts (se blockerare nedan).
+  Välkomstmail med avregistreringslänk. `/api/newsletter/unsubscribe` + `/nyhetsbrev/avregistrera`.
+- Firestore-regler: `newsletter_subscribers` låst till Admin SDK only.
+
+**Verifierat live (dev):**
+- `/integritetspolicy` renderar alla 8 sektioner korrekt inkl. ORG.NR-platshållaren.
+- `/anvandarvillkor` renderar alla 10 sektioner korrekt.
+- Footer visar juridiklänkar + "Ansvarigt företag: Ncom.se · info@aibyggare.se".
+- `POST /api/newsletter/subscribe` → Firestore-skrivning OK (200ms), Resend-varning korrekt.
+- `POST /api/newsletter/unsubscribe` → aktiv=false markering OK.
+
+**Blockerare kvar (kräver Pickis input):**
+1. ORG.NR + adress: ncom.se publicerar ej org.nr idag. Skicka org.nr till Picki →
+   uppdatera platshållarna i integritetspolicy + anvandarvillkor.
+2. Resend: `RESEND_API_KEY` saknas i Vercel-env. Se instruktioner i nästa commit-meddelande.
+
+BETA_VERSION: `0.22.0`

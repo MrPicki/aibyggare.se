@@ -13,6 +13,11 @@ const footerLinks = [
   { href: "/contact", label: "Kontakt" },
 ];
 
+const legalLinks = [
+  { href: "/integritetspolicy", label: "Integritetspolicy" },
+  { href: "/anvandarvillkor", label: "Användarvillkor" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t-2 border-ink bg-paper">
@@ -66,10 +71,45 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t-2 border-dashed border-border pt-6">
-          <p className="font-mono text-xs text-mud">
-            © {new Date().getFullYear()} AIbyggare.se · Byggt med AI, kaffe och rimlig
-            mängd panik.
-          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-mono text-xs text-mud">
+              © {new Date().getFullYear()} AIbyggare.se · Byggt med AI, kaffe och rimlig
+              mängd panik.
+            </p>
+
+            {/* Juridik + företagsinfo */}
+            <div className="flex flex-col gap-1 sm:items-end">
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {legalLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="font-mono text-xs text-mud hover:text-build-green transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              <p className="font-mono text-xs text-mud/70">
+                Ansvarigt företag:{" "}
+                <a
+                  href="https://ncom.se"
+                  className="hover:text-build-green transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ncom.se
+                </a>
+                {" · "}
+                <a
+                  href="mailto:info@aibyggare.se"
+                  className="hover:text-build-green transition-colors"
+                >
+                  info@aibyggare.se
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
