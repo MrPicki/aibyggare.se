@@ -18,6 +18,7 @@ import {
 import { db } from "@/lib/firebase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
+import { ExportDataSection } from "@/components/settings/ExportDataSection";
 
 const AVAILABLE_TOOLS = [
   "Claude Code", "Claude AI", "Cursor", "Lovable", "Bolt", "Replit",
@@ -422,6 +423,7 @@ function SettingsForm({ user }: { user: User }) {
         </div>
       </form>
 
+      <ExportDataSection />
       <DeleteAccountSection />
     </div>
   );
