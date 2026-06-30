@@ -4,6 +4,7 @@ import { ArrowLeft, MessageSquare } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 import { Sticker } from "@/components/ui/Sticker";
 import { HelpCommentSection } from "@/components/help/HelpCommentSection";
+import { PromptDrillButton } from "@/components/prompts/PromptDrillButton";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
 import { SEED_HELP_QUESTIONS } from "@/lib/seed";
@@ -174,9 +175,18 @@ export default async function ProblemhornanDetailPage({
             <span className="rounded-md border border-border bg-cream px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-mud">
               {topic}
             </span>
-            <span className="inline-flex items-center gap-1.5 font-mono text-xs text-mud">
-              <MessageSquare size={13} /> {commentCount} svar
-            </span>
+            <div className="flex items-center gap-3">
+              {post && (
+                <PromptDrillButton
+                  postId={post.id}
+                  initialCount={post.upvoteCount ?? 0}
+                  size="sm"
+                />
+              )}
+              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-mud">
+                <MessageSquare size={13} /> {commentCount} svar
+              </span>
+            </div>
           </div>
         </div>
       </article>
