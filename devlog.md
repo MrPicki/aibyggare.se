@@ -1864,8 +1864,8 @@ automatiskt som `Authorization: Bearer <CRON_SECRET>`.
 - JSON-fil med `Content-Disposition: attachment` — laddas ner direkt
 - Uppfyller GDPR Art. 20 (rätten till dataportabilitet)
 
-**TODO för settings-sidan:** Lägg till en "Ladda ner min data"-knapp som anropar
-`/api/account/export`. Finns inte i UI ännu.
+**Implementerat i v0.22.8:** `ExportDataSection`-komponent i `/settings` — knapp "Ladda ner
+min data" som anropar `/api/account/export` och triggar JSON-nedladdning direkt.
 
 ---
 
@@ -1906,13 +1906,13 @@ Ingen kodändring. Picki måste acceptera Firebase Data Processing Agreement:
 | Komplett kontoradering | ✅ Implementerat | v0.22.4 |
 | Inaktivitetsradering 150 dagar | ✅ Implementerat | v0.22.5 |
 | Dataportabilitet /api/account/export | ✅ Implementerat | v0.22.6 |
+| Export-UI i /settings | ✅ Implementerat | v0.22.8 |
 | Lösenord minst 8 tecken | ✅ Implementerat | v0.22.7 |
 | Firebase DPA | ⏳ Manuell åtgärd av Picki | — |
 
-**Kvarvarande manuella åtgärder:**
+**Kvarvarande manuella åtgärder (kräver Picki):**
 1. Vercel: lägg till `CRON_SECRET` i env vars (Fix #6)
 2. Firebase Console: acceptera DPA (Fix #9)
-3. Settings-sidan: lägg till "Ladda ner min data"-knapp mot `/api/account/export`
-4. Resend: sätt `RESEND_API_KEY` i Vercel-env för nyhetsbrev (från v0.22.0-sessionen)
+3. Resend: sätt `RESEND_API_KEY` i Vercel-env för nyhetsbrev (från v0.22.0-sessionen)
 
-BETA_VERSION: `0.22.7`
+BETA_VERSION: `0.22.8`
