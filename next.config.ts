@@ -6,6 +6,49 @@ import type { NextConfig } from "next";
 // makes getRedirectResult() return null and the login "bounces back".
 const firebaseAppDomain = `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`;
 
+// HTTP security headers applied to all routes.
+// CSP uses 'unsafe-inline'/'unsafe-eval' for Next.js hydration compatibility.
+// Nonce-based strict CSP is a future improvement once the app stabilises.
+const securityHeaders = [
+  {
+    key: "X-Frame-Options",
+    value: "DENY",
+  },
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  },
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=()",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      // Next.js needs unsafe-inline (hydration scripts) and unsafe-eval (dynamic imports).
+      // Google Sign-in popup loads from apis.google.com.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com",
+      "style-src 'self' 'unsafe-inline'",
+      // next/font/google bakes fonts into /_next/static — only 'self' + data: needed.
+      "font-src 'self' data:",
+      // Images: self + all https (Firebase Storage, Google/GitHub avatars) + data/blob (previews).
+      "img-src 'self' https: data: blob:",
+      // API calls: Firebase services, Google OAuth.
+      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://accounts.google.com",
+      // Firebase Auth redirect flow uses an iframe on <project>.firebaseapp.com.
+      "frame-src 'self' https://aibyggare-c45c6.firebaseapp.com https://accounts.google.com https://github.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self' https://accounts.google.com https://github.com",
+    ].join("; "),
+  },
+];
+
 const nextConfig: NextConfig = {
   // firebase-admin använder dynamiska require/native-beroenden som går sönder
   // om Next.js försöker bundla det. Markera som externt så det laddas direkt
@@ -21,6 +64,14 @@ const nextConfig: NextConfig = {
       // GitHub profile pictures (via GitHub Sign-In)
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+    ];
   },
   async rewrites() {
     return [
