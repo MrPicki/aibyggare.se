@@ -44,7 +44,7 @@ export default function IntegritetspolicyPage() {
             <p>
               <span className="text-mud">Adress:</span>{" "}
               <span className="rounded bg-hammer-yellow/60 px-1 font-bold text-ink">
-                Kronetorpsgatan, Malmö
+                Kronetorpsgatan 52b, Malmö
               </span>
             </p>
             <p>

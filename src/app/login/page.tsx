@@ -196,7 +196,7 @@ export default function LoginPage() {
 
       <p className="mt-8 text-center text-xs text-mud/70">
         Genom att fortsätta godkänner du att vi lagrar din profilinformation.{" "}
-        <Link href="/" className="underline underline-offset-2">Inga GDPR-popups</Link>, lovar.
+        <Link href="/integritetspolicy" className="underline underline-offset-2">Inga GDPR-popups</Link>, lovar.
       </p>
     </div>
   );
