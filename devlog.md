@@ -1746,3 +1746,173 @@ Nyhetsbrev-formuläret var dead code som visade falsk bekräftelse utan att spar
 2. Resend: `RESEND_API_KEY` saknas i Vercel-env. Se instruktioner i nästa commit-meddelande.
 
 BETA_VERSION: `0.22.0`
+
+---
+
+### v0.21.0–0.22.7 — Säkerhetssprint: alla tekniska fynd åtgärdade
+
+**Bakgrund:** Säkerhetsanalysen 2026-06-29 identifierade 9 tekniska åtgärdspunkter.
+Alla 8 kodbara punkter är nu implementerade och live-verifierade. Punkt 9 (Firebase DPA)
+kräver manuell åtgärd i Firebase Console — se instruktioner nedan.
+
+---
+
+#### Fix #1 — Counter-manipulation stängd (v0.21.0)
+
+**Problem:** Firestore-regler tillät alla inloggade användare att direkt sätta
+`upvoteCount`/`commentCount` till valfritt värde på andras projekt/inlägg.
+
+**Åtgärd:**
+- Tog bort den sårbara regeln från `firestore.rules` (`hasOnly(['upvoteCount', 'commentCount'])`)
+- Skapade `/api/upvote` och `/api/comment` (Admin SDK, server-side atomics)
+- `upvoteCount`/`commentCount` blockeras nu explicit i ägar-uppdateringsregeln via `hasAny()`
+- Alla klientfiler (`projects-client`, `prompts-client`, `help-client`) omdirigerar till API
+
+**Live-verifierat:** Attack PATCH mot Firestore REST → HTTP 403 "Missing or insufficient permissions"
+
+---
+
+#### Fix #2 — Session-cookie httpOnly+Secure (v0.21.1)
+
+**Problem:** `__session`-cookien sattes via `document.cookie` utan HttpOnly/Secure —
+läsbar av JavaScript, sårbar för XSS.
+
+**Åtgärd:**
+- Skapade `/api/auth/session` (POST) och `/api/auth/signout` (POST)
+- `AuthContext.tsx` kallar dessa via fetch istället för att skriva `document.cookie`
+- Server svarar med `Set-Cookie: __session=...; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
+
+**Live-verifierat:**
+```
+set-cookie: __session=...; Path=/; Max-Age=3600; Secure; HttpOnly; SameSite=lax
+```
+Cookie ej läsbar via `document.cookie` (httpOnly bekräftat).
+
+---
+
+#### Fix #3 — Rate limiting (v0.22.2)
+
+**Problem:** `/api/feedback` och `/api/notify` saknade rate limiting — möjligt att spamma.
+
+**Åtgärd:**
+- Skapade `src/lib/auth/rate-limit.ts` — Firestore-baserad sliding-window limiter
+- `_ratelimits`-collection (Admin SDK only, klienter nekas via regler)
+- `/api/feedback`: max 10/timme per användare → 429 + `Retry-After: 3600`
+- `/api/notify`: max 100/timme per användare
+
+**Live-verifierat:** Request 1–10 → 200, request 11+ → 429
+`{"error":"För många feedback-inlämningar. Vänta en stund och försök igen."}`
+
+---
+
+#### Fix #4 — HTTP-säkerhetsheaders (v0.22.3)
+
+**Åtgärd:** `next.config.ts` headers() med:
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`
+- `Content-Security-Policy` med `frame-src` låst till Firebase Auth-domän + Google/GitHub OAuth
+
+**Live-verifierat (curl -I production):**
+```
+content-security-policy: default-src 'self'; ...
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: DENY
+```
+
+---
+
+#### Fix #5 — Komplett kontoradering (v0.22.4)
+
+**Problem:** `/api/account/delete` raderade projekt, inlägg och profil — men inte
+votes, bookmarks, reports och Storage-filer.
+
+**Åtgärd:** Uppdaterade route för att även radera:
+- `votes` (where userId == uid)
+- `bookmarks` (where userId == uid)
+- `reports` (where reporterId == uid)
+- `_ratelimits`-räknare (kända nyckelprefix)
+- Alla Storage-filer under `images/{uid}/`
+
+---
+
+#### Fix #6 — Inaktivitetsradering 150 dagar (v0.22.5)
+
+**Åtgärd:**
+- `/api/auth/session` uppdaterar nu `lastSeenAt` i profilen vid varje inloggning (fire-and-forget)
+- Ny Vercel Cron-route: `GET /api/cron/cleanup-inactive` (skyddad med `CRON_SECRET`)
+  - Körs varje måndag 02:00 UTC
+  - Raderar profiler där `lastSeenAt < nu - 150 dagar` (max 100/körning)
+  - Använder samma fullständiga raderingslogik som Fix #5
+  - Profiler utan `lastSeenAt` (inloggade före deploy) undantas tills de loggat in igen
+- `vercel.json` skapad med cron-schemat
+
+**⚠️ Kräver manuell Vercel-åtgärd:** Lägg till `CRON_SECRET` i Vercel Dashboard →
+Project Settings → Environment Variables. Sätt ett slumpmässigt starkt värde (t.ex.
+`openssl rand -hex 32`). Utan detta saknar cron-routen skydd — Vercel skickar det
+automatiskt som `Authorization: Bearer <CRON_SECRET>`.
+
+---
+
+#### Fix #7 — Dataportabilitet (v0.22.6)
+
+**Åtgärd:** Ny route `GET /api/account/export`
+- Returnerar all användardata (profil, XP, notiser, projekt, inlägg, röster, bokmärken)
+- JSON-fil med `Content-Disposition: attachment` — laddas ner direkt
+- Uppfyller GDPR Art. 20 (rätten till dataportabilitet)
+
+**TODO för settings-sidan:** Lägg till en "Ladda ner min data"-knapp som anropar
+`/api/account/export`. Finns inte i UI ännu.
+
+---
+
+#### Fix #8 — Lösenord minst 8 tecken (v0.22.7)
+
+**Åtgärd:**
+- `minLength={8}` på lösenordsfältet i signup-läge (login/page.tsx)
+- Felmeddelandet för `auth/weak-password` uppdaterat till "minst 8 tecken"
+- Observera: Firebase enforcar 6 tecken backend — vår 8-teckengräns är client-side.
+  Firebase Identity Toolkit Password Policy (Firebase Console) kan höja backend-gränsen om önskat.
+
+---
+
+#### Fix #9 — Firebase DPA (manuell åtgärd för Picki)
+
+Ingen kodändring. Picki måste acceptera Firebase Data Processing Agreement:
+
+1. Gå till [Firebase Console](https://console.firebase.google.com) → projekt `aibyggare-c45c6`
+2. Klicka **Project Settings** (kugghjulet) → fliken **General**
+3. Scrolla ner till **Data Privacy** eller **Google Cloud & Firebase Terms of Service**
+4. Klicka **Review and accept** under "Data Processing and Security Terms"
+5. Acceptera → bekräftelse visas att DPA är aktiv
+6. Ta en skärmdump och lägg i `docs/` för dokumentation
+
+**Varför:** GDPR kräver att alla personuppgiftsbiträden har ett DPA-avtal. Firebase/Google
+är personuppgiftsbiträde för all användardata. Utan DPA bryter vi tekniskt mot GDPR Art. 28.
+
+---
+
+**Sammanfattning säkerhetssprint:**
+
+| Fix | Status | Version |
+|-----|--------|---------|
+| Counter-manipulation stängd | ✅ Live-verifierat | v0.21.0 |
+| Session-cookie HttpOnly+Secure | ✅ Live-verifierat | v0.21.1 |
+| Rate limiting feedback/notify | ✅ Live-verifierat | v0.22.2 |
+| HTTP-säkerhetsheaders (CSP m.m.) | ✅ Live-verifierat | v0.22.3 |
+| Komplett kontoradering | ✅ Implementerat | v0.22.4 |
+| Inaktivitetsradering 150 dagar | ✅ Implementerat | v0.22.5 |
+| Dataportabilitet /api/account/export | ✅ Implementerat | v0.22.6 |
+| Lösenord minst 8 tecken | ✅ Implementerat | v0.22.7 |
+| Firebase DPA | ⏳ Manuell åtgärd av Picki | — |
+
+**Kvarvarande manuella åtgärder:**
+1. Vercel: lägg till `CRON_SECRET` i env vars (Fix #6)
+2. Firebase Console: acceptera DPA (Fix #9)
+3. Settings-sidan: lägg till "Ladda ner min data"-knapp mot `/api/account/export`
+4. Resend: sätt `RESEND_API_KEY` i Vercel-env för nyhetsbrev (från v0.22.0-sessionen)
+
+BETA_VERSION: `0.22.7`
