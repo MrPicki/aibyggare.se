@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Hammer, HelpCircle, Sparkles, Users, LayoutGrid, X, ArrowRight } from "lucide-react";
+import { Hammer, HelpCircle, Sparkles, Users, LayoutGrid, X, ArrowRight, ArrowLeft } from "lucide-react";
 import { ChunkyLink } from "@/components/ui/ChunkyButton";
 
 // ── Tour cards ─────────────────────────────────────────────────────────────────
@@ -62,9 +62,8 @@ export default function WelcomePage() {
   const router = useRouter();
   const done = step >= TOUR.length;
 
-  function next() {
-    setStep((s) => s + 1);
-  }
+  function next() { setStep((s) => s + 1); }
+  function prev() { setStep((s) => Math.max(0, s - 1)); }
 
   if (done) {
     return <ActionPrompt />;
@@ -133,25 +132,36 @@ export default function WelcomePage() {
         })}
       </div>
 
-      {/* Progress dots */}
+      {/* Progress dots — klickbara för direkt-hopp */}
       <div className="mt-8 flex gap-2">
         {TOUR.map((_, i) => (
-          <div
+          <button
             key={i}
+            onClick={() => setStep(i)}
+            aria-label={`Gå till kort ${i + 1}`}
             className={[
               "h-2 rounded-full transition-all duration-300",
               i < step
-                ? "w-2 bg-ink/30"
+                ? "w-2 bg-ink/30 hover:bg-ink/60"
                 : i === step
                 ? "w-5 bg-ink"
-                : "w-2 bg-ink/20",
+                : "w-2 bg-ink/20 hover:bg-ink/40",
             ].join(" ")}
           />
         ))}
       </div>
 
       {/* Navigation */}
-      <div className="mt-8 flex flex-col items-center gap-3">
+      <div className="mt-8 flex items-center gap-3">
+        {step > 0 && (
+          <button
+            onClick={prev}
+            aria-label="Föregående"
+            className="chunky-sm pressable flex h-10 w-10 items-center justify-center rounded-xl border-2 border-ink bg-paper text-ink hover:bg-cream transition-colors"
+          >
+            <ArrowLeft size={16} />
+          </button>
+        )}
         <button
           onClick={next}
           className="chunky pressable inline-flex items-center gap-2 rounded-xl bg-ink px-8 py-3 font-mono text-sm font-bold uppercase tracking-wide text-paper"
@@ -159,13 +169,13 @@ export default function WelcomePage() {
           {step === TOUR.length - 1 ? "Kom igång" : "Nästa"}
           <ArrowRight size={15} />
         </button>
-        <Link
-          href="/"
-          className="font-mono text-xs text-mud hover:text-ink transition-colors"
-        >
-          Hoppa över guiden
-        </Link>
       </div>
+      <Link
+        href="/"
+        className="mt-3 font-mono text-xs text-mud hover:text-ink transition-colors"
+      >
+        Hoppa över guiden
+      </Link>
     </div>
   );
 }

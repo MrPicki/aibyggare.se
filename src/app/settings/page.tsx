@@ -205,14 +205,22 @@ function SettingsForm({ user }: { user: User }) {
         >
           <ArrowLeft size={14} /> Min profil
         </Link>
-        {form.username && (
+        <div className="flex items-center gap-3">
           <Link
-            href={`/profile/${form.username}`}
-            className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
+            href="/welcome"
+            className="font-mono text-xs text-mud hover:text-ink transition-colors"
           >
-            Visa min profil <ExternalLink size={13} />
+            Plattformsguide →
           </Link>
-        )}
+          {form.username && (
+            <Link
+              href={`/profile/${form.username}`}
+              className="inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wide text-mud hover:text-build-green transition-colors"
+            >
+              Visa min profil <ExternalLink size={13} />
+            </Link>
+          )}
+        </div>
       </div>
 
       <h1 className="mt-6 font-display text-2xl sm:text-3xl font-bold text-ink">
