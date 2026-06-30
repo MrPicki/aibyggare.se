@@ -38,13 +38,13 @@ export default function IntegritetspolicyPage() {
             <p>
               <span className="text-mud">Org.nr:</span>{" "}
               <span className="rounded bg-hammer-yellow/60 px-1 font-bold text-ink">
-                [ORG.NR — väntar på uppgift]
+                8812134016
               </span>
             </p>
             <p>
               <span className="text-mud">Adress:</span>{" "}
               <span className="rounded bg-hammer-yellow/60 px-1 font-bold text-ink">
-                [REGISTRERAD ADRESS — väntar på uppgift]
+                Kronetorpsgatan, Malmö
               </span>
             </p>
             <p>
