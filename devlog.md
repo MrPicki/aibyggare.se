@@ -9,6 +9,22 @@
 
 ---
 
+### 2026-06-30 — UX-sprint: CTA-dropdown, drill-down, onboarding-polish, 404-fix ✅ Klar
+
+**v0.23.0 — CTA-dropdown i headern**
+Ersatte single-link "Lägg upp"-knappen med en portal-renderad dropdown med tre val: Bygge → `/projects/new`, Hjälpfråga → `/problemhornan/new`, Prompt → `/prompts/new`. Portal-pattern (react-dom) krävdes pga `overflow-hidden` på header-containern — samma lösning som NotificationBell. Desktop: knapp med roterande ChevronDown + `aria-haspopup="menu"`. Mobil: tre separata items med ikon + label + subtitle i hamburgermenyn.
+
+**v0.23.1 — Drill-down (borr) på hjälpfrågor**
+Lade till `PromptDrillButton` på detaljsidan `/problemhornan/[slug]` — synlig för Firestore-backed posts. Noll ny kod: `/api/upvote` stöder redan `targetType: "post"` och `posts`-collectionen har `upvoteCount`. Knappen dyker upp bredvid svarsräknaren i artikelfootern.
+
+**v0.23.2 — Fix: 404 på URL-encodade slugs (Rasmus Karlsson-bugg)**
+Root cause: seed-slugs med ö (`forklara-felet-nybörjare`) matchades inte mot `%C3%B6`-encodade URL-params. Lade till `decodeURIComponent(rawSlug)` i `/problemhornan/[slug]/page.tsx` och `/guides/[slug]/page.tsx` (prompts redan fixat i v0.16.0). Preventiv fix för alla tre detaljsidor.
+
+**v0.23.3 — Welcome-sidan: tillbaka-navigation + klickbara dots + länk från inställningar**
+Welcome-sidan (`/welcome`) saknade möjlighet att navigera bakåt eller hoppa till ett specifikt kort. Lade till: (1) tillbaka-knapp (ArrowLeft) som visas när `step > 0`, (2) klickbara progress-dots för direkt-hopp till valfritt kort, (3) länk "Plattformsguide →" i `/settings` top-nav för att komma tillbaka till guiden. Gjordes utan att lägga till nya onboarding-steg — UX-analysen gav onboarding-flödet 8/10 och noterade att 6 steg är i överkant.
+
+---
+
 ### 2026-06-29 — Säkerhets- och juridikanalys ✅ Klar
 
 **Vad gjordes:** Fullständig säkerhets- och juridisk efterlevnadsanalys av aibyggare.se inför skalning till fler riktiga användare. Inkluderade granskning av alla Firestore/Storage Security Rules, 8 API-routes, auth-infrastruktur, HTTP-headers, beroenden (npm audit), XSS-ytor, samt juridisk kartläggning mot GDPR/LEK/e-handelsdirektivet.
