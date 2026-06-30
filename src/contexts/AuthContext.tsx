@@ -61,7 +61,7 @@ function firebaseErrorMessage(err: unknown): string {
   if (code === "auth/email-already-in-use")
     return "Det finns redan ett konto med den e-postadressen. Logga in istället.";
   if (code === "auth/invalid-email")     return "Ogiltig e-postadress.";
-  if (code === "auth/weak-password")     return "Lösenordet måste vara minst 6 tecken.";
+  if (code === "auth/weak-password")     return "Lösenordet måste vara minst 8 tecken.";
   if (code === "auth/missing-password")  return "Skriv in ett lösenord.";
   if (code === "auth/wrong-password" || code === "auth/invalid-credential")
     return "Fel e-post eller lösenord.";

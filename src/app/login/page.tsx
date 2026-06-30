@@ -114,9 +114,9 @@ export default function LoginPage() {
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder={mode === "signup" ? "Lösenord (minst 6 tecken)" : "Lösenord"}
+          placeholder={mode === "signup" ? "Lösenord (minst 8 tecken)" : "Lösenord"}
           required
-          minLength={6}
+          minLength={mode === "signup" ? 8 : 1}
           className="w-full rounded-xl border-2 border-ink bg-paper px-3 py-3 text-sm text-ink placeholder:text-mud/60 focus:outline-none focus:ring-2 focus:ring-build-green"
         />
         {mode === "signin" && (
