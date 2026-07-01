@@ -582,12 +582,13 @@ Baserat på UX-analysen `docs/ux-analys-2026-06-28.md` (helhetspoäng 6.8/10 →
 > **Läge:** Koden är beta-redo. Det som saknas nu är synlighet och innehåll — inte fler features.
 > Nästa sprint ska driva trafik och göra befintligt innehåll hittbart.
 
-**P1 — högst ROI, börja här:**
-- [ ] **`/tools/[tool]`-sidor** — SEO-landningssidor för Claude Code, Cursor, Lovable, Bolt, Supabase, Vercel.
-      Varje sida listar projekt + hjälpfrågor + prompts för verktyget (datan finns redan — `stack`/`tool`-fälten).
-      Det största SEO-hålet i sajten; planerad sedan dag ett (se SEO-strategin nedan) men aldrig byggd.
-- [ ] **"Veckans bygge" på startsidan** — sektion som lyfter admin-utsett featured-projekt.
-      `isFeatured`-togglen finns redan i admin; det saknas bara en synlig plats på startsidan.
+**P1 — högst ROI:** ✅ Klart (v0.24.0–0.24.1, 2026-07-01)
+- [x] **`/tools/[tool]`-sidor** — 12 SEO-landningssidor (Claude Code, Claude, ChatGPT, Cursor, Lovable,
+      Bolt, Replit, v0, Vercel, Supabase, Firebase, Stripe) med byggen + problem + prompts per verktyg,
+      unik copy, canonical, JSON-LD. Plus `/tools`-index med räknare, footer-länkning och sitemap.
+- [x] **"Veckans bygge" på startsidan** — `FeaturedBuild`-sektion visar admin-utsett featured-projekt
+      (fallback: mest borrade). CTA-loop: "Lägg upp ditt bygge — kanske står det här nästa vecka."
+- [x] **RSS-flöde** (`/feed.xml`) — senaste byggen + problem, för läsare och aggregatorer.
 
 **P2 — bra att ha:**
 - [ ] **Bookmarks i Firestore + `/sparat`-sida** — dagens bookmark på PromptCard är localStorage-only
@@ -718,6 +719,14 @@ Innan en fas markeras som klar:
   `firebase deploy --only firestore:indexes`. (Alternativ: skapa `comments.userId`
   COLLECTION_GROUP-index manuellt i Firebase Console.)
   *Utan detta:* badgen "Hjälpt någon" fungerar inte i produktion.
+- [ ] **6. Google Search Console** — verifiera aibyggare.se på
+  [search.google.com/search-console](https://search.google.com/search-console)
+  (DNS- eller HTML-verifiering) och skicka in `https://aibyggare.se/sitemap.xml`.
+  *Utan detta:* Google hittar de nya `/tools`-SEO-sidorna långsammare, och vi ser
+  aldrig vilka sökord som driver trafik. **Detta är den viktigaste trafikåtgärden.**
+- [ ] **7. Dela verktygssidorna** — posta `/tools/claude-code`, `/tools/lovable` m.fl.
+  i relevanta svenska Facebook-grupper, Discord-servrar och forum där AI-byggare finns.
+  Sidorna är byggda för att vara värda att dela — de visar riktigt innehåll.
 
 ### 🟡 P1 — Verifiera (efter P0, ~15 min)
 

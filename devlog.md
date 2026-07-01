@@ -9,6 +9,32 @@
 
 ---
 
+### 2026-07-01 — Trafiksprintt (Fas 17 P1): /tools-SEO-sidor, Veckans bygge, RSS ✅ Klar
+
+**v0.24.0 — /tools/[tool]-SEO-sidor + Veckans bygge**
+
+*12 SEO-landningssidor* (`/tools/claude-code`, `claude`, `chatgpt`, `cursor`, `lovable`, `bolt`, `replit`, `v0`, `vercel`, `supabase`, `firebase`, `stripe`):
+- Nytt register `src/lib/constants/tool-pages.ts` — slug, aliases (matchning mot `projects.stack` + `posts.tool`/`tags`), unik svensk SEO-copy per verktyg (title, meta description, intro)
+- `/tools/[tool]` — hero med intro, sektioner för byggen/problem/prompts (max 6 per sektion, länk till fulla listor), tom-state med CTA, CTA-block, "Fler verktyg"-chips för intern länkning. Canonical, OG-metadata och CollectionPage + BreadcrumbList JSON-LD. `decodeURIComponent` på slug. Firestore med seed-fallback, badges via `getUserBadges`.
+- `/tools` — indexsida med kort per verktyg och innehållsräknare (X byggen · Y problem · Z prompts), räknat live från Firestore.
+- Footer: ny "Verktyg"-kolumn (7 verktyg + "Alla verktyg →") — sajtvid intern länkning på varje sida.
+- Sitemap: `/tools` + alla 12 verktygssidor med prioritet 0.8, changeFrequency daily.
+
+*Veckans bygge på startsidan:*
+- `getFeaturedProject()` i `projects.ts` — admin-utsett `isFeatured`-projekt, fallback till mest borrade
+- `FeaturedBuild`-komponent — stort chunky-kort med featured-stämpel, författare + badges, stack, borrar/kommentarer, CTA "Lägg upp ditt bygge — kanske står det här nästa vecka" (aktiveringsloop)
+- Placerad efter aktivitetsflödet på startsidan; renderas inte om Firestore är tom
+
+**v0.24.1 — RSS-flöde**
+- `/feed.xml` — RSS 2.0 med senaste 30 byggen + problem från Firestore (seed-fallback), `Cache-Control: max-age=600`
+- `<link rel="alternate" type="application/rss+xml">` i root layout via `alternates.types`
+
+**Verifierat:** `tsc --noEmit` ✅, `npm run build` ✅ (alla routes inkl. `/tools`), preview: `/tools` visar riktiga räknare, `/tools/claude-code` visar 2 problem + 1 prompt, okänd slug → 404, startsidan visar Veckans bygge (riktigt Firestore-projekt), footer-länkar på plats, `/feed.xml` returnerar giltig RSS med riktig data, inga konsolfel.
+
+**Nästa naturliga steg för trafik (kräver Picki, ingen kod):** Google Search Console-verifiering + skicka in sitemap, dela verktygssidorna i relevanta Facebook-grupper/Discord-servrar, P0-listan i plan.md.
+
+---
+
 ### 2026-06-30 — UX-sprint: CTA-dropdown, drill-down, onboarding-polish, 404-fix ✅ Klar
 
 **v0.23.0 — CTA-dropdown i headern**
