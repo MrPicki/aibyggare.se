@@ -553,6 +553,53 @@ Placering: `.claude/skills/`
 - [x] `/api/feedback` — sparar i samlad `feedback`-collection (userId, namn, meddelande, sid-URL, bild, datum)
 - [x] Övrigt: sök + sortering, radera bygge/problem, radera konto, borr-fix (regler deployade), beta-versionering
 
+### Fas 15 — Säkerhet & juridik ✅ (v0.21.0–0.22.8)
+Baserat på säkerhetsanalysen `docs/sakerhetsanalys-2026-06-29.md`. Alla 8 kodbara fynd åtgärdade och live-verifierade.
+- [x] Counter-manipulation stängd — `upvoteCount`/`commentCount` skrivs enbart server-side via `/api/upvote` + `/api/comment`
+- [x] Session-cookie `HttpOnly + Secure + SameSite=Lax` via `/api/auth/session` + `/api/auth/signout`
+- [x] Rate limiting (Firestore sliding-window) på `/api/feedback` (10/h) och `/api/notify` (100/h)
+- [x] HTTP-säkerhetsheaders: CSP, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy
+- [x] Komplett kontoradering — även votes, bookmarks, reports, ratelimits och Storage-filer
+- [x] Inaktivitetsradering 150 dagar — Vercel Cron `/api/cron/cleanup-inactive` (⚠️ kräver `CRON_SECRET`, se manuella steg)
+- [x] Dataportabilitet — `GET /api/account/export` + "Ladda ner min data"-knapp i `/settings` (GDPR Art. 20)
+- [x] Lösenord minst 8 tecken (client-side)
+- [x] `/integritetspolicy` + `/anvandarvillkor` — fullständiga juridiska sidor (⚠️ org.nr-platshållare kvar, se manuella steg)
+- [x] Nyhetsbrev — riktigt API (`/api/newsletter/subscribe` + unsubscribe), Firestore-lagring, Resend-integration (⚠️ kräver `RESEND_API_KEY`, se manuella steg)
+
+### Fas 16 — UX-sprintar ✅ (v0.19.0 + v0.23.0–0.23.3)
+Baserat på UX-analysen `docs/ux-analys-2026-06-28.md` (helhetspoäng 6.8/10 → alla kodbara brister åtgärdade).
+- [x] Community-sidan: riktig Firestore-statistik + riktiga profiler (ersatte hårdkodad fake-data)
+- [x] Prompts-listan: sökning + verktygsfilter + sortering (`PromptFilterList`); preview-fade istället för lås-ikon för utloggade
+- [x] Kommentarer på prompt- och guide-detaljsidor (`PostCommentSection`)
+- [x] "Glömt lösenord?"-länk + `/register` startar i signup-läge
+- [x] CTA-dropdown i headern — "Lägg upp" → Bygge / Hjälpfråga / Prompt (portal-renderad, desktop + mobil)
+- [x] Drill-down (borr) på hjälpfrågornas detaljsidor
+- [x] 404-fix: `decodeURIComponent` på slugs med svenska tecken (problemhörnan, guider; prompts sedan v0.16.0)
+- [x] Welcome-guiden: tillbaka-navigation, klickbara progress-dots, "Plattformsguide →"-länk i settings
+
+### Fas 17 — Discovery & tillväxt 🔜 NÄSTA SPRINT
+
+> **Läge:** Koden är beta-redo. Det som saknas nu är synlighet och innehåll — inte fler features.
+> Nästa sprint ska driva trafik och göra befintligt innehåll hittbart.
+
+**P1 — högst ROI, börja här:**
+- [ ] **`/tools/[tool]`-sidor** — SEO-landningssidor för Claude Code, Cursor, Lovable, Bolt, Supabase, Vercel.
+      Varje sida listar projekt + hjälpfrågor + prompts för verktyget (datan finns redan — `stack`/`tool`-fälten).
+      Det största SEO-hålet i sajten; planerad sedan dag ett (se SEO-strategin nedan) men aldrig byggd.
+- [ ] **"Veckans bygge" på startsidan** — sektion som lyfter admin-utsett featured-projekt.
+      `isFeatured`-togglen finns redan i admin; det saknas bara en synlig plats på startsidan.
+
+**P2 — bra att ha:**
+- [ ] **Bookmarks i Firestore + `/sparat`-sida** — dagens bookmark på PromptCard är localStorage-only
+      (försvinner vid enhetsbyte). `bookmarks`-collectionen finns redan i datamodell och Security Rules.
+- [ ] **`/guides/new`** — community-genererade guider. ⚠️ Beslut krävs från Picki: ska guider vara
+      öppna för alla att skapa, eller kurerade (admin/seed)? Bygg inte förrän beslutet är taget.
+
+**P3 — manuella review-steg (kräver människa + riktig webbläsare):**
+- [ ] Responsivitetsgenomgång på riktiga enheter
+- [ ] Accessibility-review (tangentbord + skärmläsare)
+- [ ] Lighthouse på produktion
+
 ---
 
 ## SEO-strategi
@@ -637,80 +684,68 @@ Innan en fas markeras som klar:
 | Fas 12 — Notissystem | ✅ Klar |
 | Fas 13 — Founding Member-badge (första 30) | ✅ Klar |
 | Fas 14 — Feedback-inhämtning | ✅ Klar |
+| Fas 15 — Säkerhet & juridik | ✅ Klar (3 manuella steg kvar — se nedan) |
+| Fas 16 — UX-sprintar | ✅ Klar |
+| Fas 17 — Discovery & tillväxt | 🔜 Nästa sprint |
 
-> **Beta-lansering:** Sidan är live på **aibyggare.se** (v0.11.1), säker och redo för de första 30 testarna.
+> **Beta-lansering:** Sidan är live på **aibyggare.se** (v0.23.3), säker och redo för de första 30 testarna.
+> Säkerhetssprinten är komplett och live-verifierad. Det som blockerar full drift är de manuella stegen nedan.
 
 ---
 
-## ⚠️ MANUELLA STEG SOM DU MÅSTE GÖRA
+## ⚠️ MANUELLA STEG — PICKI MÅSTE GÖRA DESSA
 
-> Koden är pushad och Vercel deployar automatiskt, men följande kan **inte** göras
-> via git/Vercel. Markera av när klart.
+> Allt kodarbete är pushat och live. Följande kan **inte** göras via git/Vercel —
+> de kräver dig. P0-listan tar totalt ca 30 minuter och blockerar juridik + nyhetsbrev.
+> Markera av när klart.
 
-### 🔴 Kritiskt — säkerhet och funktion
+### 🔴 P0 — Blockerare (gör nu, ~30 min totalt)
 
-- [x] **Firestore Security Rules deployade** (session 13, programmatiskt via
-  Rules REST API). Hela regeluppsättningen live: role-escalation-skydd,
-  isFeatured-skydd, votes + rösträknar-carve-out, XP/level/founding-skydd,
-  meta-lås, notifications, feedback.
-- [ ] **Deploya Firestore-index:** kräver `firebase login`. Krävs för
-  `comments.userId` (badge "Hjälpt någon") och `posts: type + createdAt`.
-  Tills dess kan vissa profil-/filtreringsqueries falla tillbaka tomt.
-- [ ] **Gör dig själv till admin:** sätt `role: 'admin'` på ditt eget dokument
-  `profiles/{din-uid}` i Firebase Console. Annars ser ingen `/admin`.
-- [ ] **`firebase login`** (rekommenderas): låter framtida regel-/index-deploy
-  ske direkt via CLI istället för tillfälliga endpoints.
+- [ ] **1. `CRON_SECRET` i Vercel** — Vercel Dashboard → projekt `aibyggare-se` →
+  Settings → Environment Variables. Skapa värdet med `openssl rand -hex 32`.
+  *Utan detta:* inaktivitetsraderingen (GDPR, 150 dagar) körs oskyddad/inte alls.
+- [ ] **2. `RESEND_API_KEY` i Vercel** — skapa konto/nyckel på resend.com, lägg in
+  som env-variabel i Vercel.
+  *Utan detta:* nyhetsbrevsprenumeranter sparas men får aldrig välkomstmail.
+- [ ] **3. Acceptera Firebase DPA** — [Firebase Console](https://console.firebase.google.com)
+  → projekt `aibyggare-c45c6` → Project Settings → General → Data Privacy →
+  "Review and accept" under Data Processing and Security Terms. Ta en skärmdump till `docs/`.
+  *Utan detta:* teknisk GDPR-brist (Art. 28 — biträdesavtal saknas).
+- [ ] **4. Org.nr + adress** — skicka Ncom.se:s organisationsnummer och adress till Claude
+  i en session, så uppdateras platshållarna i `/integritetspolicy` och `/anvandarvillkor`.
+  *Utan detta:* juridiska sidor visar synliga platshållare för alla besökare.
+- [ ] **5. Deploya Firestore-index** — kör `firebase login` en gång, sedan
+  `firebase deploy --only firestore:indexes`. (Alternativ: skapa `comments.userId`
+  COLLECTION_GROUP-index manuellt i Firebase Console.)
+  *Utan detta:* badgen "Hjälpt någon" fungerar inte i produktion.
 
-### 🟡 Verifiera efter deploy
+### 🟡 P1 — Verifiera (efter P0, ~15 min)
 
-- [ ] Bekräfta att Vercel-deployen är **Ready** (senaste commit).
-- [ ] Testa att en VANLIG användare **inte** kan: göra sig till admin, eller
-      sätta isFeatured på eget innehåll (öppna konsolen och försök skriva direkt).
-- [ ] Testa att röster/kommentarer från en ANNAN användare än ägaren funkar
-      (nya reglerna har carve-out för räknarna).
+- [ ] Testa nyhetsbrevsflödet: prenumerera med riktig e-post → välkomstmail kommer →
+      avregistreringslänken fungerar.
 - [ ] Testa hela kärnflödet på mobil: logga in → skapa projekt → kommentera →
-      rösta → ställ fråga → redigera profil.
-
-### 🟢 Polish / SEO (kan göras löpande)
-
-- [x] **OG-delningsbilder** — dynamiska via next/og (start/projekt/problem/prompt)
-- [x] **`NEXT_PUBLIC_SITE_URL`** satt i Vercel → `https://aibyggare.se`
-- [ ] **Responsivitet-genomgång** i riktig webbläsare (kräver mänskligt öga).
-- [ ] **Accessibility-review** med tangentbord + skärmläsare.
-- [ ] **Performance** — kör Lighthouse på produktion.
-
-### Infrastruktur (engångs — troligen redan gjort)
-
-- [x] Firebase Auth: Google + GitHub aktiverade (Fas 2)
-- [x] Vercel env-variabler satta (Fas 1)
+      borra → ställ fråga → redigera profil.
 - [ ] Verifiera att `storage.rules` är deployade: `firebase deploy --only storage`
+      (går snabbt när `firebase login` är gjort i P0 steg 5).
+
+### 🟢 P2 — Löpande (kräver mänskligt öga, ingen deadline)
+
+- [ ] **Responsivitet-genomgång** på riktiga enheter (mobil + surfplatta).
+- [ ] **Accessibility-review** med tangentbord + skärmläsare.
+- [ ] **Lighthouse** på produktion (performance-baslinje inför tillväxt).
+
+### ✅ Redan gjort (behålls som kvitto)
+
+- [x] Firestore Security Rules deployade (hela regeluppsättningen live, verifierad med attack-tester)
+- [x] Admin satt: `christoffer.nolet@gmail.com` har `role: 'admin'` (session 15)
+- [x] OG-delningsbilder live (next/og — start/projekt/problem/prompt)
+- [x] `NEXT_PUBLIC_SITE_URL` satt i Vercel → `https://aibyggare.se`
+- [x] Firebase Auth: Google + GitHub aktiverade
+- [x] Vercel env-variabler satta
+- [x] Escalation-tester körda mot prod: icke-admin nekas på alla vektorer (403)
 
 ---
 
 ---
 
-## UX-sprint (2026-06-29) — Två kärnresor
-
-Baserat på UX-analys (docs/ux-analys-2026-06-28.md) identifierades två kärnresor som behövde förbättras inför betalaunch.
-
-### Resa 1: Hjälpsökaren
-Har ett problem, kommer till Problemhörnan, vill snabbt hitta liknande frågor och få ett svar.
-- [x] Sökning + filter på prompts-sidan (PromptFilterList — mönster från HelpFilterList)
-- [x] Tydligare "Glömt lösenord?" på login-sidan
-
-### Resa 2: Visaren
-Har byggt något, vill visa upp det, få kommentarer och känna att communityn är levande.
-- [x] Community-sidan: hårdkodad fake-statistik ersatt med riktig Firestore-data
-- [x] Community-sidan: riktiga profiler istället för seed-karaktärer
-- [x] Kommentarsektion på prompt-detalj (PostCommentSection)
-- [x] Kommentarsektion på guide-detalj (PostCommentSection)
-
-### Övriga UX-fixes
-- [x] Settings: "← Startsidan" → "← Min profil" med korrekt profilURL
-- [x] Register: startar i signup-läge (rubrik "Skapa ditt konto" vid /register)
-- [x] Projekt-detalj: visar inte description om den är identisk med tagline
-- [x] PromptCard: logged-out-användare ser en preview-fade istället för lock-ikon
-
----
-
-*Senast uppdaterad: 2026-06-29 (session 14 — UX-sprint: community real data, prompts filter, kommentarer på prompts/guides)*
+*Senast uppdaterad: 2026-07-01 — planen omskriven mot faktiskt läge: Fas 15–16 (säkerhet/juridik + UX-sprintar) dokumenterade som klara, Fas 17 (Discovery & tillväxt) definierad som nästa sprint, manuella steg konsoliderade och prioriterade (P0–P2).*
