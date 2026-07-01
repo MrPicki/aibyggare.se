@@ -6,6 +6,7 @@ import {
   SEED_GUIDES,
   SEED_USERS,
 } from "@/lib/seed";
+import { TOOL_PAGES } from "@/lib/constants/tool-pages";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aibyggare.se";
 
@@ -25,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/problemhornan",
     "/prompts",
     "/guides",
+    "/tools",
     "/about",
     "/community",
     "/community-rules",
@@ -34,6 +36,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
     changeFrequency: "daily" as const,
     priority: p === "/" ? 1 : 0.8,
+  }));
+
+  // Verktygssidor — SEO-landningssidor, hög prioritet.
+  const toolRoutes: MetadataRoute.Sitemap = TOOL_PAGES.map((t) => ({
+    url: url(`/tools/${t.slug}`),
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.8,
   }));
 
   // Dynamiskt innehåll — försök Firestore, fall tillbaka på seed-slugs.
@@ -76,5 +86,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...profileHandles.map((h) => ({ url: url(`/profile/${h}`), lastModified: now, priority: 0.5 })),
   ];
 
-  return [...staticRoutes, ...contentRoutes];
+  return [...staticRoutes, ...toolRoutes, ...contentRoutes];
 }

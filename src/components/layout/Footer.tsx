@@ -18,11 +18,23 @@ const legalLinks = [
   { href: "/anvandarvillkor", label: "Användarvillkor" },
 ];
 
+// Sajtvid intern länkning till SEO-landningssidorna per verktyg.
+const toolLinks = [
+  { href: "/tools/claude-code", label: "Claude Code" },
+  { href: "/tools/cursor", label: "Cursor" },
+  { href: "/tools/lovable", label: "Lovable" },
+  { href: "/tools/bolt", label: "Bolt" },
+  { href: "/tools/supabase", label: "Supabase" },
+  { href: "/tools/vercel", label: "Vercel" },
+  { href: "/tools/firebase", label: "Firebase" },
+  { href: "/tools", label: "Alla verktyg →" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t-2 border-ink bg-paper">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-3">
+        <div className="grid gap-10 md:grid-cols-4">
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2" aria-label="AIbyggare.se — startsida">
@@ -57,6 +69,25 @@ export function Footer() {
             </h3>
             <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2">
               {footerLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="font-mono text-sm text-mud hover:text-build-green transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Verktyg */}
+          <div className="md:justify-self-end">
+            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink">
+              Verktyg
+            </h3>
+            <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2">
+              {toolLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

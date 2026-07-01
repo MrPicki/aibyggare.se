@@ -1,6 +1,7 @@
 import { Hero } from "@/components/home/Hero";
 import { TabStrip } from "@/components/home/TabStrip";
 import { LatestBuildActivity, type BuildActivityItem } from "@/components/home/LatestBuildActivity";
+import { FeaturedBuild } from "@/components/home/FeaturedBuild";
 import { StatementBlock } from "@/components/home/StatementBlock";
 import { ProjectShowcase } from "@/components/home/ProjectShowcase";
 import { HelpShowcase } from "@/components/home/HelpShowcase";
@@ -79,25 +80,31 @@ function helpToActivity(post: Post, badges?: { level: number; foundingMember: bo
 
 export default async function HomePage() {
   let activityItems: BuildActivityItem[] | undefined;
+  let featuredProject: Project | null = null;
+  let featuredBadge: { level: number; foundingMember: boolean } | undefined;
 
   try {
-    const [{ getProjects }, { getHelpPosts }, { getUserBadges }] = await Promise.all([
+    const [{ getProjects, getFeaturedProject }, { getHelpPosts }, { getUserBadges }] = await Promise.all([
       import("@/lib/firebase/projects"),
       import("@/lib/firebase/help"),
       import("@/lib/firebase/profiles"),
     ]);
-    const [projects, helpPosts] = await Promise.all([
+    const [projects, helpPosts, featured] = await Promise.all([
       getProjects(5),
       getHelpPosts(4),
+      getFeaturedProject().catch(() => null),
     ]);
+    featuredProject = featured;
 
-    if (projects.length > 0 || helpPosts.length > 0) {
+    if (projects.length > 0 || helpPosts.length > 0 || featured) {
       // Hämta författarnas level + founding-status i en batch för badges.
       const authorIds = [
         ...projects.map((p) => p.userId),
         ...helpPosts.map((p) => p.userId),
+        ...(featured?.userId ? [featured.userId] : []),
       ].filter(Boolean) as string[];
       const badges = await getUserBadges(authorIds);
+      if (featured?.userId) featuredBadge = badges[featured.userId];
 
       const mixed: BuildActivityItem[] = [
         ...projects.map((p) => projectToActivity(p, badges[p.userId])),
@@ -122,6 +129,7 @@ export default async function HomePage() {
       <Hero />
       <TabStrip />
       <LatestBuildActivity items={activityItems} />
+      {featuredProject && <FeaturedBuild project={featuredProject} badge={featuredBadge} />}
       <StatementBlock />
       <ProjectShowcase />
       <HelpShowcase />
