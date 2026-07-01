@@ -68,7 +68,10 @@ export const metadata: Metadata = {
   authors: [{ name: "AIbyggare.se", url: SITE_URL }],
   creator: "AIbyggare.se",
   publisher: "AIbyggare.se",
-  alternates: { canonical: SITE_URL },
+  alternates: {
+    canonical: SITE_URL,
+    types: { "application/rss+xml": `${SITE_URL}/feed.xml` },
+  },
   openGraph: {
     title: "AIbyggare.se — För oss som bygger med AI",
     description:
